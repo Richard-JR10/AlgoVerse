@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react'
 import {useLocation, useNavigate} from 'react-router-dom';
 import {useAuth} from "../Auth/AuthContext.jsx";
+import PasswordRequirements from "./utils/passwordRequirements.jsx";
 
 function useQuery() {
     const location = useLocation();
@@ -160,13 +161,7 @@ const ResetNewPassword = () => {
                                 )}
                             </button>
                         </div>
-                        <div className="mt-5">
-                            <div className="flex flex-row text-xs items-center gap-2">{handleCondition(passwordError.minLength)} Minimum 8 characters</div>
-                            <div className="flex flex-row text-xs items-center gap-2">{handleCondition(passwordError.hasNumber)} Contains at least 1 number (0-9)</div>
-                            <div className="flex flex-row text-xs items-center gap-2">{handleCondition(passwordError.hasSpecialChar)} Contains at least 1 special character (!@#$%^&*_-)</div>
-                            <div className="flex flex-row text-xs items-center gap-2">{handleCondition(passwordError.hasUppercase)} Contains at least 1 uppercase letter (A-Z)</div>
-                            <div className="flex flex-row text-xs items-center gap-2">{handleCondition(passwordError.hasLowercase)} Contains at least 1 lowercase letter (a-z)</div>
-                        </div>
+                        <PasswordRequirements passwordError={passwordError} />
                         <div className="card-actions">
                             <button type="submit" className={`btn btn-primary mt-5 w-full rounded-lg shadow-none`}>
                                 Reset Password

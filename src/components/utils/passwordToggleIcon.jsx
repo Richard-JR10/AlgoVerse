@@ -28,4 +28,5 @@ PasswordToggleIcon.propTypes = {
     showPassword: PropTypes.bool,
     onToggle: PropTypes.func,
 }
+
 export default PasswordToggleIcon
