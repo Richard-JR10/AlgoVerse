@@ -42,7 +42,7 @@ const NavBar = ({ menuItems }) => {
 
 
     return (
-        <div className="navbar bg-base-100 sticky top-0 z-50 px-6 border-b-1">
+        <div className="navbar bg-base-100 sticky top-0 z-50 px-6 border-b-1 h-fit">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
@@ -74,17 +74,19 @@ const NavBar = ({ menuItems }) => {
                 )}
 
             </div>
-            <div className="navbar-center hidden lg:flex text-accent">
-                <ul className="menu menu-horizontal px-1">
-                    {menuItems.map((item, index) => (
-                        <li key={index}>
-                            <Link to={item.path} className={`${location.pathname === item.path && location.pathname.startsWith('/visualizer/') ? 'bg-primary' : ''}`}>
-                                {item.label}
-                            </Link>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+            {user && (
+                <div className="navbar-center hidden lg:flex text-accent">
+                    <ul className="menu menu-horizontal px-1">
+                        {menuItems.map((item, index) => (
+                            <li key={index}>
+                                <Link to={item.path} className={`${location.pathname === item.path && location.pathname.startsWith('/visualizer/') ? 'bg-primary' : ''}`}>
+                                    {item.label}
+                                </Link>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
             <div className="navbar-end">
                 {user ? (
                     <div className="relative" draggable="false" ref={dropdownRef}>
@@ -141,6 +143,13 @@ const NavBar = ({ menuItems }) => {
                                             </svg>
                                             Profile
                                         </button>
+                                        {user.admin && (
+                                            <button className="btn btn-ghost justify-start text-sm font-normal gap-6 border-none"
+                                                onClick={() => navigate('/admin')}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"><path fill="currentColor" d="M12 23C6.443 21.765 2 16.522 2 11V5l10-4l10 4v6c0 5.524-4.443 10.765-10 12M4 6v5a10.58 10.58 0 0 0 8 10a10.58 10.58 0 0 0 8-10V6l-8-3Z"/><circle cx="12" cy="8.5" r="2.5" fill="currentColor"/><path fill="currentColor" d="M7 15a5.78 5.78 0 0 0 5 3a5.78 5.78 0 0 0 5-3c-.025-1.896-3.342-3-5-3c-1.667 0-4.975 1.104-5 3"/></svg>
+                                                Admin
+                                            </button>
+                                        )}
                                         <button className="btn btn-ghost justify-start text-sm font-normal gap-6 border-none"
                                             onClick={handleSignOutClick}>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="24" viewBox="0 0 24 24">

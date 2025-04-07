@@ -9,6 +9,8 @@ import {
     resetPassword
 } from './AuthService.js';
 import app from '../config/firebase-config.js';
+import PropTypes from "prop-types";
+import {ErrorContext} from "../context/errorContext.jsx";
 
 const AuthContext = createContext();
 
@@ -16,17 +18,30 @@ export const AuthProvider = ({ children }) => {
     const auth = getAuth(app);
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const {setError} = useContext(ErrorContext);
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (authUser) => {
-            setUser(authUser);
-            if (loading) {
-                setLoading(false);
+        const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
+            if (authUser) {
+                try {
+                    // Fetch token with custom claims
+                    const tokenResult = await authUser.getIdTokenResult();
+                    setUser({
+                        ...authUser,
+                        admin: tokenResult.claims.admin || false, // Add admin claim
+                    });
+                } catch (error) {
+                    setError(error);
+                    setUser(authUser); // Fallback to basic user
+                }
+            } else {
+                setUser(null); // Explicitly set to null when logged out
             }
+            setLoading(false); // Done loading after auth state resolves
         });
 
         return () => unsubscribe();
-    }, [auth,loading]);
+    }, [auth]);
 
     const handleLogout = async () => {
         try {
@@ -91,6 +106,10 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     );
 };
+
+AuthProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+}
 
 export const useAuth = () => {
     return useContext(AuthContext);
