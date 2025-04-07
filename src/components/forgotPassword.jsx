@@ -1,19 +1,17 @@
-import { useEffect, useState } from 'react';
+import {useContext, useState} from 'react';
 import { Link } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
 import isEmail from "validator/lib/isEmail";
+import {ErrorContext} from "../context/errorContext.jsx";
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
-    const [error, setError] = useState(null);
+    const { setError } = useContext(ErrorContext);
     const [success, setSuccess] = useState(false);
     const { sendResetPassword } = useAuth();
 
     const isValidEmail = (email) => isEmail(email);
 
-    useEffect(() => {
-        console.log("error changed to:", error);
-    }, [error]);
 
     const handleSendResetPassword = async (e) => {
         e.preventDefault();
@@ -27,7 +25,6 @@ const ForgotPassword = () => {
             setSuccess(true);
         } catch (e) {
             setError(e.message);
-            console.error(e.message);
         }
     };
 
@@ -70,14 +67,6 @@ const ForgotPassword = () => {
                     </div>
                 </div>
             </div>
-            {error && (
-                <div className="absolute bottom-5 px-5 rounded-md">
-                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between">
-                        <span>{error}</span>
-                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

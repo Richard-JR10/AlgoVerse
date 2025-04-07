@@ -1,52 +1,40 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useContext, useState} from 'react';
 import { useAuth } from "../Auth/AuthContext.jsx";
 import {Link} from "react-router-dom";
 import isEmail from 'validator/lib/isEmail';
 import PasswordToggleIcon from "./utils/passwordToggleIcon.jsx";
+import {ErrorContext} from "../context/errorContext.jsx";
 
 const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [loginError, setLoginError] = useState(null);
-    const { loginWithEmail, loginWithGoogle, loading, error: authError} = useAuth();
+    const { setError } = useContext(ErrorContext);
+    const { loginWithEmail, loginWithGoogle, loading} = useAuth();
 
     // Email validation
     const isValidEmail = (email) => isEmail(email);
 
-    useEffect(() => {
-        if (authError && !loginError) setLoginError(authError);
-    }, [authError]);
-
-    useEffect(() => {
-        if (loginError) {
-            const timer = setTimeout(() => setLoginError(null), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [loginError]);
-
     // Google Login
     const handleGoogleAuth = useCallback(async (e) => {
         e.preventDefault();
-        setLoginError(null); // Clear previous error on new attempt
         try {
             await loginWithGoogle();
         } catch (e) {
-            setLoginError(`Google Login Error: ${e.message}`);
+            setError(`Google Login Error: ${e.message}`);
         }
     }, [loginWithGoogle]);
 
     const handleEmailLogin = async (e) => {
         e.preventDefault();
-        setLoginError(null); // Clear previous error on new attempt
         try {
             if (!isValidEmail(email)) {
-                setLoginError("Invalid email address.");
+                setError("Invalid email address.");
                 return;
             }
             await loginWithEmail(email, password);
         } catch (e) {
-            setLoginError(`Email Login Error: ${e.message}`);
+            setError(`Email Login Error: ${e.message}`);
         }
     };
 
@@ -128,14 +116,6 @@ const LoginForm = () => {
                     </div>
                 </div>
             </div>
-            {loginError && (
-                <div className="absolute bottom-5 px-5 rounded-md">
-                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between">
-                        <span>{loginError}</span>
-                        <button onClick={() => setLoginError(null)} className="btn btn-sm btn-ghost">×</button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

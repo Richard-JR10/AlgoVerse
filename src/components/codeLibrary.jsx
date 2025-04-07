@@ -1,13 +1,14 @@
-import React, {useEffect, useState} from 'react'
+import {useContext, useEffect, useState} from 'react'
 import NavBar from "./navBar.jsx";
 import CodeLibraryCard from "./codeLibraryCard.jsx";
 import {useAuth} from "../Auth/AuthContext.jsx";
 import axios from "axios";
+import {ErrorContext} from "../context/errorContext.jsx";
 
 const CodeLibrary = () => {
     const { auth } = useAuth();
     const [codeEntries, setCodeEntries] = useState([]);
-    const [error, setError] = useState(null);
+    const { setError } = useContext(ErrorContext);
     const codeMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },

@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import { AuthProvider, useAuth } from "./Auth/AuthContext.jsx";
+import { ErrorProvider } from "./context/errorContext.jsx";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import LoginForm from "./components/loginForm.jsx";
 import LogoutForm from "./components/logoutForm.jsx";
@@ -10,16 +11,20 @@ import ForgotPassword from "./components/forgotPassword.jsx";
 import ResetPassword from "./components/resetPassword.jsx";
 import Comparator from "./components/comparator.jsx";
 import CodeLibrary from "./components/codeLibrary.jsx";
+import ErrorPopup from "./components/errorPopup.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
 
 const App = () => (
-    <AuthProvider>
-        <BrowserRouter>
-            <AppRoutes />
-        </BrowserRouter>
-    </AuthProvider>
+    <ErrorProvider>
+        <AuthProvider>
+            <BrowserRouter>
+                <AppRoutes />
+                <ErrorPopup />
+            </BrowserRouter>
+        </AuthProvider>
+    </ErrorProvider>
 );
 
 const AppRoutes = React.memo(() => {

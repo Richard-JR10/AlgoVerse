@@ -1,7 +1,7 @@
-import React, {useEffect, useState} from 'react'
+import {useContext, useState} from 'react'
 import NavBar from "./navBar.jsx";
 import axios from 'axios';
-import { DotLottieReact } from '@lottiefiles/dotlottie-react';
+import {ErrorContext} from "../context/errorContext.jsx";
 
 const Comparator = () => {
     const [formData, setFormData] = useState({
@@ -10,7 +10,7 @@ const Comparator = () => {
     });
     const [result, setResult] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const { setError } = useContext(ErrorContext);
 
     const comparatorMenu = [
         { label: 'Visualizer', path: '/visualizer' },
@@ -58,19 +58,12 @@ const Comparator = () => {
             });
             setResult(response.data);
         } catch (err) {
-            console.log(err.response?.data?.detail);
             setError(err.response?.data?.detail || 'An error occurred while fetching data.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    useEffect(() => {
-        if (error) {
-            const timer = setTimeout(() => setError(null), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [error]);
 
 
     return (
@@ -214,14 +207,6 @@ const Comparator = () => {
 
                 )}
 
-                {error && (
-                    <div className="absolute bottom-5 px-5 rounded-md">
-                        <div className="alert alert-error rounded-md flex flex-row items-center justify-between">
-                            <span>{error}</span>
-                            <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
-                        </div>
-                    </div>
-                )}
             </div>
 
         </div>

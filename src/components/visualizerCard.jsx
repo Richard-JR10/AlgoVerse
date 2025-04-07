@@ -1,5 +1,6 @@
 import React from 'react'
 import {useNavigate} from "react-router-dom";
+import PropTypes from "prop-types";
 
 const VisualizerCard = ({ imgUrl, title, desc, btnUrl }) => {
     const navigate = useNavigate();
@@ -22,4 +23,13 @@ const VisualizerCard = ({ imgUrl, title, desc, btnUrl }) => {
             </div>
     )
 }
+
+VisualizerCard.propTypes = {
+    imgUrl: PropTypes.string,
+    title: PropTypes.string,
+    desc: PropTypes.string,
+    btnUrl: PropTypes.string,
+}
+
+
 export default VisualizerCard

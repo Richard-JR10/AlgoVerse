@@ -39,6 +39,23 @@ body {
   }
 }
 
+@theme {
+  --animate-fade-in-out: fade-in-out 3s ease-in-out forwards;
+  @keyframes fade-in-out {
+    0% {
+      opacity: 0;    /* Start invisible */
+    }
+    15% {
+      opacity: 1;    /* Peak visibility at halfway */
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;    /* End invisible */
+    }
+  }
+}
 
 @plugin "daisyui/theme" {
   name: "dark";

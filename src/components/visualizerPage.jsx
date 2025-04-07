@@ -1,4 +1,3 @@
-import React from 'react'
 import VisualizerCard from "./visualizerCard.jsx";
 import NavBar from "./navBar.jsx";
 
@@ -10,6 +9,7 @@ const VisualizerPage = () => {
         { label: 'Code Library', path: '/library' },
         { label: 'Examples', path: '/' }
     ];
+
 
     const cards = [
         { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*scHWqR8nUcqWCWGK", title: "Sorting Algorithm", desc: "Sorts", url: "/visualizer/bubblesort" },

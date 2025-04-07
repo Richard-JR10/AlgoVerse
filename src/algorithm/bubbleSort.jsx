@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, {useState, useEffect, useRef, useContext} from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../components/navBar.jsx";
+import {ErrorContext} from "../context/errorContext.jsx";
 
 const BubbleSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -9,7 +10,7 @@ const BubbleSort = () => {
     const [isSorting, setIsSorting] = useState(false);
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState(null);
+    const { setError } = useContext(ErrorContext);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
@@ -345,9 +346,6 @@ const BubbleSort = () => {
                         />
                         <span>Speed: {speed} ms</span>
                     </div>
-                </div>
-                <div className="flex justify-center items-center flex-col mt-2">
-                    {error && <p className="text-red-500">{error}</p>}
                 </div>
             </div>
         </div>
