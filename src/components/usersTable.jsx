@@ -6,7 +6,7 @@ const UsersTable = ({ usersInfo, onDelete, onDisable, onEnable, onCheckboxChange
 
     return (
         <div className="overflow-x-auto">
-            <table className="table flex just">
+            <table className="table flex">
                 {/* head */}
                 <thead>
                 <tr>

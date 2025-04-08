@@ -66,9 +66,13 @@ const CodeLibrary = () => {
                         <button className="btn btn-accent btn-sm rounded-3xl text-base-300">Show All</button>
                     </div>
                 </div>
-                {codeEntries.map(entry => (
-                    <CodeLibraryCard key={entry.id} cardInfo={entry} />
-                ))}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-10">
+                    {codeEntries.map(entry => (
+                        <div key={entry.id} className="rounded-lg flex flex-col">
+                            <CodeLibraryCard cardInfo={entry} />
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
 

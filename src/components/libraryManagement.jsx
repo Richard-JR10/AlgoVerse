@@ -1,0 +1,137 @@
+import {useContext, useEffect, useState} from 'react'
+import {useAuth} from "../Auth/AuthContext.jsx";
+import {ErrorContext} from "../context/errorContext.jsx";
+import axios from "axios";
+import LibraryTable from "./libraryTable.jsx";
+import LibraryAddData from "./libraryAddData.jsx";
+
+const LibraryManagement = () => {
+    const { auth } = useAuth();
+    const { setError } = useContext(ErrorContext);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedId, setSelectedId] = useState([]);
+    const [data, setData] = useState([]);
+    const contentsPerPage = 10;
+    const baseURL = "http://localhost:3000";
+
+    useEffect(() => {
+        const fetchLibraryData = async () => {
+            if (!auth.currentUser) return;
+            const token = await auth.currentUser.getIdToken();
+            
+            try {
+                const response = await axios.get(`${baseURL}/api/library`,{
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    }
+                });
+                setData(response.data);
+                setError(null);
+            } catch (err) {
+                if (err.response) {
+                    setError(err.response.data.error || 'Failed to fetch code entries');
+                } else {
+                    setError(err.message || 'An unexpected error occurred');
+                }
+            }
+        }
+        fetchLibraryData();
+    }, [auth.currentUser])
+
+    const handleAddData = async(data) => {
+        const token = await auth.currentUser.getIdToken();
+        try{
+            const response = await axios.post(
+                `${baseURL}/api/addLibrary`,
+                data, // Send the data directly
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+            const newItem = {
+                id: response.data.id, // Get the id from the backend response
+                ...data, // Spread the original libraryData (title, category, description, codeData)
+            };
+            setData((prev) => [...prev, newItem]);
+            setError(null);
+        } catch (err) {
+            setError(err.response?.data.error || 'Failed to add data');
+        }
+    }
+
+    const handleCheckboxChange = (id) => {
+        setSelectedId((prev) =>
+            prev.includes(id) ? prev.filter((item) => item !== id) : [...prev,id]
+        );
+    }
+
+    const handleSelectAll = (isChecked) => {
+        if (isChecked) {
+            setSelectedId(data.map((item) => item.id));
+        } else {
+            setSelectedId([]);
+        }
+    }
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this data?')) return;
+        const token = await auth.currentUser.getIdToken();
+        try {
+            await axios.delete(
+                `${baseURL}/api/library/delete`,{
+                data: {id: [id]},
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            });
+            setData(data.filter((item) => item.id !== id));
+            setError(null);
+        } catch (err) {
+            setError(err.response?.data.error || 'Failed to delete data');
+        }
+    }
+
+    const handleBulkDisable = async () => {
+        if (selectedId.length === 0) return setError('No users selected');
+        if (!confirm(`Delete ${selectedId.length} data? This is permanent!`)) return;
+        const token = await auth.currentUser.getIdToken();
+        try {
+            await axios.delete(
+                `${baseURL}/api/library/delete`,{
+                    data: {id: selectedId},
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                });
+            setData((prevItems) => prevItems.filter((i) => !selectedId.includes(i.id)));
+            setSelectedId([]);
+            setError(null);
+        } catch (err) {
+            setError(err.response?.data.error || 'Failed to delete data');
+        }
+    }
+
+
+    return (
+        <div className="flex-3">
+            <div className="flex items-center gap-3 mb-2">
+                <h1 className="font-bold text-xl">Library Management</h1>
+                <LibraryAddData onAddData={handleAddData}/>
+                <button
+                    className="btn btn-error"
+                    onClick={handleBulkDisable}
+                    disabled={selectedId.length === 0}
+                >
+                    Delete Selected
+                </button>
+            </div>
+            <LibraryTable
+                libraryInfo={data}
+                onCheckboxChange={handleCheckboxChange}
+                selectedIds={selectedId}
+                onSelectAll={handleSelectAll}
+                onDelete={handleDelete}
+            />
+        </div>
+    )
+}
+export default LibraryManagement

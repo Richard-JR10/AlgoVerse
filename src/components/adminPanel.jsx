@@ -1,4 +1,4 @@
-import React from 'react'
+import 'react'
 import {Link, Outlet} from "react-router-dom";
 import NavBar from "./navBar.jsx";
 
@@ -6,7 +6,7 @@ const AdminPanel = () => {
 
 
     return (
-        <div className="scrollbar-hide overflow-auto h-screen bg-base-200 flex flex-row">
+        <div className="min-h-screen bg-base-200 flex flex-row">
             <div className="flex h-screen">
                 {/* Sidebar */}
                 <div className="flex flex-col w-60 bg-base-300 text-base-content">
@@ -27,9 +27,6 @@ const AdminPanel = () => {
                     <Outlet /> {/* Renders UserManagement below Navbar */}
                 </div>
             </div>
-
-
-
         </div>
     )
 }
