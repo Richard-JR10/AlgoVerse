@@ -46,6 +46,10 @@ body.modal-open {
     background: radial-gradient(circle at right top, #462759, #160C1C);
   }
 
+  .bg-nightOwl {
+    background: rgb(1, 22, 39);
+  }
+
   .hide-scrollbar {
     /* Firefox */
     scrollbar-width: none;
@@ -56,6 +60,11 @@ body.modal-open {
   /* Chrome, Safari, Edge */
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+
+  .no-color-change-when-disabled:disabled {
+    background-color: inherit !important;
+    opacity: 1;
   }
 }
 

@@ -9,6 +9,12 @@ const CodeLibrary = () => {
     const { auth } = useAuth();
     const [codeEntries, setCodeEntries] = useState([]);
     const { setError } = useContext(ErrorContext);
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeFilter, setActiveFilter] = useState('');
+    const [filteredEntries, setFilteredEntries] = useState([]);
+    const [isFiltering, setIsFiltering] = useState(false);
+
     const codeMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },
@@ -34,6 +40,7 @@ const CodeLibrary = () => {
                 });
 
                 setCodeEntries(response.data);
+                setFilteredEntries(response.data); // Initialize filtered entries with all entries
                 setError(null);
             } catch (err) {
                 console.error('Fetch error:', err);
@@ -48,6 +55,59 @@ const CodeLibrary = () => {
         fetchCodeEntries();
     }, []);
 
+    useEffect(() => {
+        // Check if any filtering is active
+        const filtering = searchTerm.trim() !== '' || activeFilter !== '';
+        setIsFiltering(filtering);
+
+        applySearchAndFilter();
+    }, [searchTerm, activeFilter, codeEntries]);
+
+    const applySearchAndFilter = () => {
+        // Only proceed if we have code entries to filter
+        if (codeEntries.length === 0) return;
+
+        // If no search or filter is active, show all entries
+        if (searchTerm.trim() === '' && activeFilter === '') {
+            setFilteredEntries(codeEntries);
+            return;
+        }
+
+        let results = [...codeEntries];
+
+        // Apply search
+        if (searchTerm.trim() !== '') {
+            const term = searchTerm.toLowerCase();
+            results = results.filter(entry =>
+                entry.title?.toLowerCase().includes(term) ||
+                entry.description?.toLowerCase().includes(term) ||
+                entry.code?.toLowerCase().includes(term)
+            );
+        }
+
+        // Apply category filter
+        if (activeFilter !== '') {
+            results = results.filter(entry => entry.category === activeFilter);
+        }
+
+        setFilteredEntries(results);
+    }
+
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+    }
+
+    const handleFilterChange = (filter) => {
+        setActiveFilter(filter);
+    };
+
+    const handleResetFilters = () => {
+        setSearchTerm('');
+        setActiveFilter('');
+    }
+
+    // Determine which entries to display
+    const displayEntries = isFiltering ? filteredEntries : codeEntries;
 
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
@@ -56,26 +116,50 @@ const CodeLibrary = () => {
                 <div className="flex flex-col items-center justify-center max-w-120 w-full">
                     <label className="input w-full">
                         <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
-                        <input type="search" required placeholder="Search"/>
+                        <input
+                            type="search"
+                            placeholder="Search"
+                            value={searchTerm}
+                            onChange={handleSearch}
+                        />
                     </label>
-                    <div className="flex flex-row gap-5 mt-5">
-                        <button className="btn btn-accent btn-sm rounded-3xl text-base-300">Sorting</button>
-                        <button className="btn btn-accent btn-sm rounded-3xl text-base-300">Search</button>
-                        <button className="btn btn-accent btn-sm rounded-3xl text-base-300">Graph</button>
-                        <button className="btn btn-accent btn-sm rounded-3xl text-base-300">Recursion</button>
-                        <button className="btn btn-accent btn-sm rounded-3xl text-base-300">Show All</button>
+                    <form className="filter mt-5 flex justify-center items-center">
+                        <input
+                            className="btn btn-square btn-error"
+                            type="reset"
+                            value="✕"
+                            onClick={handleResetFilters}
+                        />
+
+                        {['Sorting', 'Search', 'Graph', 'Recursion'].map(filter => (
+                            <input
+                                key={filter}
+                                className="btn btn-accent btn-sm rounded-3xl text-base-300 shadow-sm ml-2"
+                                type="radio"
+                                name="frameworks"
+                                aria-label={filter}
+                                onClick={() => handleFilterChange(filter)}
+                            />
+                        ))}
+                    </form>
+                </div>
+
+                {isFiltering && filteredEntries.length === 0 ? (
+                    <div className="mt-10 text-center">
+                        <h3 className="text-xl">No matching code entries found</h3>
+                        <p className="mt-2">Try adjusting your search or filters</p>
                     </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-10">
-                    {codeEntries.map(entry => (
-                        <div key={entry.id} className="rounded-lg flex flex-col">
-                            <CodeLibraryCard cardInfo={entry} />
-                        </div>
-                    ))}
-                </div>
+                ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-10">
+                        {displayEntries.map(entry => (
+                            <div key={entry.id} className="rounded-lg flex flex-col">
+                                <CodeLibraryCard cardInfo={entry} />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
-
     )
 }
 export default CodeLibrary

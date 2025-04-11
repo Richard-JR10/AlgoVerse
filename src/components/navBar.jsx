@@ -1,17 +1,17 @@
 import React, {useEffect, useRef, useState} from 'react'
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../Auth/AuthContext.jsx";
+import ProfileImage from "./utils/ProfileImage.jsx";
 
 const NavBar = ({ menuItems }) => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const [loaded, setLoaded] = useState(false);
-
-    const photoURL = user?.photoURL || 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp';
 
     const location = useLocation();
+
+
 
     const handleProfileClick = () => {
         setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown on click
@@ -92,13 +92,7 @@ const NavBar = ({ menuItems }) => {
                     <div className="relative" draggable="false" ref={dropdownRef}>
                         <button className="avatar cursor-pointer" onClick={handleProfileClick}>
                             <div className="w-10 rounded-full">
-                                {!loaded && <img src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp" alt="Loading" />}
-                                <img
-                                    src={photoURL}
-                                    alt="User avatar"
-                                    onLoad={() => setLoaded(true)}
-                                    draggable="false"
-                                />
+                                <ProfileImage src={user.photoURL} size="10" type="circle"/>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     className="h-3 w-3 fill-accent absolute bottom-1 right-1 transform translate-x-1 translate-y-1"
@@ -114,11 +108,7 @@ const NavBar = ({ menuItems }) => {
                                 <div className="card-body w-full h-fit gap-0 p-4">
 
                                     <div className="flex flex-row items-center pr-4 w-fit">
-                                        <div className="avatar">
-                                            <div className="w-15 rounded-full">
-                                                <img src={photoURL} alt="User avatar"/>
-                                            </div>
-                                        </div>
+                                        <ProfileImage src={user.photoURL} size="16" type="circle"/>
                                         <div className="w-full pl-3">
                                             <div className="font-semibold text-xl whitespace-nowrap">{user.displayName}</div>
                                             <div className="text-sm w-fit">{user.email}</div>

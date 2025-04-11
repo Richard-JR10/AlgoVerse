@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from "prop-types";
+import ProfileImage from "./utils/ProfileImage.jsx";
 
 const UsersTable = ({ usersInfo, onDelete, onDisable, onEnable, onCheckboxChange, selectedUids, onSelectAll, onSetAdmin, onRemoveAdmin }) => {
     const allSelected = usersInfo.length > 0 && usersInfo.every((user) => selectedUids.includes(user.uid));
@@ -39,13 +40,7 @@ const UsersTable = ({ usersInfo, onDelete, onDisable, onEnable, onCheckboxChange
                             </th>
                             <td>
                                 <div className="flex items-center gap-3">
-                                    <div className="avatar">
-                                        <div className="mask mask-squircle h-12 w-12">
-                                            <img
-                                                src={user.photoURL}
-                                                alt="Avatar" />
-                                        </div>
-                                    </div>
+                                    <ProfileImage src={user.photoURL} size="12" type="square"/>
                                     <div>
                                         <div className="font-bold">{user.displayName}</div>
                                         <div className="text-sm opacity-50">{user.email}</div>
