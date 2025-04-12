@@ -1,7 +1,8 @@
 import React from 'react'
 import PropTypes from "prop-types";
+import LibraryEditData from "./libraryEditData.jsx";
 
-const LibraryTable = ({ libraryInfo, onDelete, onCheckboxChange, selectedIds, onSelectAll }) => {
+const LibraryTable = ({ libraryInfo, onDelete, onCheckboxChange, selectedIds, onSelectAll, onEditData }) => {
     const allSelected = libraryInfo.length > 0 && libraryInfo.every((info) => selectedIds.includes(info.id));
 
     return (
@@ -75,16 +76,11 @@ const LibraryTable = ({ libraryInfo, onDelete, onCheckboxChange, selectedIds, on
                                 )}
                             </div>
                         </td>
-                        <td>
+                        <td className="flex flex-row">
                             <button className="btn btn-error mr-2" onClick={() => onDelete(content.id)}>
                                 Delete
                             </button>
-                            <button className="btn btn-primary">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                                    <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 21h16M5.666 13.187A2.28 2.28 0 0 0 5 14.797V18h3.223c.604 0 1.183-.24 1.61-.668l9.5-9.505a2.28 2.28 0 0 0 0-3.22l-.938-.94a2.277 2.277 0 0 0-3.222.001z" />
-                                </svg>
-                                Edit
-                            </button>
+                            <LibraryEditData content={content} onEditData={onEditData} />
                         </td>
                     </tr>
                 ))}
@@ -113,6 +109,7 @@ LibraryTable.propTypes = {
     onSelectAll: PropTypes.func.isRequired,
     onCheckboxChange: PropTypes.func.isRequired,
     selectedIds: PropTypes.arrayOf(PropTypes.string).isRequired,
+    onEditData: PropTypes.func.isRequired,
 };
 
 export default LibraryTable

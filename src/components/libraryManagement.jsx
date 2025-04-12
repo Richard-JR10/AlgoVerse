@@ -62,6 +62,39 @@ const LibraryManagement = () => {
         }
     }
 
+    const handleEditData = async(id,data) => {
+        const token = await auth.currentUser.getIdToken();
+
+        try {
+            await axios.put(
+                `${baseURL}/api/updateLibrary`,
+                {
+                    id: id,
+                    ...data
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                }
+            );
+
+            // Update the parent component
+            setData(prevData =>
+                prevData.map(item =>
+                    item.id === id
+                        ? { id: id, ...data }
+                        : item
+                )
+            );
+
+            setError(null);
+        } catch (err) {
+            setError(err.response?.data.error || 'Failed to update data');
+        }
+    }
+
     const handleCheckboxChange = (id) => {
         setSelectedId((prev) =>
             prev.includes(id) ? prev.filter((item) => item !== id) : [...prev,id]
@@ -130,6 +163,7 @@ const LibraryManagement = () => {
                 selectedIds={selectedId}
                 onSelectAll={handleSelectAll}
                 onDelete={handleDelete}
+                onEditData={handleEditData}
             />
         </div>
     )
