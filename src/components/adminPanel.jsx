@@ -15,7 +15,7 @@ const AdminPanel = () => {
                         <li><Link to="/admin/users">Users</Link></li>
                         <li><Link to="/admin/challenges">Manage Challenges</Link></li>
                         <li><Link to="/admin/library">Manage Library</Link></li>
-                        <li><Link to="/admin/examples">Manage Examples</Link></li>
+                        <li><Link to="/admin/example">Manage Examples</Link></li>
                     </ul>
                 </div>
 
