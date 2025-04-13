@@ -1,6 +1,5 @@
-import 'react'
-import PropTypes from "prop-types";
 import {useState} from "react";
+import PropTypes from "prop-types";
 
 const LibraryEditData = ({content, onEditData}) => {
     const {id, title, category, description, codeData } = content;
@@ -11,7 +10,6 @@ const LibraryEditData = ({content, onEditData}) => {
         title: title,
         category: category,
         description: description,
-        codeData: [codeEntries],
     });
 
     const handleInputChange = (e) => {

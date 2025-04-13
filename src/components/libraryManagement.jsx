@@ -143,6 +143,16 @@ const LibraryManagement = () => {
         }
     }
 
+    // Pagination logic
+    const indexOfLastUser = currentPage * contentsPerPage;
+    const indexOfFirstUser = indexOfLastUser - contentsPerPage;
+    const currentData = data.slice(indexOfFirstUser, indexOfLastUser);
+    const totalPages = Math.ceil(data.length / contentsPerPage);
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+    };
+
 
     return (
         <div className="flex-3">
@@ -158,13 +168,30 @@ const LibraryManagement = () => {
                 </button>
             </div>
             <LibraryTable
-                libraryInfo={data}
+                libraryInfo={currentData}
                 onCheckboxChange={handleCheckboxChange}
                 selectedIds={selectedId}
                 onSelectAll={handleSelectAll}
                 onDelete={handleDelete}
                 onEditData={handleEditData}
             />
+            {totalPages > 1 && (
+                <div className="flex justify-center mt-4">
+                    <div className="join">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <input
+                                key={page}
+                                className="join-item btn btn-square"
+                                type="radio"
+                                name="pagination"
+                                aria-label={page.toString()}
+                                checked={currentPage === page}
+                                onChange={() => handlePageChange(page)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
