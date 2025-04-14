@@ -1,13 +1,15 @@
-import {useContext, useEffect, useState} from 'react'
+import 'react'
 import NavBar from "./navBar.jsx";
-import CodeLibraryCard from "./codeLibraryCard.jsx";
+import {useContext, useEffect, useState} from "react";
 import {useAuth} from "../Auth/AuthContext.jsx";
-import axios from "axios";
 import {ErrorContext} from "../context/errorContext.jsx";
+import axios from "axios";
+import CodeLibraryCard from "./codeLibraryCard.jsx";
+import ExampleCard from "./exampleCard.jsx";
 
-const CodeLibrary = () => {
+const Example = () => {
     const { auth } = useAuth();
-    const [codeEntries, setCodeEntries] = useState([]);
+    const [exampleEntries, setExampleEntries] = useState([]);
     const { setError } = useContext(ErrorContext);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -15,7 +17,7 @@ const CodeLibrary = () => {
     const [filteredEntries, setFilteredEntries] = useState([]);
     const [isFiltering, setIsFiltering] = useState(false);
 
-    const codeMenu = [
+    const exampleMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },
         { label: 'Challenges', path: '/' },
@@ -24,7 +26,7 @@ const CodeLibrary = () => {
     ];
 
     useEffect(() => {
-        const fetchCodeEntries = async () => {
+        const fetchExampleEntries = async () => {
             try {
                 if (!auth.currentUser) {
                     setError('No user is logged in');
@@ -33,13 +35,13 @@ const CodeLibrary = () => {
 
                 const token = await auth.currentUser.getIdToken();
 
-                const response = await axios.get('http://localhost:3000/api/library', {
+                const response = await axios.get('http://localhost:3000/api/example', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
                 });
 
-                setCodeEntries(response.data);
+                setExampleEntries(response.data);
                 setFilteredEntries(response.data); // Initialize filtered entries with all entries
                 setError(null);
             } catch (err) {
@@ -52,7 +54,7 @@ const CodeLibrary = () => {
                 }
             }
         };
-        fetchCodeEntries();
+        fetchExampleEntries();
     }, []);
 
     useEffect(() => {
@@ -61,19 +63,19 @@ const CodeLibrary = () => {
         setIsFiltering(filtering);
 
         applySearchAndFilter();
-    }, [searchTerm, activeFilter, codeEntries]);
+    }, [searchTerm, activeFilter, exampleEntries]);
 
     const applySearchAndFilter = () => {
         // Only proceed if we have code entries to filter
-        if (codeEntries.length === 0) return;
+        if (exampleEntries.length === 0) return;
 
         // If no search or filter is active, show all entries
         if (searchTerm.trim() === '' && activeFilter === '') {
-            setFilteredEntries(codeEntries);
+            setFilteredEntries(exampleEntries);
             return;
         }
 
-        let results = [...codeEntries];
+        let results = [...exampleEntries];
 
         // Apply search
         if (searchTerm.trim() !== '') {
@@ -106,11 +108,11 @@ const CodeLibrary = () => {
     }
 
     // Determine which entries to display
-    const displayEntries = isFiltering ? filteredEntries : codeEntries;
+    const displayEntries = isFiltering ? filteredEntries : exampleEntries;
 
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
-            <NavBar menuItems={codeMenu} />
+            <NavBar menuItems={exampleMenu} />
             <div className="flex flex-col justify-center items-center mt-25">
                 <div className="flex flex-col items-center justify-center max-w-120 w-full">
                     <label className="input w-full">
@@ -145,20 +147,21 @@ const CodeLibrary = () => {
 
                 {isFiltering && filteredEntries.length === 0 ? (
                     <div className="mt-10 text-center">
-                        <h3 className="text-xl">No matching code entries found</h3>
+                        <h3 className="text-xl">No matching example entries found</h3>
                         <p className="mt-2">Try adjusting your search or filters</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-10">
                         {displayEntries.map(entry => (
                             <div key={entry.id} className="rounded-lg flex flex-col">
-                                <CodeLibraryCard cardInfo={entry} />
+                                <ExampleCard cardInfo={entry} />
                             </div>
                         ))}
                     </div>
                 )}
+
             </div>
         </div>
     )
 }
-export default CodeLibrary
+export default Example

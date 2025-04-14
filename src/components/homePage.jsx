@@ -8,7 +8,7 @@ const HomePage = () => {
         { label: 'Comparator', path: '/comparator' },
         { label: 'Challenges', path: '/' },
         { label: 'Code Library', path: '/library' },
-        { label: 'Examples', path: '/' }
+        { label: 'Examples', path: '/example' }
     ];
 
     const { setError } = useContext(ErrorContext);

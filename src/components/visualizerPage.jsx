@@ -7,7 +7,7 @@ const VisualizerPage = () => {
         { label: 'Comparator', path: '/comparator' },
         { label: 'Challenges', path: '/' },
         { label: 'Code Library', path: '/library' },
-        { label: 'Examples', path: '/' }
+        { label: 'Examples', path: '/example' }
     ];
 
 
