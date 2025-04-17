@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef, useContext} from 'react';
+import {useState, useEffect, useRef, useContext} from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../components/navBar.jsx";
@@ -14,15 +14,16 @@ const BubbleSort = () => {
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
+    const [size, setSize] = useState(10);
     const [width, setWidth] = useState();
 
     const sortingMenu = [
-        { label: 'Bubble Sort', path: '/visualizer/bubblesort' },
-        { label: 'Merge Sort', path: '/' },
-        { label: 'Selection Sort', path: '/' },
-        { label: 'Insertion Sort', path: '/' },
-        { label: 'Quick Sort', path: '/' },
-        { label: 'Heap Sort', path: '/' }
+        { label: 'Bubble Sort', path: '/visualizer/bubble' },
+        { label: 'Merge Sort', path: '/visualizer/merge' },
+        { label: 'Selection Sort', path: '/visualizer/select' },
+        { label: 'Insertion Sort', path: '/visualizer/insert' },
+        { label: 'Quick Sort', path: '/visualizer/quick' },
+        { label: 'Heap Sort', path: '/visualizer/heap' }
     ];
 
     // Sorting colors
@@ -38,20 +39,21 @@ const BubbleSort = () => {
         setInputValue(e.target.value);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSizeInput = (e) => {
         e.preventDefault();
+        setSize(e.target.value);
+    };
 
-        if (isSubmitting) return;
-
+    const animateBars = async (input) => {
         try {
-            const stringArray = inputValue.split(",").map(item => item.trim()).filter(Boolean);
+            const stringArray = input;
             if (stringArray.length === 0) {
-                throw new Error("Please enter at least one number");
+                setError("Please enter at least one number");
             }
             const numArray = stringArray.map((numStr, index) => {
                 const num = parseInt(numStr, 10);
                 if (isNaN(num)) {
-                    throw new Error(`Invalid number at position ${index + 1}: "${numStr}"`);
+                    setError(`Invalid number at position ${index + 1}: "${numStr}"`);
                 }
                 return num;
             });
@@ -84,7 +86,53 @@ const BubbleSort = () => {
             resetHighlight();
             isCancelledRef.current = false;
         }
+    }
+
+    function generateRandomArray(size) {
+        // Validate input
+        const sizeInput = Number(size);
+        if (!Number.isInteger(sizeInput) || sizeInput < 0) {
+            setError("Size must be a non-negative integer");
+            return;
+        }
+        // Create an array of the specified size filled with random values between 0 and 1
+        const randomArray = Array(sizeInput).fill(0).map(() => Math.floor(Math.random() * 100));
+
+        return randomArray;
+    }
+
+    const handleRandom = async (e) => {
+        if (e) e.preventDefault();
+        if (isSubmitting) return;
+
+        const input = generateRandomArray(size);
+        await animateBars(input);
+
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (isSubmitting) return;
+        const input = inputValue.split(",").map(item => item.trim()).filter(Boolean);
+        await animateBars(input);
     };
+
+    const isInitializedRef = useRef(false);
+
+// Update your useEffect to handle SVG availability
+    useEffect(() => {
+        const initializeVisualization = async () => {
+            if (svgRef.current && !isInitializedRef.current) {
+                isInitializedRef.current = true;
+                await handleRandom();
+            }
+        };
+
+        // Wait a small amount of time to ensure the SVG is rendered
+        const timer = setTimeout(initializeVisualization, 100);
+
+        return () => clearTimeout(timer);
+    }, []);
 
 
 
@@ -97,7 +145,12 @@ const BubbleSort = () => {
         const barSpacing = 10;
         const minBarHeight = 2;
 
+        if (svg.selectAll(".bar-group").size() !== arr.length) {
+            svg.selectAll(".bar-group").remove();
+        }
+
         svg.attr("viewBox", `0 0 ${width} ${height + margin.top + margin.bottom}`);
+
 
         const yScale = d3.scaleLinear()
             .domain([d3.min([0, ...arr]) - 1, d3.max(arr)])
@@ -256,7 +309,7 @@ const BubbleSort = () => {
                 .end()
         ]);
 
-        drawBars(array, false);
+        await drawBars(array, false);
     };
 
     const animateSortSteps = async (steps) => {
@@ -298,7 +351,7 @@ const BubbleSort = () => {
 
                 await animateSortSteps(data.steps);
             } catch (err) {
-                setError(err.response?.data?.detail);
+                setError(err.response?.data.error || 'Failed to process');
             }
             resetHighlight();
             setIsSorting(false);
@@ -317,23 +370,37 @@ const BubbleSort = () => {
             </div>
             <div className="flex flex-col items-center mb-4">
                 <div className="flex justify-center items-center flex-row">
+                    <button className="btn mr-2" onClick={handleRandom}>
+                        Random
+                    </button>
+                    <button className="btn mr-2">
+                        Sorted
+                    </button>
                     <button className="btn mr-4" onClick={startSorting} disabled={isSorting}>
                         Start Sorting
                     </button>
-                    <div className="relative flex items-center w-full max-w-md mr-4">
+                    <div className="join flex items-center w-full max-w-md mr-4">
                         <input
                             type="text"
                             value={inputValue}
-                            className="input w-full pr-16"
+                            className="input join-item w-full"
                             onChange={handleInput}
                         />
                         <button
-                            className="btn absolute right-0 top-0 h-full px-4"
+                            className="btn join-item"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
                             Go
                         </button>
+                    </div>
+                    <div className="join flex items-center w-full max-w-md mr-4">
+                        <input
+                            type="number"
+                            value={size}
+                            className="input join-item w-full"
+                            onChange={handleSizeInput}
+                        />
                     </div>
                     <div className="flex justify-center w-full max-w-md">
                         <input
