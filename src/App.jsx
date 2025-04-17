@@ -17,6 +17,7 @@ import UserManagement from "./components/userManagement.jsx";
 import LibraryManagement from "./components/libraryManagement.jsx";
 import ExampleManagement from "./components/exampleManagement.jsx";
 import Example from "./components/example.jsx";
+import SelectSort from "./algorithm/selectSort.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
@@ -79,6 +80,7 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/bubblesort" element={<BubbleSort />} />
                     <Route path="/visualizer/mergesort" element={<MergeSort />} />
                     <Route path="/visualizer/quicksort" element={<QuickSort />} />
+                    <Route path="/visualizer/selectionsort" element={<SelectSort/>} />
                 </Route>
 
                 <Route element={<AdminRoute />}>
