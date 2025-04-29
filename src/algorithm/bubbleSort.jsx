@@ -18,10 +18,10 @@ const BubbleSort = () => {
     const [width, setWidth] = useState();
 
     const sortingMenu = [
-        { label: 'Bubble Sort', path: '/visualizer/bubble' },
+        { label: 'Bubble Sort', path: '/visualizer/bubblesort' },
         { label: 'Merge Sort', path: '/visualizer/merge' },
-        { label: 'Selection Sort', path: '/visualizer/select' },
-        { label: 'Insertion Sort', path: '/visualizer/insert' },
+        { label: 'Selection Sort', path: '/visualizer/selectionsort' },
+        { label: 'Insertion Sort', path: '/visualizer/insertionsort' },
         { label: 'Quick Sort', path: '/visualizer/quick' },
         { label: 'Heap Sort', path: '/visualizer/heap' }
     ];
