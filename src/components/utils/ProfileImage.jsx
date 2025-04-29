@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 
 const ProfileImage = ({ src, size, type }) => {
     const [loaded, setLoaded] = useState(false);
-    console.log(src)
     const photoURL = src || 'https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp';
 
     const sizeClasses = {
