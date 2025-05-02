@@ -124,7 +124,8 @@ const NavBar = ({ menuItems }) => {
                                             </svg>
                                             Home
                                         </button>
-                                        <button className="btn btn-ghost justify-start text-sm font-normal gap-6 border-none">
+                                        <button className="btn btn-ghost justify-start text-sm font-normal gap-6 border-none"
+                                            onClick={() => navigate('/profile')}>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="24" viewBox="0 0 24 24">
                                                 <g fill="currentColor" fillRule="evenodd" clipRule="evenodd">
                                                     <path d="M16 9a4 4 0 1 1-8 0a4 4 0 0 1 8 0m-2 0a2 2 0 1 1-4 0a2 2 0 0 1 4 0" />
