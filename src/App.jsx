@@ -19,6 +19,8 @@ import ExampleManagement from "./components/exampleManagement.jsx";
 import Example from "./components/example.jsx";
 import SelectSort from "./algorithm/selectSort.jsx";
 import InsertSort from "./algorithm/insertSort.jsx";
+import Linear from "./algorithm/search/linear.jsx";
+import ProfilePage from "./components/profilePage.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
@@ -77,12 +79,15 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer" element={<VisualizerPage />} />
                     <Route path="/library" element={<CodeLibrary />} />
                     <Route path="/example" element={<Example />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/logout" element={<LogoutForm />} />
                     <Route path="/visualizer/bubblesort" element={<BubbleSort />} />
                     <Route path="/visualizer/mergesort" element={<MergeSort />} />
                     <Route path="/visualizer/quicksort" element={<QuickSort />} />
                     <Route path="/visualizer/selectionsort" element={<SelectSort/>} />
                     <Route path="/visualizer/insertionsort" element={<InsertSort/>} />
+                    <Route path="/visualizer/merge" element={<MergeSort/>} />
+                    <Route path="/visualizer/linear" element={<Linear/>} />
                 </Route>
 
                 <Route element={<AdminRoute />}>
