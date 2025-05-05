@@ -1,4 +1,15 @@
-import {getAuth, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, signOut, updateProfile, sendPasswordResetEmail, confirmPasswordReset} from "firebase/auth";
+import {
+    getAuth,
+    deleteUser,
+    GoogleAuthProvider,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPopup,
+    signOut,
+    updateProfile,
+    sendPasswordResetEmail,
+    confirmPasswordReset
+} from "firebase/auth";
 import app from "../config/firebase-config.js"
 
 const auth = getAuth(app);
@@ -13,7 +24,6 @@ const loginWithEmail = async (email,password) => {
     }
 };
 
-// Logs in with Google through popup, returns user object or throws error
 const loginWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
 
@@ -47,6 +57,24 @@ const sendResetPassword = async (email) => {
     }
 };
 
+const deleteAccount = async (user) => {
+    try {
+        // Make sure user is defined and has necessary Firebase methods
+        if (!user || typeof user.delete !== 'function') {
+            throw new Error('Invalid user object. Cannot delete account.');
+        }
+
+        // Call the Firebase deleteUser method on the user object directly
+        await user.delete();
+
+        console.log('Account deleted successfully');
+        return true;
+    } catch (e) {
+        console.error('Error deleting account:', e);
+        throw e;
+    }
+}
+
 const resetPassword = async (oobCode, newPassword) => {
     try {
         await confirmPasswordReset(auth, oobCode, newPassword);
@@ -64,4 +92,4 @@ const logout = async () => {
     }
 }
 
-export { loginWithEmail, loginWithGoogle, signupWithEmail, sendResetPassword, logout, resetPassword };
+export { loginWithEmail, loginWithGoogle, signupWithEmail, sendResetPassword, logout, resetPassword, deleteAccount };

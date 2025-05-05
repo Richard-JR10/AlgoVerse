@@ -6,7 +6,8 @@ import {
     signupWithEmail,
     logout,
     sendResetPassword,
-    resetPassword
+    resetPassword,
+    deleteAccount
 } from './AuthService.js';
 import app from '../config/firebase-config.js';
 import PropTypes from "prop-types";
@@ -67,9 +68,8 @@ export const AuthProvider = ({ children }) => {
         try {
             await loginWithGoogle();
         } catch (e) {
-            throw e;
-        } finally {
             setLoading(false);
+            throw e;
         }
     };
 
@@ -100,8 +100,27 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const handleDeleteAccount = async (user) => {
+        try {
+            // Make sure user is defined
+            if (!user) {
+                throw new Error('No user provided for deletion');
+            }
+
+            // Call the deleteAccount function from AuthService
+            await deleteAccount(user);
+
+            // The onAuthStateChanged observer will automatically update state
+            // when the user is deleted
+            return true;
+        } catch (e) {
+            console.error('Error in handleDeleteAccount:', e);
+            throw e;
+        }
+    }
+
     return (
-        <AuthContext.Provider value={{ auth, user, loading, logout: handleLogout, loginWithGoogle: googleLogin, loginWithEmail: emailLogin, signupWithEmail: handleSignupWithEmail, sendResetPassword: handleSendResetPassword , resetPassword: handleResetPassword } }>
+        <AuthContext.Provider value={{ auth, user, loading, logout: handleLogout, loginWithGoogle: googleLogin, loginWithEmail: emailLogin, signupWithEmail: handleSignupWithEmail, sendResetPassword: handleSendResetPassword , resetPassword: handleResetPassword, deleteUser: handleDeleteAccount } }>
             {children}
         </AuthContext.Provider>
     );
