@@ -14,8 +14,8 @@ const Linear = () => {
     const timeoutIdsRef = useRef([]); // Store timeout IDs for animation
 
     const searchMenu = [
-        { label: 'Linear Search', path: '/visualizer/linear' },
-        { label: 'Binary Search', path: '/visualizer/binary' }
+        { label: 'Linear Search', path: '/visualizer/search/linear' },
+        { label: 'Binary Search', path: '/visualizer/search/binary' }
     ];
 
     // Function to clear all active timeouts
@@ -40,6 +40,19 @@ const Linear = () => {
         setData(randomArray);
         await drawArray(randomArray);
     };
+
+    const handleSize = (e) => {
+        if (e) e.preventDefault();
+        if (e.target.value > 50) {
+            setError("Maximum size is 50.");
+            return;
+        }
+        if (e.target.value < 0) {
+            setError("Minimum size is 0.");
+            return;
+        }
+        setSize(e.target.value);
+    }
 
     const handleInputChange = (e) => {
         e.preventDefault();
@@ -252,7 +265,7 @@ const Linear = () => {
                                 type="number"
                                 className="input join-item w-13"
                                 value={size}
-                                onChange={(e) => setSize(e.target.value)}
+                                onChange={handleSize}
                             />
                             <button className="btn btn-primary join-item" onClick={handleRandom}>
                                 Random
