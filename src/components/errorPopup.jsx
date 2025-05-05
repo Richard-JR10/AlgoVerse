@@ -6,12 +6,22 @@ const ErrorPopup = () => {
 
     if (!error) return null;
 
+    // Safely extract error message
+    let errorMessage = 'An unknown error occurred';
+
+    if (typeof error === 'string') {
+        errorMessage = error;
+    } else if (error && typeof error === 'object') {
+        // Handle both Error objects and Firebase error objects
+        errorMessage = error.message || error.code || 'An unknown error occurred';
+    }
+
     return (
-        <div className="fixed bottom-5 left-1/2 transform -translate-x-1/2 z-50 items-center justify-center animate-fade-in-out">
+        <div className="fixed top-35 left-1/2 transform -translate-x-1/2 z-50 items-center justify-center animate-fade-in-out">
             <div className="alert alert-error rounded-md flex flex-row items-center justify-between shadow-lg">
-                <span>{error}</span>
-                <button onClick={() => setError(null)} className="btn btn-sm btn-ghost px-2.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="14" width="10.5" viewBox="0 0 384 512"><path fill="#ffffff" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/></svg>
+                <span>{errorMessage}</span>
+                <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">
+                    ×
                 </button>
             </div>
         </div>
