@@ -1,29 +1,56 @@
-import React, {useCallback, useContext, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import { useAuth } from "../Auth/AuthContext.jsx";
 import {Link} from "react-router-dom";
 import isEmail from 'validator/lib/isEmail';
 import PasswordToggleIcon from "./utils/passwordToggleIcon.jsx";
-import {ErrorContext} from "../context/errorContext.jsx";
 
 const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { setError } = useContext(ErrorContext);
-    const { loginWithEmail, loginWithGoogle, loading} = useAuth();
+    const [googleLoading, setGoogleLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const { loginWithEmail, loginWithGoogle, loading } = useAuth();
+
+    // Reset google loading state when main loading state changes
+    useEffect(() => {
+        if (!loading) {
+            setGoogleLoading(false);
+        }
+    }, [loading]);
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     // Email validation
     const isValidEmail = (email) => isEmail(email);
 
-    // Google Login
+    // Google Login with improved error handling
     const handleGoogleAuth = useCallback(async (e) => {
         e.preventDefault();
+
+        // Set local loading state
+        setGoogleLoading(true);
+
         try {
             await loginWithGoogle();
+            // If successful, the AuthContext will handle the rest
         } catch (e) {
-            setError(`Google Login Error: ${e.message}`);
+            // Provide more user-friendly error messages
+            if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+                setError("Authentication canceled: Login window was closed");
+            } else {
+                setError(`Google Login Error: ${e.message}`);
+            }
+
+            // Reset local loading state immediately
+            setGoogleLoading(false);
         }
-    }, [loginWithGoogle]);
+    }, [loginWithGoogle, setError]);
 
     const handleEmailLogin = async (e) => {
         e.preventDefault();
@@ -34,13 +61,20 @@ const LoginForm = () => {
             }
             await loginWithEmail(email, password);
         } catch (e) {
-            setError(`Email Login Error: ${e.message}`);
+            if (e.code === 'auth/invalid-credential') {
+                setError('Invalid Credentials');
+            } else {
+                setError(`Email Login Error: ${e.message}`);
+            }
         }
     };
 
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
+
+    // Determine which loading state to use for the Google button
+    const isGoogleButtonLoading = googleLoading || loading;
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gradient relative">
@@ -89,8 +123,11 @@ const LoginForm = () => {
                         </div>
 
                         <div className="card-actions">
-                            <button type="submit" className={`btn btn-primary mt-4 w-full rounded-md ${loading ? 'loading' : ''}`}>
-                                {loading ? 'Logging in...' : 'Login'}
+                            <button type="submit" className={`btn btn-primary mt-4 w-full rounded-md`} disabled={loading}>
+                                {loading ?
+                                    'Logging in...'
+                                    :
+                                    'Login'}
                             </button>
                         </div>
                     </form>
@@ -98,14 +135,20 @@ const LoginForm = () => {
                     <div className="divider px-2 text-accent">Or continue with</div>
 
                     <button
-                        className="btn bg-primary-content text-black border-[#e5e5e5] w-full rounded-md"
+                        className="btn bg-primary-content text-black w-full rounded-md"
                         onClick={handleGoogleAuth}
-                        disabled={loading}
+                        disabled={isGoogleButtonLoading}
                     >
-                        <svg className="size-4 bg-primary-content" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                            <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/>
-                        </svg>
-                        Continue with Google
+                        {isGoogleButtonLoading ? (
+                            <span className="loading loading-spinner loading-xl"></span>
+                        ) : (
+                            <>
+                                <svg className="size-4 bg-primary-content" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                                    <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"/>
+                                </svg>
+                                Continue with Google
+                            </>
+                        )}
                     </button>
 
                     <div className="mt-4 text-center text-sm text-accent">
@@ -116,6 +159,14 @@ const LoginForm = () => {
                     </div>
                 </div>
             </div>
+            {error && (
+                <div className="absolute bottom-5 px-5 rounded-md">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
