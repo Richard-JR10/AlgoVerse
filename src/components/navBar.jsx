@@ -44,35 +44,40 @@ const NavBar = ({ menuItems }) => {
     return (
         <div className="navbar bg-base-100 sticky top-0 z-50 px-6 border-b-1 h-fit">
             <div className="navbar-start">
-                <div className="dropdown">
-                    <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M4 6h16M4 12h8m-8 6h16" />
-                        </svg>
+                {menuItems.length !== 0 && (
+                    <div className="dropdown">
+                        <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M4 6h16M4 12h8m-8 6h16" />
+                            </svg>
+                        </div>
+                        <ul
+                            tabIndex={0}
+                            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow text-accent">
+                            {menuItems.map((item, index) => (
+                                <li key={index}>
+                                    <Link to={item.path} className={`${location.pathname === item.path && location.pathname.startsWith('/visualizer/') ? 'bg-primary' : ''}`}>
+                                        {item.label}
+                                    </Link>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
-                    <ul
-                        tabIndex={0}
-                        className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow text-accent">
-                        <li><Link to="/visualizer">Visualizer</Link></li>
-                        <li><a>Comparator</a></li>
-                        <li><a>Challenges</a></li>
-                    </ul>
-                </div>
+                )}
                 {user ? (
                     <Link to="/visualizer" className="btn btn-ghost text-xl text-accent">AlgoVerse</Link>
                 ):(
                     <Link to="/" className="btn btn-ghost text-xl text-accent">AlgoVerse</Link>
                 )}
-
             </div>
             {user && (
                 <div className="navbar-center hidden lg:flex text-accent">
