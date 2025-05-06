@@ -23,6 +23,7 @@ import Linear from "./algorithm/search/linear.jsx";
 import ProfilePage from "./components/profilePage.jsx";
 import Binary from "./algorithm/search/binary.jsx";
 import BFS from "./algorithm/graph/BFS.jsx";
+import DFS from "./algorithm/graph/DFS.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
@@ -92,6 +93,7 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/search/linear" element={<Linear/>} />
                     <Route path="/visualizer/search/binary" element={<Binary/>} />
                     <Route path="/visualizer/graph/bfs" element={<BFS/>} />
+                    <Route path="/visualizer/graph/dfs" element={<DFS/>} />
                 </Route>
 
                 <Route element={<AdminRoute />}>
