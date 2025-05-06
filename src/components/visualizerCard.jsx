@@ -1,4 +1,4 @@
-import React from 'react'
+import 'react'
 import {useNavigate} from "react-router-dom";
 import PropTypes from "prop-types";
 
@@ -6,7 +6,7 @@ const VisualizerCard = ({ imgUrl, title, desc, btnUrl }) => {
     const navigate = useNavigate();
 
     return (
-            <div className="card card-compact bg-base-100 w-96 shadow-xl">
+            <div className="card card-compact bg-base-100 w-80 shadow-xl">
                 <figure>
                     <img
                         className="max-h-72"
