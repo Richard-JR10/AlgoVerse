@@ -1,7 +1,6 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import  { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import NavBar from "../../components/navBar.jsx";
-import { ErrorContext } from "../../context/errorContext.jsx";
 import axios from "axios";
 
 const Binary = () => {
@@ -10,13 +9,28 @@ const Binary = () => {
     const svgRef = useRef(null);
     const isInitializedRef = useRef(false);
     const [searchValue, setSearchValue] = useState(0);
-    const { setError } = useContext(ErrorContext);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
     const timeoutIdsRef = useRef([]); // Store timeout IDs for animation
 
     const searchMenu = [
         { label: 'Linear Search', path: '/visualizer/search/linear' },
         { label: 'Binary Search', path: '/visualizer/search/binary' }
     ];
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
+    useEffect(() => {
+        if (success) {
+            const timer = setTimeout(() => setSuccess(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [success]);
 
     // Function to clear all active timeouts
     const clearAnimationTimeouts = () => {
@@ -310,6 +324,7 @@ const Binary = () => {
                     updatePointers(step.left || 0, step.right || data.length - 1, step.index); // Include mid
                 } else if (step.type === "found") {
                     highlightIndex(step.index, "#0fff00"); // Green for found
+                    setSuccess(`Found ${searchValue} at index ${step.index}`);
                     //resetPointers();
                 } else if (step.type === "not_found") {
                     d3.select(svgRef.current)
@@ -321,6 +336,7 @@ const Binary = () => {
                         // .duration(300)
                         // .attr("fill", "#8b5cf6");
                     //resetPointers();
+                    setError(`Value ${searchValue} not found in the array`);
                 } else if (step.type === "search_left" || step.type === "search_right") {
                     updatePointers(step.left, step.right); // Update L and R only
                     dimOutsideRange(step.left, step.right);
@@ -345,7 +361,7 @@ const Binary = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
             <NavBar menuItems={searchMenu} />
             <div className="flex items-center flex-grow">
                 <svg ref={svgRef} className="w-full h-30"></svg>
@@ -397,6 +413,22 @@ const Binary = () => {
                     </div>
                 </div>
             </div>
+            {success && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-30">
+                    <div className="alert alert-success rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{success}</span>
+                        <button onClick={() => setSuccess(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
+            {error && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-20">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
