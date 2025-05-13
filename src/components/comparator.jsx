@@ -53,7 +53,7 @@ const Comparator = () => {
                 return;
             }
             console.log(formData);
-            const response = await axios.post('https://algoverse-backend-nodejs.onrender.com/compare', formData, {
+            const response = await axios.post('https://algoverse-backend-python.onrender.com//compare', formData, {
                 headers: { 'Content-Type': 'application/json' },
             });
             setResult(response.data);
