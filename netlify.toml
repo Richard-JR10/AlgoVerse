@@ -1,0 +1,8 @@
+[build]
+command = "npm run build"  # Build command for your React app
+publish = "dist"          # Output directory for the built files
+
+[[redirects]]
+from = "/*"                # Match all paths
+to = "/index.html"         # Serve index.html for all routes
+status = 200               # Use 200 status for SPA rewrite
