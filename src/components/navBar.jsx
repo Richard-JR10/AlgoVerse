@@ -161,7 +161,7 @@ const NavBar = ({ menuItems }) => {
 
                     </div>
                     ) : (
-                        <a className="btn text-accent" onClick={() => navigate('/login')}>
+                        <a className="btn btn-outline text-accent" onClick={() => navigate('/login')}>
                             Login
                         </a>
                     )}

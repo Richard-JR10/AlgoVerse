@@ -15,7 +15,7 @@ const Comparator = () => {
     const comparatorMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },
-        { label: 'Challenges', path: '/' },
+        { label: 'Challenges', path: '/challenge' },
         { label: 'Code Library', path: '/library' },
         { label: 'Examples', path: '/example' }
     ];
@@ -53,7 +53,7 @@ const Comparator = () => {
                 return;
             }
             console.log(formData);
-            const response = await axios.post('http://localhost:8000/compare', formData, {
+            const response = await axios.post('https://algoverse-backend-nodejs.onrender.com/compare', formData, {
                 headers: { 'Content-Type': 'application/json' },
             });
             setResult(response.data);

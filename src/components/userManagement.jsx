@@ -18,7 +18,7 @@ const UserManagement = () => {
             const token = await auth.currentUser.getIdToken();
 
             try {
-                const response = await axios.get('http://localhost:3000/api/users', {
+                const response = await axios.get('https://algoverse-backend-nodejs.onrender.com/api/users', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -64,7 +64,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/disable',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/disable',
                 { uid: selectedUids },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -85,7 +85,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/enable',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/enable',
                 { uid: selectedUids },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -106,7 +106,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/delete',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/delete',
                 { uid: selectedUids },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -127,7 +127,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/disable',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/disable',
                 { uid: [uid] },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -145,7 +145,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/enable',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/enable',
                 { uid: [uid] },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -163,7 +163,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/delete',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/delete',
                 { uid: [uid] },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -184,7 +184,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/set-admin',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/set-admin',
                 { uid: [uid] },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );
@@ -203,7 +203,7 @@ const UserManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.post(
-                'http://localhost:3000/api/users/remove-admin',
+                'https://algoverse-backend-nodejs.onrender.com/api/users/remove-admin',
                 { uid: [uid] },
                 { headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } }
             );

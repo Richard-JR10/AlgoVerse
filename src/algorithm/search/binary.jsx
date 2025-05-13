@@ -205,7 +205,7 @@ const Binary = () => {
                 return;
             }
 
-            const response = await axios.post('http://127.0.0.1:8000/search/binary', {
+            const response = await axios.post('https://algoverse-backend-python.onrender.com/search/binary', {
                 array: arrayToSearch,
                 value: parseInt(searchValue)
             }, {

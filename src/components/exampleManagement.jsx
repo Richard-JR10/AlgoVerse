@@ -13,7 +13,7 @@ const ExampleManagement = () => {
     const [selectedId, setSelectedId] = useState([]);
     const [data, setData] = useState([]);
     const contentsPerPage = 10;
-    const baseURL = "http://localhost:3000";
+    const baseURL = "https://algoverse-backend-nodejs.onrender.com";
 
     useEffect(() => {
         const fetchExampleData = async () => {

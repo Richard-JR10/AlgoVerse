@@ -184,7 +184,7 @@ const Linear = () => {
                 return;
             }
 
-            const response = await axios.post('http://127.0.0.1:8000/search/linear', {
+            const response = await axios.post('https://algoverse-backend-python.onrender.com/search/linear', {
                 array: arrayToSearch,
                 value: parseInt(searchValue)
             }, {

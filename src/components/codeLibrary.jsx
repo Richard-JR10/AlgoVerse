@@ -18,7 +18,7 @@ const CodeLibrary = () => {
     const codeMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },
-        { label: 'Challenges', path: '/' },
+        { label: 'Challenges', path: '/challenge' },
         { label: 'Code Library', path: '/library' },
         { label: 'Examples', path: '/example' }
     ];
@@ -33,7 +33,7 @@ const CodeLibrary = () => {
 
                 const token = await auth.currentUser.getIdToken();
 
-                const response = await axios.get('http://localhost:3000/api/library', {
+                const response = await axios.get('https://algoverse-backend-nodejs.onrender.com/api/library', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -46,9 +46,9 @@ const CodeLibrary = () => {
                 console.error('Fetch error:', err);
                 // Handle Axios-specific errors
                 if (err.response) {
-                    setError(err.response.data.error || 'Failed to fetch code entries');
+                    setError('Failed to fetch code entries');
                 } else {
-                    setError(err.message || 'An unexpected error occurred');
+                    setError('An unexpected error occurred');
                 }
             }
         };

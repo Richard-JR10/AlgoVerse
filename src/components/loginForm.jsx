@@ -1,6 +1,6 @@
-import {useCallback, useEffect, useState} from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from "../Auth/AuthContext.jsx";
-import {Link} from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import isEmail from 'validator/lib/isEmail';
 import PasswordToggleIcon from "./utils/passwordToggleIcon.jsx";
 
@@ -10,7 +10,17 @@ const LoginForm = () => {
     const [password, setPassword] = useState('');
     const [googleLoading, setGoogleLoading] = useState(false);
     const [error, setError] = useState(null);
-    const { loginWithEmail, loginWithGoogle, loading } = useAuth();
+    const [success, setSuccess] = useState(null);
+    const [isLoggingIn, setIsLoggingIn] = useState(false); // Track login process
+    const { loginWithEmail, loginWithGoogle, loading, user } = useAuth();
+    const navigate = useNavigate();
+
+    // Redirect logged-in users to home page, but not during login process
+    useEffect(() => {
+        if (user && !loading && !isLoggingIn) {
+            navigate('/', { replace: true }); // Redirect to home page
+        }
+    }, [user, loading, isLoggingIn, navigate]);
 
     // Reset google loading state when main loading state changes
     useEffect(() => {
@@ -19,12 +29,25 @@ const LoginForm = () => {
         }
     }, [loading]);
 
+    // Clear error after 5 seconds
     useEffect(() => {
         if (error) {
-            const timer = setTimeout(() => setError(null), 5000);
+            const timer = setTimeout(() => setError(null), 2000);
             return () => clearTimeout(timer);
         }
     }, [error]);
+
+    // Clear success message after 5 seconds and navigate to /visualizer
+    useEffect(() => {
+        if (success) {
+            const timer = setTimeout(() => {
+                setSuccess(null);
+                setIsLoggingIn(false); // End login process
+                navigate('/visualizer', { replace: true }); // Navigate to visualizer
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [success, navigate]);
 
     // Email validation
     const isValidEmail = (email) => isEmail(email);
@@ -32,35 +55,37 @@ const LoginForm = () => {
     // Google Login with improved error handling
     const handleGoogleAuth = useCallback(async (e) => {
         e.preventDefault();
-
-        // Set local loading state
         setGoogleLoading(true);
-
+        setIsLoggingIn(true); // Start login process
         try {
             await loginWithGoogle();
-            // If successful, the AuthContext will handle the rest
+            setSuccess("User has successfully logged in!");
+            // Navigation handled by success useEffect
         } catch (e) {
-            // Provide more user-friendly error messages
+            setIsLoggingIn(false); // End login process on error
             if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
                 setError("Authentication canceled: Login window was closed");
             } else {
                 setError(`Google Login Error: ${e.message}`);
             }
-
-            // Reset local loading state immediately
             setGoogleLoading(false);
         }
-    }, [loginWithGoogle, setError]);
+    }, [loginWithGoogle]);
 
     const handleEmailLogin = async (e) => {
         e.preventDefault();
+        setIsLoggingIn(true); // Start login process
         try {
             if (!isValidEmail(email)) {
                 setError("Invalid email address.");
+                setIsLoggingIn(false); // End login process on validation error
                 return;
             }
             await loginWithEmail(email, password);
+            setSuccess("User has successfully logged in!");
+            // Navigation handled by success useEffect
         } catch (e) {
+            setIsLoggingIn(false); // End login process on error
             if (e.code === 'auth/invalid-credential') {
                 setError('Invalid Credentials');
             } else {
@@ -73,11 +98,10 @@ const LoginForm = () => {
         setShowPassword(!showPassword);
     };
 
-    // Determine which loading state to use for the Google button
     const isGoogleButtonLoading = googleLoading || loading;
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient relative">
+        <div className="flex flex-col items-center justify-center min-h-screen relative">
             <div className="card bg-base-300 w-96 shadow-none m-5 rounded-xl">
                 <div className="card-body">
                     <h1 className="flex justify-center card-title text-3xl mb-5 text-base-content">Sign in</h1>
@@ -112,7 +136,6 @@ const LoginForm = () => {
                             <PasswordToggleIcon showPassword={showPassword} onToggle={togglePasswordVisibility} />
                         </div>
 
-
                         <div className="flex justify-end mt-2">
                             <Link
                                 to="/forgot-password"
@@ -124,10 +147,7 @@ const LoginForm = () => {
 
                         <div className="card-actions">
                             <button type="submit" className={`btn btn-primary mt-4 w-full rounded-md`} disabled={loading}>
-                                {loading ?
-                                    'Logging in...'
-                                    :
-                                    'Login'}
+                                {loading ? 'Logging in...' : 'Login'}
                             </button>
                         </div>
                     </form>
@@ -152,15 +172,23 @@ const LoginForm = () => {
                     </button>
 
                     <div className="mt-4 text-center text-sm text-accent">
-                        Don&apos;t have an account?{" "}
+                        Don&#39;t have an account?{" "}
                         <Link to="/signup" className="underline underline-offset-4">
                             Sign up
                         </Link>
                     </div>
                 </div>
             </div>
+            {success && (
+                <div className="fixed left-0 right-0 bottom-5 flex justify-center z-30">
+                    <div className="alert alert-success rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{success}</span>
+                        <button onClick={() => setSuccess(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
             {error && (
-                <div className="absolute bottom-5 px-5 rounded-md">
+                <div className="fixed left-0 right-0 bottom-5 flex justify-center z-20">
                     <div className="alert alert-error rounded-md flex flex-row items-center justify-between">
                         <span>{error}</span>
                         <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>

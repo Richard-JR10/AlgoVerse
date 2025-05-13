@@ -17,12 +17,11 @@ const SelectSort = () => {
     const [size, setSize] = useState(10);
 
     const sortingMenu = [
-        { label: 'Bubble Sort', path: '/visualizer/bubblesort' },
-        { label: 'Merge Sort', path: '/visualizer/merge' },
-        { label: 'Selection Sort', path: '/visualizer/selectionsort' },
-        { label: 'Insertion Sort', path: '/visualizer/insertionsort' },
-        { label: 'Quick Sort', path: '/visualizer/quick' },
-        { label: 'Heap Sort', path: '/visualizer/heap' }
+        { label: 'Bubble Sort', path: '/visualizer/sort/bubble' },
+        { label: 'Merge Sort', path: '/visualizer/sort/merge' },
+        { label: 'Selection Sort', path: '/visualizer/sort/select' },
+        { label: 'Insertion Sort', path: '/visualizer/sort/insert' },
+        { label: 'Quick Sort', path: '/visualizer/sort/quick' }
     ];
 
     // Sorting colors
@@ -355,7 +354,7 @@ const SelectSort = () => {
             setIsSorting(true);
             isCancelledRef.current = false;
             try {
-                const response = await axios.post('http://127.0.0.1:8000/sort/selection', {
+                const response = await axios.post('https://algoverse-backend-python.onrender.com/sort/selection', {
                     array: numberArr
                 }, {
                     headers: {

@@ -6,12 +6,10 @@ const HomePage = () => {
     const homeMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },
-        { label: 'Challenges', path: '/' },
+        { label: 'Challenges', path: '/challenge' },
         { label: 'Code Library', path: '/library' },
         { label: 'Examples', path: '/example' }
     ];
-
-    const { setError } = useContext(ErrorContext);
 
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
@@ -24,9 +22,6 @@ const HomePage = () => {
                         <p className="py-6">
                             Interactive <span className="font-bold">COMMON</span> AlgorithmS Visualizer with Gamification and AI-Powered Comparisons
                         </p>
-                        <div className="btn btn-primary" onClick={() => setError("test")}>
-                            Test
-                        </div>
                         <button className="btn btn-primary">Get Started</button>
                     </div>
                 </div>

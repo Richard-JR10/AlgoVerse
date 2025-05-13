@@ -20,7 +20,7 @@ const Example = () => {
     const exampleMenu = [
         { label: 'Visualizer', path: '/visualizer' },
         { label: 'Comparator', path: '/comparator' },
-        { label: 'Challenges', path: '/' },
+        { label: 'Challenges', path: '/challenge' },
         { label: 'Code Library', path: '/library' },
         { label: 'Examples', path: '/example' }
     ];
@@ -35,7 +35,7 @@ const Example = () => {
 
                 const token = await auth.currentUser.getIdToken();
 
-                const response = await axios.get('http://localhost:3000/api/example', {
+                const response = await axios.get('https://algoverse-backend-nodejs.onrender.com/api/example', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
