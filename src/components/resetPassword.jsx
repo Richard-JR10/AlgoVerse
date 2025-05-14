@@ -70,7 +70,7 @@ const ResetNewPassword = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient relative">
+        <div className="flex flex-col items-center justify-center min-h-screen relative">
             <div className="card bg-base-300 w-120 shadow-none m-5 rounded-xl">
                 <div className="card-body gap-0 px-8 py-9.5">
                     <h1 className="flex justify-center card-title text-3xl mb-5 text-base-content">Reset Password</h1>
