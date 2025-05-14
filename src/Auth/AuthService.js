@@ -47,7 +47,7 @@ const signupWithEmail = async (email, password, displayName) => {
 
 const sendResetPassword = async (email) => {
     const actionCodeSettings = {
-        url: 'http://localhost:5173/reset-password', // Your custom reset URL
+        url: 'https://algoverse1.netlify.app/reset-password', // Your custom reset URL
         handleCodeInApp: true, // Ensures the code is usable in your app
     };
     try {
