@@ -7,8 +7,7 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   plugins: [react(),
     tailwindcss(),
-    VitePWA(
-        {
+    VitePWA({
           manifest: {
             icons: [
               {
@@ -19,8 +18,7 @@ export default defineConfig({
               },
             ]
           }
-        }
-    ),
+        }),
   ],
   server: {
     middleware: [
