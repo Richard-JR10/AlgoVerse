@@ -12,33 +12,18 @@ export default defineConfig({
       devOptions: {
         enabled: true // Enable service worker in dev mode
       },
+      srcDir: 'src',
+      filename: 'sw.js',
+      strategies: 'generateSW',
       manifest: {
         name: "Algoverse",
-        short_name: "Algo",
+        short_name: "Algoverse",
         description: "A progressive web app for Algoverse",
         start_url: "/",
         display: "standalone",
         background_color: "#ffffff",
         theme_color: "#000000",
         icons: [
-          {
-            src: "/Square150x150Logo.scale-400.png",
-            sizes: "600x600",
-            type: "image/png",
-            purpose: "any"
-          },
-          {
-            src: "/Square150x150Logo.scale-200.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "any"
-          },
-          {
-            src: "/Square150x150Logo.scale-200.png",
-            sizes: "192x192",
-            type: "image/png",
-            purpose: "maskable"
-          },
           {
             src: "/512.png",
             sizes: "512x512",
@@ -48,56 +33,64 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // Cache all necessary assets during build
-        globPatterns: ["**/*.{js,css,html,png,jpg,svg,ico}"],
-        // Increase cache size limit if needed
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-        // Precache index.html explicitly
-        additionalManifestEntries: [
-          { url: "/index.html", revision: null }
-        ],
+        // Cache critical assets
+        globPatterns: ['**/*.{js,css,html,png,jpg,jpeg,svg,gif,ico}', '512.png'],
         runtimeCaching: [
           {
-            // Cache navigation requests (e.g., index.html)
-            urlPattern: ({ request }) => request.destination === "document",
-            handler: "CacheFirst", // Use CacheFirst to ensure offline access
+            // Handle navigation requests (e.g., page reloads)
+            urlPattern: ({ request }) => request.mode === 'navigate',
+            handler: 'CacheFirst',
             options: {
-              cacheName: "html-cache",
+              cacheName: 'html-cache',
               expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          {
+            // Cache static assets including SVG and GIF
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|woff2)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'asset-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          {
+            // Cache Node.js backend API responses
+            urlPattern: ({ url }) => url.origin === 'https://algoverse-backend-nodejs.onrender.com',
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'api-nodejs-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
               },
               cacheableResponse: {
-                statuses: [0, 200]
-              }
-            }
+                statuses: [0, 200],
+              },
+            },
           },
           {
-            // Cache static assets (JS, CSS, images)
-            urlPattern: ({ request }) =>
-                ["style", "script", "image"].includes(request.destination),
-            handler: "CacheFirst",
+            // Cache Python backend API responses
+            urlPattern: ({ url }) => url.origin === 'https://algoverse-backend-python.onrender.com',
+            handler: 'StaleWhileRevalidate',
             options: {
-              cacheName: "static-assets",
+              cacheName: 'api-python-cache',
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
-              }
-            }
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
           },
-          {
-            // Cache API calls (if applicable, replace with your API URL)
-            urlPattern: /^https:\/\/your-api\.com\/.*/, // Update this
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "api-cache",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 24 * 60 * 60 // 1 day
-              }
-            }
-          }
-        ]
+        ],
       }
     }),
   ],
