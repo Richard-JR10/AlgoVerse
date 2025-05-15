@@ -14,7 +14,7 @@ const VisualizerPage = () => {
     const cards = [
         { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*scHWqR8nUcqWCWGK", title: "Sorting Algorithm", desc: "Sorts", url: "/visualizer/sort/bubble" },
         { imgUrl: "https://i.imgur.com/xiuJxtt.png", title: "Searching Algorithm", desc: "Sorts", url: "/visualizer/search/linear" },
-        { imgUrl: "https://data-structure-visualization.netlify.app/dijkstra.gif", title: "Graph Traversal", desc: "Sorts", url: "/visualizer/graph/bfs"  },
+        { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*Iu161N6Z5phs2Cp5TwWBLw.gif", title: "Graph Traversal", desc: "Sorts", url: "/visualizer/graph/bfs"  },
         { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*scHWqR8nUcqWCWGK", title: "Recursion Algorithm", desc: "Sorts" }
     ];
 
