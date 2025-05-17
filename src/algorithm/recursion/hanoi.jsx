@@ -31,7 +31,7 @@ const HanoiVisualization = () => {
         setInputValue(e.target.value);
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
         if (isSubmitting) return;
 
@@ -42,28 +42,16 @@ const HanoiVisualization = () => {
         }
 
         setNumber(input);
-        await initializeVisualization(input);
+        initializeVisualization(input);
     };
 
-    const initializeVisualization = async (num) => {
+    const initializeVisualization = (num) => {
         try {
             setIsSubmitting(true);
             if (isCalculating) {
                 isCancelledRef.current = true;
                 setIsCalculating(false);
             }
-
-            // Fetch steps from the API
-            const response = await axios.post(`http://127.0.0.1:8000/recursion/hanoi`, {
-                n: num
-            }, {
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            const calculationSteps = response.data.steps;
-            setSteps(calculationSteps);
 
             // Initialize pegs with disks on source peg (A), smallest at top
             const initialPegs = {
@@ -94,22 +82,38 @@ const HanoiVisualization = () => {
         const randomNum = Math.floor(Math.random() * 5) + 1;
         setInputValue(randomNum.toString());
         setNumber(randomNum);
-        await initializeVisualization(randomNum);
+        initializeVisualization(randomNum);
     };
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            if (svgRef.current) {
-                handleRandom();
-            }
-        }, 100);
-
-        return () => clearTimeout(timer);
+        initializeVisualization(number);
     }, []);
 
     useEffect(() => {
         speedRef.current = speed;
     }, [speed]);
+
+    const fetchSteps = async () => {
+        // Fetch steps from the API
+        try {
+            const response = await axios.post(`https://algoverse-backend-python.onrender.com/recursion/hanoi`, {
+                n: number
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            const calculationSteps = response.data.steps;
+            setSteps(calculationSteps);
+            return calculationSteps;
+        } catch (err) {
+            console.error(err);
+            alert("Failed to fetch factorial steps from the API. Please try again.");
+        }
+
+    }
+
 
     const animateCalculationSteps = async () => {
         setIsCalculating(true);
@@ -118,42 +122,14 @@ const HanoiVisualization = () => {
         let currentPegs = JSON.parse(JSON.stringify(pegs)); // Deep copy to avoid mutating state directly
         const svg = d3.select(svgRef.current);
 
-        // Clear SVG and render base and pegs only once before animation starts
-        svg.selectAll("*").remove();
+        const steps = await fetchSteps();
+
         const width = 900;
         const height = 400;
         svg.attr("viewBox", `0 0 ${width} ${height}`);
 
-        const pegWidth = 10;
-        const baseHeight = 20;
-        const pegHeight = 200;
-        const pegSpacing = width / 3;
-
-        // Draw base
-        svg.append("rect")
-            .attr("x", 50)
-            .attr("y", height - baseHeight - 10)
-            .attr("width", width - 100)
-            .attr("height", baseHeight)
-            .attr("fill", pegColor);
-
-        // Draw pegs
-        ['A', 'B', 'C'].forEach((peg, index) => {
-            const x = pegSpacing * (index + 0.5);
-
-            // Peg
-            svg.append("rect")
-                .attr("x", x - pegWidth / 2)
-                .attr("y", height - pegHeight - baseHeight - 10)
-                .attr("width", pegWidth)
-                .attr("height", pegHeight)
-                .attr("fill", pegColor);
-
-        });
-
         for (const step of steps) {
             if (isCancelledRef.current) break;
-
             if (step.type === "move") {
                 const { disk, from, to } = step;
                 const diskToMove = currentPegs[from].find(d => d.id === disk);
@@ -293,7 +269,7 @@ const HanoiVisualization = () => {
 
 
     return (
-        <div className="flex flex-col h-full text-white relative">
+        <div className="flex flex-col h-full bg-base-200 text-white relative">
             <NavBar menuItems={visualizerMenu}/>
 
             <div className="w-full mb-6 p-4 flex justify-center">
@@ -312,7 +288,7 @@ const HanoiVisualization = () => {
                     <button
                         className="btn mr-4"
                         onClick={animateCalculationSteps}
-                        disabled={isCalculating || steps.length === 0}
+                        disabled={isCalculating}
                     >
                         Start Moves
                     </button>

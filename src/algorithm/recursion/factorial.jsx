@@ -49,7 +49,7 @@ const FactorialVisualization = () => {
             }
 
             // Fetch steps from the API
-            const response = await axios.post(`http://127.0.0.1:8000/recursion/factorial`, {
+            const response = await axios.post(`https://algoverse-backend-python.onrender.com/recursion/factorial`, {
                 n: num
             },{
                 headers: {
@@ -147,7 +147,7 @@ const FactorialVisualization = () => {
     };
 
     return (
-        <div className="flex flex-col h-full  text-white relative">
+        <div className="flex flex-col h-full bg-base-200 text-white relative">
             <NavBar menuItems={visualizerMenu}/>
 
             <div className="flex justify-between items-center mx-4 mt-4 p-4 bg-indigo-900 rounded-lg text-white">
@@ -253,17 +253,6 @@ const FactorialVisualization = () => {
                     </div>
                 </div>
             </div>
-
-            <style jsx>{`
-                @keyframes fadeIn {
-                    from { opacity: 0; transform: translateY(10px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                
-                .animate-fadeIn {
-                    animation: fadeIn 0.5s ease-in-out;
-                }
-            `}</style>
         </div>
     );
 };
