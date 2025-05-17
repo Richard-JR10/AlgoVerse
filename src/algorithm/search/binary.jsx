@@ -361,7 +361,7 @@ const Binary = () => {
     }, []);
 
     return (
-        <div className="flex flex-col h-full relative">
+        <div className="flex flex-col h-full relative bg-base-200">
             <NavBar menuItems={searchMenu} />
             <div className="flex items-center flex-grow">
                 <svg ref={svgRef} className="w-full h-30"></svg>

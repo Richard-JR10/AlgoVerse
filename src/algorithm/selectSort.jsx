@@ -379,7 +379,7 @@ const SelectSort = () => {
     }, [speed]);
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full bg-base-200">
             <NavBar menuItems={sortingMenu}/>
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>

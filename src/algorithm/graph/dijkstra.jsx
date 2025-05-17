@@ -716,7 +716,7 @@ const Dijkstra = () => {
     );
 
     return (
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full bg-base-200">
             <NavBar menuItems={graphMenu} />
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
