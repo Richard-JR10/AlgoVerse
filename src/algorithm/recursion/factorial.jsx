@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import * as d3 from 'd3';
 import NavBar from "../../components/navBar.jsx";
 import axios from "axios";
 
