@@ -13,6 +13,7 @@ export function SortableItem({ id, value, colorClass  }) {
     } = useSortable({ id });
 
     const style = {
+        touchAction: 'none',
         transform: CSS.Transform.toString(transform),
         transition,
     };
