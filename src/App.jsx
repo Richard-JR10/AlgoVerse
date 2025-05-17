@@ -29,6 +29,8 @@ import Dijkstra from "./algorithm/graph/dijkstra.jsx";
 import ChallengePage from "./components/challengePage.jsx";
 import SortingArrangement from "./components/challenges/SortingArrangement/SortingArrangement.jsx";
 import FillInTheBlanksQuiz from "./components/challenges/FillInTheBlanksQuiz/FIllInTheBlanksQuiz.jsx";
+import Factorial from "./algorithm/recursion/factorial.jsx";
+import Hanoi from "./algorithm/recursion/hanoi.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
@@ -101,6 +103,9 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/graph/dfs" element={<DFS/>} />
                     <Route path="/visualizer/graph/dijkstra" element={<Dijkstra/>} />
                     <Route path="/visualizer/graph/kruskal" element={<Kruskal/>} />
+
+                    <Route path="/visualizer/recursion/factorial" element={<Factorial/>} />
+                    <Route path="/visualizer/recursion/hanoi" element={<Hanoi/>} />
 
                     <Route path="/task" element={<FillInTheBlanksQuiz />} />
                     <Route path="/task1" element={<SortingArrangement />} />
