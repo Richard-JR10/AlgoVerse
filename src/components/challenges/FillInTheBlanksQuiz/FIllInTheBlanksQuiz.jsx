@@ -41,6 +41,7 @@ const SortableItem = ({ id, value }) => {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
     const style = {
+        touchAction: 'none',
         transform: CSS.Transform.toString(transform),
         transition,
     };
