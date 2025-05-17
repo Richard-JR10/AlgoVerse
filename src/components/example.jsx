@@ -4,7 +4,6 @@ import {useContext, useEffect, useState} from "react";
 import {useAuth} from "../Auth/AuthContext.jsx";
 import {ErrorContext} from "../context/errorContext.jsx";
 import axios from "axios";
-import CodeLibraryCard from "./codeLibraryCard.jsx";
 import ExampleCard from "./exampleCard.jsx";
 
 const Example = () => {
@@ -25,8 +24,23 @@ const Example = () => {
         { label: 'Examples', path: '/example' }
     ];
 
+    const CACHE_KEY = 'exampleEntries';
+    const CACHE_DURATION = 1000 * 60 * 60;
+
     useEffect(() => {
         const fetchExampleEntries = async () => {
+            const cached = localStorage.getItem(CACHE_KEY);
+
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    setExampleEntries(data);
+                    setFilteredEntries(data);
+                    setError(null);
+                    return;
+                }
+            }
+
             try {
                 if (!auth.currentUser) {
                     setError('No user is logged in');
@@ -44,6 +58,8 @@ const Example = () => {
                 setExampleEntries(response.data);
                 setFilteredEntries(response.data); // Initialize filtered entries with all entries
                 setError(null);
+
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data: response.data, timestamp: Date.now() }));
             } catch (err) {
                 console.error('Fetch error:', err);
                 // Handle Axios-specific errors
