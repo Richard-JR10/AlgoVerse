@@ -9,7 +9,7 @@ const VisualizerCard = ({ imgUrl, title, desc, btnUrl }) => {
             <div className="card card-compact bg-base-100 w-80 shadow-xl">
                 <figure>
                     <img
-                        className="max-h-72"
+                        className="max-h-60 w-full"
                         src={imgUrl}
                         alt="Image" />
                 </figure>
