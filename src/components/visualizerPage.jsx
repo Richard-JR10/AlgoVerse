@@ -15,7 +15,7 @@ const VisualizerPage = () => {
         { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*scHWqR8nUcqWCWGK", title: "Sorting Algorithm", desc: "Sorts", url: "/visualizer/sort/bubble" },
         { imgUrl: "https://i.imgur.com/xiuJxtt.png", title: "Searching Algorithm", desc: "Sorts", url: "/visualizer/search/linear" },
         { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/1*Iu161N6Z5phs2Cp5TwWBLw.gif", title: "Graph Traversal", desc: "Sorts", url: "/visualizer/graph/bfs"  },
-        { imgUrl: "https://miro.medium.com/v2/resize:fit:640/format:webp/0*scHWqR8nUcqWCWGK", title: "Recursion Algorithm", desc: "Sorts" }
+        { imgUrl: "https://upload.wikimedia.org/wikipedia/commons/8/8d/Iterative_algorithm_solving_a_6_disks_Tower_of_Hanoi.gif", title: "Recursion Algorithm", desc: "Sorts", url: "/visualizer/recursion/factorial" }
     ];
 
     return (
