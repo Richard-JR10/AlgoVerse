@@ -70,6 +70,7 @@ body.modal-open {
 
 @theme {
   --animate-fade-in-out: fade-in-out 3s ease-in-out forwards;
+  --animate-fadeIn: fadeIn 0.5s ease-in-out;
   @keyframes fade-in-out {
     0% {
       opacity: 0;    /* Start invisible */
@@ -84,6 +85,16 @@ body.modal-open {
       opacity: 0;    /* End invisible */
     }
   }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+}
+
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark, lofi;
 }
 
 @plugin "daisyui/theme" {
@@ -120,3 +131,4 @@ body.modal-open {
   --depth: 0;
   --noise: 0;
 }
+
