@@ -23,8 +23,23 @@ const CodeLibrary = () => {
         { label: 'Examples', path: '/example' }
     ];
 
+    const CACHE_KEY = 'codeEntries';
+    const CACHE_DURATION = 1000 * 60 * 60;
+
     useEffect(() => {
         const fetchCodeEntries = async () => {
+            const cached = localStorage.getItem(CACHE_KEY);
+
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    setCodeEntries(data);
+                    setFilteredEntries(data);
+                    setError(null);
+                    return;
+                }
+            }
+
             try {
                 if (!auth.currentUser) {
                     setError('No user is logged in');
@@ -42,6 +57,8 @@ const CodeLibrary = () => {
                 setCodeEntries(response.data);
                 setFilteredEntries(response.data); // Initialize filtered entries with all entries
                 setError(null);
+
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data: response.data, timestamp: Date.now() }));
             } catch (err) {
                 console.error('Fetch error:', err);
                 // Handle Axios-specific errors
