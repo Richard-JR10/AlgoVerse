@@ -147,7 +147,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                             </button>
                                         )}
                                     </div>
-                                    {challengeData.type == 1 && (
+                                    {challengeData.type === 1 && (
                                         <>
                                             <legend className="fieldset-legend">Question</legend>
                                             <input
@@ -181,7 +181,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                             ))}
                                         </>
                                     )}
-                                    {challengeData.type == 2 && (
+                                    {challengeData.type === 2 && (
                                         <>
                                             <legend className="fieldset-legend">Algorithm</legend>
                                             <input
@@ -228,7 +228,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                             ></textarea>
                                         </>
                                     )}
-                                    {challengeData.type == 3 && (
+                                    {challengeData.type === 3 && (
                                         <>
                                             <legend className="fieldset-legend">Text</legend>
                                             <input
