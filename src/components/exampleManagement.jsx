@@ -128,7 +128,7 @@ const ExampleManagement = () => {
         }
     }
 
-    const handleBulkDisable = async () => {
+    const handleBulkDelete = async () => {
         if (selectedId.length === 0) return setError('No users selected');
         if (!confirm(`Delete ${selectedId.length} data? This is permanent!`)) return;
         const token = await auth.currentUser.getIdToken();
@@ -163,7 +163,7 @@ const ExampleManagement = () => {
                 <ExampleAddData onAddData={handleAddData}/>
                 <button
                     className="btn btn-error"
-                    onClick={handleBulkDisable}
+                    onClick={handleBulkDelete}
                     disabled={selectedId.length === 0}
                 >
                     Delete Selected
@@ -180,9 +180,9 @@ const ExampleManagement = () => {
             {totalPages > 1 && (
                 <div className="flex justify-center mt-4">
                     <div className="join">
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page,i) => (
                             <input
-                                key={page}
+                                key={i}
                                 className="join-item btn btn-square"
                                 type="radio"
                                 name="pagination"
