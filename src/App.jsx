@@ -31,6 +31,7 @@ import SortingArrangement from "./components/challenges/SortingArrangement/Sorti
 import FillInTheBlanksQuiz from "./components/challenges/FillInTheBlanksQuiz/FIllInTheBlanksQuiz.jsx";
 import Factorial from "./algorithm/recursion/factorial.jsx";
 import Hanoi from "./algorithm/recursion/hanoi.jsx";
+import ChallengesManagement from "./components/challengesManagement.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
@@ -116,6 +117,7 @@ const AppRoutes = React.memo(() => {
                         <Route path="users" element={<UserManagement />} />
                         <Route path="library" element={<LibraryManagement />} />
                         <Route path="example" element={<ExampleManagement />} />
+                        <Route path="challenges" element={<ChallengesManagement />} />
                     </Route>
                 </Route>
 
