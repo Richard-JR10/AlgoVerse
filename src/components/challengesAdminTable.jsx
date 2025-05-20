@@ -56,10 +56,9 @@ const ChallengesAdminTable = ({ challengesInfo, onDelete, onCheckboxChange, sele
                         </td>
                         <td>
                             <span className="badge badge-accent badge-sm">
-                            {
-                                content.Type === 1 ? 'Multiple Choice' :
-                                content.Type === 2 ? 'Sorting Arrangement' : 'Fill In The Blanks'
-                            }
+                                {content.type === 1 && 'Multiple Choice'}
+                                {content.type === 2 && 'Sorting Arrangement'}
+                                {content.type === 3 && 'Fill In The Blanks'}
                             </span>
                         </td>
                         <td className="flex flex-row">
