@@ -69,7 +69,7 @@ const questions = [
 ];
 
 
-const SortingArrangement = () => {
+const SortingArrangement = ({questions}) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const currentQuestion = questions[currentQuestionIndex];
 

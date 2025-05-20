@@ -98,7 +98,7 @@ const Blank = ({ id, questionId, blankIndex, filledAnswer }) => {
 };
 
 // Main Quiz component
-const FillInBlanksQuiz = () => {
+const FillInBlanksQuiz = ({questions}) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const currentQuestion = questions[currentQuestionIndex];
     const [quizState, setQuizState] = useState(
