@@ -28,10 +28,11 @@ import Kruskal from "./algorithm/graph/kruskal.jsx";
 import Dijkstra from "./algorithm/graph/dijkstra.jsx";
 import ChallengePage from "./components/challengePage.jsx";
 import SortingArrangement from "./components/challenges/SortingArrangement/SortingArrangement.jsx";
-import FillInTheBlanksQuiz from "./components/challenges/FillInTheBlanksQuiz/FIllInTheBlanksQuiz.jsx";
+import FillInTheBlanksQuiz from "./components/challenges/FIllInTheBlanksQuiz.jsx";
 import Factorial from "./algorithm/recursion/factorial.jsx";
 import Hanoi from "./algorithm/recursion/hanoi.jsx";
 import ChallengesManagement from "./components/challengesManagement.jsx";
+import {ChallengeProvider} from "./components/challenges/ChallengeContext.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
@@ -57,10 +58,12 @@ const AdminRoute = () => {
 const App = () => (
     <ErrorProvider>
         <AuthProvider>
-            <BrowserRouter>
-                <AppRoutes />
-                <ErrorPopup />
-            </BrowserRouter>
+            <ChallengeProvider>
+                <BrowserRouter>
+                    <AppRoutes />
+                    <ErrorPopup />
+                </BrowserRouter>
+            </ChallengeProvider>
         </AuthProvider>
     </ErrorProvider>
 );
