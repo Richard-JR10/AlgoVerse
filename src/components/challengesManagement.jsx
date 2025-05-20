@@ -12,7 +12,7 @@ const ChallengesManagement = () => {
     const [selectedId, setSelectedId] = useState([]);
     const [data, setData] = useState([]);
     const contentsPerPage = 10;
-    const baseURL = "http://127.0.0.1:3000";
+    const baseURL = "https://algoverse-backend-nodejs.onrender.com";
 
     useEffect(() => {
         const fetchChallengesData = async () => {
