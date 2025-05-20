@@ -1,9 +1,12 @@
-import FillInBlanksQuiz from "./challenges/FillInTheBlanksQuiz/FIllInTheBlanksQuiz.jsx";
+import FillInBlanksQuiz from "./challenges/FIllInTheBlanksQuiz.jsx";
 import SortingArrangement from "./challenges/SortingArrangement/SortingArrangement.jsx";
 import MultipleChoices from "./challenges/MultipleChoices.jsx";
+import {useContext} from "react";
+import {ChallengeContext} from "./challenges/ChallengeContext.jsx";
 
-const ArrowButton = ({question}) => {
-    const {id, type} = question;
+const ArrowButton = ({id, difficulty, type, question}) => {
+    const pointsMultiplier = difficulty === "Hard" ? 3 : difficulty === "Medium" ? 2 : 1;
+
     return (
         <div>
             <button className="btn btn-sm btn-ghost" onClick={()=>document.getElementById(id).showModal()}>
@@ -17,52 +20,22 @@ const ArrowButton = ({question}) => {
                         {/* if there is a button in form, it will close the modal */}
                         <button className="btn btn-lg btn-circle btn-ghost absolute right-2 top-2">✕</button>
                     </form>
-                    {type === 3 && <FillInBlanksQuiz/>}
-                    {type === 2 && <SortingArrangement/>}
-                    {type === 1 && <MultipleChoices/>}
+                    {type === 3 && <FillInBlanksQuiz questions={question} />}
+                    {type === 2 && <SortingArrangement questions={question} />}
+                    {type === 1 && <MultipleChoices id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
                 </div>
             </dialog>
         </div>
     )
 }
 
-const questions = [
-    {
-        id: '4LCF7qzdJu8VT8wZECf1',
-        title: 'fill in the blanks',
-        text: 'The capital of ____ is ____.',
-        correctAnswers: ['France', 'Paris'],
-        choices: ['France', 'Paris', 'Germany', 'Berlin', 'Spain', 'Madrid'],
-        explanation: 'France is a country in Europe, and Paris is its capital city, known for landmarks like te Eiffel Tower.',
-        difficulty: 'Hard',
-        type: 3
-    },
-    {
-        id: '5LCF7qwsJx9VT8wZECf1',
-        title: 'fill in the blanks 2',
-        text: 'The capital of ____ is ____.',
-        correctAnswers: ['France', 'Paris'],
-        choices: ['France', 'Paris', 'Germany', 'Berlin', 'Spain', 'Madrid'],
-        explanation: 'France is a country in Europe, and Paris is its capital city, known for landmarks like te Eiffel Tower.',
-        difficulty: 'Easy',
-        type: 2
-    },
-    {
-        id: '5LCF7qwsJx9VT8wZECf21',
-        title: 'fill in the blanks 2',
-        text: 'The capital of ____ is ____.',
-        correctAnswers: ['France', 'Paris'],
-        choices: ['France', 'Paris', 'Germany', 'Berlin', 'Spain', 'Madrid'],
-        explanation: 'France is a country in Europe, and Paris is its capital city, known for landmarks like te Eiffel Tower.',
-        difficulty: 'Med.',
-        type: 1
-    }
-];
+// Type 3 = fill in the blanks
+// Type 2 = sorting bars arrangement
+// Type 1 = Multiple Choices
 
-const ChallengeTable = () => {
-    // Type 3 = fill in the blanks
-    // Type 2 = sorting bars arrangement
-    // Type 1 = Multiple Choices
+const ChallengeTable = ({ challenges }) => {
+    const { solvedChallenges } = useContext(ChallengeContext);
+
     return (
         <div className="overflow-x-auto">
             <table className="table">
@@ -71,17 +44,34 @@ const ChallengeTable = () => {
                 <tr>
                     <th className="w-0"></th>
                     <th>Name</th>
+                    <th>Category</th>
                     <th>Difficulty</th>
                     <th className="w-0"></th>
                 </tr>
                 </thead>
                 <tbody>
-                    {questions.map((question) => (
+                    {challenges.map((question) => (
                         <tr key={question.id}>
                             <td>
-                                {/*<div aria-label="status" className="status status-accent status-lg"></div>*/}
+                                {solvedChallenges.includes(question.id) && (
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="h-5 w-5 text-green-500"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={3}
+                                            d="M5 13l4 4L19 7"
+                                        />
+                                    </svg>
+                                )}
                             </td>
                             <td>{question.title}</td>
+                            <td>{question.category}</td>
                             <td>
                                 <span className={`badge 
                                 ${question.difficulty === 'Easy' ? 
@@ -92,7 +82,7 @@ const ChallengeTable = () => {
                                 </span>
                             </td>
                             <td>
-                                <ArrowButton question={question} />
+                                <ArrowButton id={question.id} difficulty={question.difficulty} type={question.type} question={question.questions} />
                             </td>
                         </tr>
                     ))}
