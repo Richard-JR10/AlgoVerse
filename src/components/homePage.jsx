@@ -1,6 +1,5 @@
-import {useContext} from 'react'
 import NavBar from "./navBar.jsx";
-import {ErrorContext} from "../context/errorContext.jsx";
+import ParticleBackground from "./utils/ParticleBackground.jsx";
 
 const HomePage = () => {
     const homeMenu = [
@@ -12,10 +11,10 @@ const HomePage = () => {
     ];
 
     return (
-        <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
+        <div className="scrollbar-hide overflow-auto h-screen bg-base-200 relative">
+            <ParticleBackground />
             <NavBar menuItems={homeMenu}/>
-            <div className="hero bg-base-200 text-accent" style={{ minHeight: "calc(100vh - var(--navbar-height))" }}>
-
+            <div className="hero bg-transparent text-accent" style={{ minHeight: "calc(100vh - var(--navbar-height))" }}>
                 <div className="hero-content text-center">
                     <div className="max-w-md">
                         <h1 className="text-5xl font-bold">ALGOVERSE</h1>
@@ -29,4 +28,5 @@ const HomePage = () => {
         </div>
     )
 }
+
 export default HomePage
