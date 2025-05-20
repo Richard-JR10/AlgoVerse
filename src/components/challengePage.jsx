@@ -1,6 +1,12 @@
 import 'react';
 import NavBar from "./navBar.jsx";
 import ChallengeTable from "./challengeTable.jsx";
+import {useContext, useEffect, useState} from "react";
+import axios from "axios";
+import {useAuth} from "../Auth/AuthContext.jsx";
+import {ErrorContext} from "../context/errorContext.jsx";
+import FilterButton from "./challenges/filterButton.jsx";
+import {ChallengeContext} from "./challenges/ChallengeContext.jsx";
 
 const challengeMenu = [
     { label: 'Visualizer', path: '/visualizer' },
@@ -11,6 +17,159 @@ const challengeMenu = [
 ];
 
 const ChallengePage = () => {
+    const { auth } = useAuth();
+    const [challengeEntries, setChallengeEntries] = useState([]);
+    const { setError } = useContext(ErrorContext);
+    const { solvedChallenges } = useContext(ChallengeContext);
+
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filteredEntries, setFilteredEntries] = useState([]);
+    const [isFiltering, setIsFiltering] = useState(false);
+
+    // Filter state in a single object
+    const [filters, setFilters] = useState({
+        status: null,
+        difficulty: null,
+        category: null,
+        type: null
+    });
+
+    const CACHE_KEY = 'challengesEntries';
+    const CACHE_DURATION = 1000 * 60 * 60;
+
+    const baseURL = 'https://algoverse-backend-nodejs.onrender.com';
+
+    useEffect(() => {
+        const fetchChallengesEntries = async () => {
+            const cached = localStorage.getItem(CACHE_KEY);
+
+            if (cached) {
+                const { data, timestamp } = JSON.parse(cached);
+                if (Date.now() - timestamp < CACHE_DURATION) {
+                    setChallengeEntries(data);
+                    setFilteredEntries(data);
+                    setError(null);
+                    return;
+                }
+            }
+
+            try {
+                if (!auth.currentUser) {
+                    setError('No user is logged in');
+                    return;
+                }
+
+                const token = await auth.currentUser.getIdToken();
+
+                const response = await axios.get(`${baseURL}/api/challenges`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                setChallengeEntries(response.data);
+                setFilteredEntries(response.data); // Initialize filtered entries with all entries
+                setError(null);
+
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data: response.data, timestamp: Date.now() }));
+            } catch (err) {
+                console.error('Fetch error:', err);
+                // Handle Axios-specific errors
+                if (err.response) {
+                    setError(err.response.data.error || 'Failed to fetch code entries');
+                } else {
+                    setError(err.message || 'An unexpected error occurred');
+                }
+            }
+        };
+        fetchChallengesEntries();
+    }, [auth.currentUser]);
+
+    useEffect(() => {
+        // Check if any filtering is active
+        const hasActiveFilters = searchTerm.trim() !== '' ||
+            Object.values(filters).some(filter => filter !== null && filter !== '');
+
+        setIsFiltering(hasActiveFilters);
+        applyFilters();
+    }, [searchTerm, filters, challengeEntries, solvedChallenges]);
+
+    const applyFilters = () => {
+        // Only proceed if we have challenge entries to filter
+        if (challengeEntries.length === 0) return;
+
+        // If no search or filters are active, show all entries
+        const hasActiveFilters = searchTerm.trim() !== '' ||
+            Object.values(filters).some(filter => filter !== null && filter !== '');
+
+        if (!hasActiveFilters) {
+            setFilteredEntries(challengeEntries);
+            return;
+        }
+
+        let results = [...challengeEntries];
+
+        // Apply search term filter
+        if (searchTerm.trim() !== '') {
+            const term = searchTerm.toLowerCase();
+            results = results.filter(entry =>
+                entry.title?.toLowerCase().includes(term) ||
+                entry.description?.toLowerCase().includes(term)
+            );
+        }
+
+        // Apply status filter
+        if (filters.status) {
+            results = results.filter(entry =>
+                filters.status === 'Solved'
+                    ? solvedChallenges.includes(entry.id)
+                    : !solvedChallenges.includes(entry.id)
+            );
+        }
+
+        // Apply difficulty filter
+        if (filters.difficulty) {
+            results = results.filter(entry => entry.difficulty === filters.difficulty);
+        }
+
+        // Apply category filter
+        if (filters.category) {
+            results = results.filter(entry => entry.category === filters.category);
+        }
+
+        // Apply challenge type filter
+        if (filters.type) {
+            results = results.filter(entry => entry.type === filters.type);
+        }
+
+        setFilteredEntries(results);
+    }
+
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+    }
+
+    const handleFilterChange = (filterType, value) => {
+        // If the same value is clicked again, toggle it off
+        setFilters(prev => ({
+            ...prev,
+            [filterType]: prev[filterType] === value ? null : value
+        }));
+    }
+
+    const handleResetFilters = () => {
+        setSearchTerm('');
+        setFilters({
+            status: null,
+            difficulty: null,
+            category: null,
+            type: null
+        });
+    }
+
+    // Determine which entries to display
+    const displayEntries = isFiltering ? filteredEntries : challengeEntries;
+
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200 flex flex-col items-center">
             <NavBar menuItems={challengeMenu} />
@@ -80,31 +239,9 @@ const ChallengePage = () => {
                         <div className="col-span-1 lg:col-span-3">
                             <div className="card w-full bg-base-300 shadow-xl min-h-64">
                                 <div className="card-body p-4 sm:p-6">
-                                    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-3 lg:gap-0">
-                                        {/* Filters - Stack vertically on mobile, horizontal on sm-md with full width, original layout on lg */}
-                                        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-fit">
-                                            <select defaultValue="Status" className="select select-sm sm:select-md w-full lg:w-auto">
-                                                <option disabled={true}>Status</option>
-                                                <option>Not Started</option>
-                                                <option>In Progress</option>
-                                                <option>Completed</option>
-                                            </select>
-                                            <select defaultValue="Category" className="select select-sm sm:select-md w-full lg:w-auto">
-                                                <option disabled={true}>Category</option>
-                                                <option>Sorting</option>
-                                                <option>Search</option>
-                                                <option>Graph</option>
-                                                <option>Recursion</option>
-                                            </select>
-                                            <select defaultValue="Difficulty" className="select select-sm sm:select-md w-full lg:w-auto">
-                                                <option disabled={true}>Difficulty</option>
-                                                <option>Easy</option>
-                                                <option>Medium</option>
-                                                <option>Hard</option>
-                                            </select>
-                                        </div>
+                                    <div className="flex flex-row items-start justify-end lg:items-center gap-3 lg:gap-0">
                                         {/* Search bar - Full width on mobile to md, auto width on lg */}
-                                        <label className="input input-sm sm:input-md w-full lg:max-w-69">
+                                        <label className="input input-sm sm:input-md w-full lg:max-w-69 mr-2">
                                             <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                                                 <g
                                                     strokeLinejoin="round"
@@ -117,10 +254,17 @@ const ChallengePage = () => {
                                                     <path d="m21 21-4.3-4.3"></path>
                                                 </g>
                                             </svg>
-                                            <input type="search" required placeholder="Search" className="w-full" />
+                                            <input onChange={handleSearch} type="search" required placeholder="Search" className="w-full" />
                                         </label>
+
+                                        {/* New FilterButton Component */}
+                                        <FilterButton
+                                            filters={filters}
+                                            onFilterChange={handleFilterChange}
+                                            onResetFilters={handleResetFilters}
+                                        />
                                     </div>
-                                    <ChallengeTable/>
+                                    <ChallengeTable challenges={displayEntries}/>
                                 </div>
                             </div>
                         </div>
