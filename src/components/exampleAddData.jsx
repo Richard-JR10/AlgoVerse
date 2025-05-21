@@ -49,10 +49,6 @@ const ExampleAddData = ({ onAddData }) => {
             description: exampleData.description,
             examples: exampleEntries,
         });
-        console.log({
-            ...exampleData,
-            examples: exampleEntries
-        });
         document.getElementById('my_modal_3').close();
         handleClose();
     }
