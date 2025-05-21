@@ -1,8 +1,7 @@
-import {useState, useEffect, useRef, useContext} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
-import {ErrorContext} from "../../context/errorContext.jsx";
 
 const SelectSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -10,7 +9,7 @@ const SelectSort = () => {
     const [isSorting, setIsSorting] = useState(false);
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { setError } = useContext(ErrorContext);
+    const [error, setError] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
@@ -33,6 +32,13 @@ const SelectSort = () => {
     const FONT_COLOR = "#6E199F";
     const INDEX_COLOR = "#EDE2F3";
 
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
+
     const handleInput = (e) => {
         e.preventDefault();
         setInputValue(e.target.value);
@@ -40,7 +46,20 @@ const SelectSort = () => {
 
     const handleSizeInput = (e) => {
         e.preventDefault();
-        setSize(e.target.value);
+        const value = Number(e.target.value);
+        if (Number.isInteger(value) && value >= 0) {
+            if (value > 50) {
+                setError("Maximum size is 50.");
+                return;
+            }
+            if (value < 0) {
+                setError("Minimum size is 0.");
+                return;
+            }
+            setSize(value);
+        } else {
+            setError("Size must be a non-negative integer");
+        }
     };
 
     const animateBars = async (input) => {
@@ -386,7 +405,7 @@ const SelectSort = () => {
     }, [speed]);
 
     return (
-        <div className="flex flex-col h-full bg-base-200">
+        <div className="flex flex-col h-full bg-base-200 relative">
             <NavBar menuItems={sortingMenu}/>
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
@@ -445,6 +464,14 @@ const SelectSort = () => {
                 <div className="lg:navbar-end">
                 </div>
             </div>
+            {error && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-20">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

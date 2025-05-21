@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
-import { ErrorContext } from "../../context/errorContext.jsx";
 
 const MergeSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -10,7 +9,7 @@ const MergeSort = () => {
     const [isSorting, setIsSorting] = useState(false);
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { setError } = useContext(ErrorContext);
+    const [error, setError] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
@@ -32,6 +31,13 @@ const MergeSort = () => {
     const defaultColor = "#EDE2F3"; // Grey for default
     const FONT_COLOR = "#6E199F"; // Black for text
     const INDEX_COLOR = "#FFFFFF"; // White for index labels
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     const API_URL = 'https://algoverse-backend-python.onrender.com';
 
@@ -538,7 +544,7 @@ const MergeSort = () => {
     };
 
     return (
-        <div className="flex flex-col h-full bg-base-200">
+        <div className="flex flex-col h-full bg-base-200 relative">
             <NavBar menuItems={sortingMenu} />
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
@@ -597,6 +603,14 @@ const MergeSort = () => {
                 <div className="lg:navbar-end">
                 </div>
             </div>
+            {error && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-20">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
