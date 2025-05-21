@@ -317,12 +317,6 @@ const InsertSort = () => {
                 .attr("x", parseFloat(barAX) + parseFloat(barWidth) / 2)
                 .end()
         ]);
-        if (movedBarsArr.includes(index1)) {
-            console.log(`INDEX1: ${index1} is in movedBarsArr`);
-        }
-        if (movedBarsArr.includes(index2)) {
-            console.log(`INDEX2: ${index2} is in movedBarsArr`);
-        }
         let newMovedBars = movedBars.filter((value) => value !== index1);
         newMovedBars = [...newMovedBars,index2];
         setMovedBars(newMovedBars);
