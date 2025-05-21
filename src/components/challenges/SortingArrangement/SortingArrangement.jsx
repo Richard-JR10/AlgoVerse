@@ -1,5 +1,4 @@
-// SortingArrangement.jsx
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import {
     DndContext,
     closestCenter,
@@ -10,12 +9,18 @@ import {
     DragOverlay,
 } from '@dnd-kit/core';
 import {
-    arrayMove, horizontalListSortingStrategy,
+    arrayMove,
+    horizontalListSortingStrategy,
     SortableContext,
-    sortableKeyboardCoordinates
+    sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { SortableItem } from './SortableItem.jsx';
 import { Item } from './Item.jsx';
+import axios from 'axios';
+import PropTypes from "prop-types";
+import {useAuth} from "../../../Auth/AuthContext.jsx";
+import {ErrorContext} from "../../../context/errorContext.jsx";
+import {ChallengeContext} from "../ChallengeContext.jsx";
 
 const ALGORITHMS = {
     BUBBLE: 'bubble sort',
@@ -25,61 +30,28 @@ const ALGORITHMS = {
     SELECTION: 'selection sort'
 };
 
-const questions = [
-    {
-        id: 1,
-        algorithm: ALGORITHMS.BUBBLE,
-        initialArray: [7, 3, 9, 2, 5],
-        expectedArray: [3, 7, 2, 5, 9],
-        explanation: 'Bubble sort repeatedly swaps adjacent elements if they are in wrong order. After first pass, the largest element (9) bubbles to the end.',
-        stepDescription: 'Show the array after the first complete pass'
-    },
-    {
-        id: 2,
-        algorithm: ALGORITHMS.QUICK,
-        initialArray: [8, 4, 6, 2, 5],
-        expectedArray: [5, 4, 6, 2, 8], // After first partition with pivot=8
-        explanation: 'Quick sort selects a pivot and partitions the array. After first partition with pivot=8, elements are rearranged around the pivot.',
-        stepDescription: 'Show the array after the first partition (pivot=8)'
-    },
-    {
-        id: 3,
-        algorithm: ALGORITHMS.MERGE,
-        initialArray: [5, 1, 4, 2, 8],
-        expectedArray: [1, 5, 2, 4, 8], // After first merge of pairs
-        explanation: 'Merge sort divides the array and merges sorted halves. This shows the array after merging adjacent pairs.',
-        stepDescription: 'Show the array after merging adjacent pairs'
-    },
-    {
-        id: 4,
-        algorithm: ALGORITHMS.INSERTION,
-        initialArray: [6, 3, 8, 1, 5],
-        expectedArray: [3, 6, 8, 1, 5], // After first insertion
-        explanation: 'Insertion sort builds the final array one item at a time. This shows the array after inserting the second element.',
-        stepDescription: 'Show the array after the first insertion step'
-    },
-    {
-        id: 5,
-        algorithm: ALGORITHMS.SELECTION,
-        initialArray: [7, 2, 9, 4, 1],
-        expectedArray: [1, 2, 9, 4, 7], // After first selection and swap
-        explanation: 'Selection sort repeatedly finds the minimum element. This shows the array after the first swap with the minimum element.',
-        stepDescription: 'Show the array after the first selection and swap'
-    }
-];
-
-
-const SortingArrangement = ({questions}) => {
+const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const currentQuestion = questions[currentQuestionIndex];
 
     // State
     const [items, setItems] = useState([...currentQuestion.initialArray]);
+    const [answers, setAnswers] = useState(questions.map(() => [...currentQuestion.initialArray]));
     const [activeId, setActiveId] = useState(null);
-    const [isCorrect, setIsCorrect] = useState(null);
-    const [showExplanation, setShowExplanation] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isCompleted, setIsCompleted] = useState(false);
+    const [isRetaking, setIsRetaking] = useState(false);
+    const [storedAnswers, setStoredAnswers] = useState(null);
+    const [storedScore, setStoredScore] = useState(null);
+    const [retryCount, setRetryCount] = useState(0);
+    const [loading, setLoading] = useState(true);
 
-    // Sensors for different input methods
+    const { auth } = useAuth();
+    const { setError } = useContext(ErrorContext);
+    const { addSolvedChallenge, addPoints } = useContext(ChallengeContext);
+    const baseURL = 'https://algoverse-backend-nodejs.onrender.com';
+
+    // Sensors
     const sensors = useSensors(
         useSensor(PointerSensor),
         useSensor(KeyboardSensor, {
@@ -87,12 +59,51 @@ const SortingArrangement = ({questions}) => {
         })
     );
 
-    // Drag start handler
+    // Check completion status
+    useEffect(() => {
+        const checkCompletion = async () => {
+            if (auth.currentUser) {
+                try {
+                    const token = await auth.currentUser.getIdToken();
+                    const response = await axios.get(`${baseURL}/api/userProgress`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    });
+                    if (response.data.SolvedChallenges?.includes(id)) {
+                        setIsCompleted(true);
+                        const rawAnswers = response.data.challengeAttempts?.[id]?.answers || [];
+                        // Normalize storedAnswers to array of arrays
+                        let normalizedAnswers = [];
+                        let answerIndex = 0;
+                        for (const q of questions) {
+                            const arrayLength = q.expectedArray.length;
+                            const questionAnswer = rawAnswers.slice(answerIndex, answerIndex + arrayLength);
+                            normalizedAnswers.push(questionAnswer);
+                            answerIndex += arrayLength;
+                        }
+                        setStoredAnswers(normalizedAnswers);
+                        setStoredScore(response.data.challengeAttempts?.[id]?.score || 0);
+                        setRetryCount(response.data.retryCount?.[id] || 0);
+                    }
+                } catch (err) {
+                    console.error("Error checking completion:", err);
+                    setError("Failed to load challenge status.");
+                }
+            }
+            setLoading(false);
+        };
+        checkCompletion();
+    }, [auth.currentUser, id, setError, questions, baseURL]);
+
+    // Update items when question changes
+    useEffect(() => {
+        setItems([...questions[currentQuestionIndex].initialArray]);
+    }, [currentQuestionIndex, questions]);
+
+    // Drag handlers
     const handleDragStart = (event) => {
         setActiveId(event.active.id);
     };
 
-    // Drag end handler
     const handleDragEnd = (event) => {
         const { active, over } = event;
         setActiveId(null);
@@ -101,46 +112,145 @@ const SortingArrangement = ({questions}) => {
             setItems((items) => {
                 const oldIndex = items.indexOf(active.id);
                 const newIndex = items.indexOf(over.id);
-                return arrayMove(items, oldIndex, newIndex);
+                const newItems = arrayMove(items, oldIndex, newIndex);
+                // Update answers
+                setAnswers((prev) => {
+                    const newAnswers = [...prev];
+                    newAnswers[currentQuestionIndex] = [...newItems];
+                    return newAnswers;
+                });
+                return newItems;
             });
         }
     };
 
-    // Check if the current arrangement matches the expected result
-    const checkAnswer = () => {
-        const correct = JSON.stringify(items) === JSON.stringify(currentQuestion.expectedArray);
-        setIsCorrect(correct);
-        setShowExplanation(true);
-    };
-
-    // Reset the current question
+    // Reset question
     const resetQuestion = () => {
         setItems([...currentQuestion.initialArray]);
-        setIsCorrect(null);
-        setShowExplanation(false);
+        setAnswers((prev) => {
+            const newAnswers = [...prev];
+            newAnswers[currentQuestionIndex] = [...currentQuestion.initialArray];
+            return newAnswers;
+        });
     };
 
-    // Move to next question
+    // Navigation
     const nextQuestion = () => {
         if (currentQuestionIndex < questions.length - 1) {
             setCurrentQuestionIndex(currentQuestionIndex + 1);
-            setItems([...questions[currentQuestionIndex + 1].initialArray]);
-            setIsCorrect(null);
-            setShowExplanation(false);
         }
     };
 
-    // Move to previous question
     const prevQuestion = () => {
         if (currentQuestionIndex > 0) {
             setCurrentQuestionIndex(currentQuestionIndex - 1);
-            setItems([...questions[currentQuestionIndex - 1].initialArray]);
-            setIsCorrect(null);
-            setShowExplanation(false);
         }
     };
 
-    // Get algorithm-specific styling
+    // Submit quiz
+    const handleSubmit = async () => {
+        setIsSubmitted(true);
+        setIsRetaking(false);
+        const score = calculateScore();
+        const totalPoints = score * pointsMultiplier;
+        if (!isCompleted) {
+            const success = await handleCompleteChallenge(totalPoints, answers, score);
+            if (success) {
+                setIsCompleted(true);
+            }
+        } else {
+            await handleRecordRetry(answers, score);
+        }
+    };
+
+    // Calculate score
+    const calculateScore = () => {
+        return answers.reduce((score, answer, index) => {
+            return JSON.stringify(answer) === JSON.stringify(questions[index].expectedArray)
+                ? score + 1
+                : score;
+        }, 0);
+    };
+
+    // Complete challenge
+    const handleCompleteChallenge = async (totalPoints, answers, score) => {
+        if (!auth.currentUser) {
+            setError("You must be logged in to complete a challenge.");
+            return false;
+        }
+        try {
+            const token = await auth.currentUser.getIdToken();
+            const payload = {
+                challengeId: id || "unknown",
+                points: Number(totalPoints) || 0,
+                answers: answers.flat().map(a => a.toString()),
+                score: Number(score) || 0,
+            };
+            if (!payload.challengeId || !Array.isArray(payload.answers)) {
+                throw new Error("Invalid payload: challengeId or answers missing");
+            }
+            await axios.post(
+                `${baseURL}/api/completeChallenge`,
+                payload,
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            addSolvedChallenge(id);
+            addPoints(totalPoints);
+            return true;
+        } catch (err) {
+            console.error("Error in handleCompleteChallenge:", {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+            });
+            setError(err.response?.data?.error || "Failed to complete challenge.");
+            return false;
+        }
+    };
+
+    // Record retry
+    const handleRecordRetry = async (answers, score) => {
+        if (!auth.currentUser) {
+            setError("You must be logged in to retry a challenge.");
+            return;
+        }
+        try {
+            const token = await auth.currentUser.getIdToken();
+            const sanitizedAnswers = answers.flat().map(a => a.toString());
+            await axios.post(
+                `${baseURL}/api/recordRetry`,
+                { challengeId: id, answers: sanitizedAnswers, score },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            setRetryCount(prev => prev + 1);
+            setStoredAnswers(answers);
+            setStoredScore(score);
+        } catch (err) {
+            console.error("Error recording retry:", err);
+            setError(err.response?.data?.error || "Failed to record retry.");
+        }
+    };
+
+    // Reset quiz
+    const handleReset = () => {
+        setIsSubmitted(false);
+        setAnswers(questions.map(q => [...q.initialArray]));
+        setCurrentQuestionIndex(0);
+        setIsRetaking(true);
+        setItems([...questions[0].initialArray]);
+    };
+
+    // Algorithm styling
     const getAlgorithmColor = () => {
         switch(currentQuestion.algorithm) {
             case ALGORITHMS.BUBBLE: return 'bg-blue-500';
@@ -152,8 +262,84 @@ const SortingArrangement = ({questions}) => {
         }
     };
 
+    if (loading) {
+        return <p className="text-center">Loading...</p>;
+    }
+
+    if (isSubmitted || (isCompleted && !isRetaking && !isSubmitted)) {
+        const displayAnswers = isSubmitted ? answers : storedAnswers || answers;
+        const displayScore = isSubmitted ? calculateScore() : storedScore !== null ? storedScore : calculateScore();
+
+        return (
+            <div className="max-w-3xl mx-auto p-6 rounded-xl flex flex-col justify-center">
+                <div className="mt-4">
+                    <div className="text-lg font-medium mb-10 text-center">
+                        {isCompleted && !isSubmitted ? "Challenge Already Completed" : "Quiz Results"}
+                    </div>
+                    <div className="flex flex-col items-start w-full">
+                        <div className="text-lg mb-4">
+                            You scored {displayScore} out of {questions.length}!
+                        </div>
+                        {questions.map((q, qIndex) => (
+                            <div key={qIndex} className="mb-4 w-full">
+                                <div className="font-medium">
+                                    {q.stepDescription} ({q.algorithm})
+                                </div>
+                                <div className=" p-3 rounded-md mt-2">
+                                    <p className="font-semibold mb-1">Your arrangement:</p>
+                                    <div className="flex gap-2">
+                                        {displayAnswers[qIndex]?.map((num, i) => (
+                                            <span key={`answer-${qIndex}-${i}`} className="font-mono">{num}</span>
+                                        ))}
+                                        <span
+                                            className={
+                                                JSON.stringify(displayAnswers[qIndex]) === JSON.stringify(q.expectedArray)
+                                                    ? "text-green-500"
+                                                    : "text-red-500"
+                                            }
+                                        >
+                                            {JSON.stringify(displayAnswers[qIndex]) === JSON.stringify(q.expectedArray)
+                                                ? " (Correct)"
+                                                : " (Incorrect)"}
+                                        </span>
+                                    </div>
+                                </div>
+                                {JSON.stringify(displayAnswers[qIndex]) !== JSON.stringify(q.expectedArray) && (
+                                    <div className=" p-3 rounded-md mt-2">
+                                        <p className="font-semibold mb-1">Expected arrangement:</p>
+                                        <div className="flex gap-2">
+                                            {q.expectedArray.map((num, i) => (
+                                                <span key={`expected-${qIndex}-${i}`} className="font-mono">{num}</span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        {isCompleted && (
+                            <div className="text-sm text-gray-600 mb-4">
+                                This challenge was previously completed. No additional points will be awarded upon retry.
+                            </div>
+                        )}
+                        {isCompleted && (
+                            <div className="text-sm text-gray-600 mb-4">
+                                Retry attempts: {retryCount}
+                            </div>
+                        )}
+                        <button
+                            className="btn btn-primary w-full mt-4"
+                            onClick={handleReset}
+                        >
+                            Retake Quiz
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     return (
-        <div className="max-w-3xl mx-auto p-6 rounded-xl flex flex-col justify-center">
+        <div className="max-w-3xl mx-auto p-0 sm:p-6 rounded-xl flex flex-col justify-center">
             <div className="mt-20">
                 <div className={`mb-4 p-2 rounded-lg ${getAlgorithmColor().replace('500', '100')} border-l-4 ${getAlgorithmColor()} border-opacity-75`}>
                     <h1 className="text-2xl font-bold text-center text-gray-800">
@@ -205,72 +391,58 @@ const SortingArrangement = ({questions}) => {
                     <button
                         onClick={prevQuestion}
                         disabled={currentQuestionIndex === 0}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:opacity-50"
+                        className="btn rounded-lg shadow-lg bg-gray-600"
                     >
                         Previous
                     </button>
 
-                    <div className="flex gap-4">
+                    <div className="flex gap-1 sm:gap-4">
                         <button
                             onClick={resetQuestion}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
+                            className="btn btn-error rounded-lg shadow-lg"
                         >
                             Reset
                         </button>
-                        <button
-                            onClick={checkAnswer}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        >
-                            Check Answer
-                        </button>
+
                     </div>
 
-                    <button
-                        onClick={nextQuestion}
-                        disabled={currentQuestionIndex === questions.length - 1}
-                        className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition disabled:opacity-50"
-                    >
-                        Next
-                    </button>
+                    {currentQuestionIndex === questions.length - 1 ? (
+                        <button
+                            onClick={handleSubmit}
+                            className="btn btn-success rounded-lg shadow-lg"
+                        >
+                            Submit
+                        </button>
+                    ) : (
+                        <button
+                            onClick={nextQuestion}
+                            disabled={currentQuestionIndex === questions.length - 1}
+                            className="btn rounded-lg shadow-lg bg-gray-600"
+                        >
+                            Next
+                        </button>
+                    )}
+
                 </div>
 
-                {isCorrect !== null && (
-                    <div className={`mt-4 p-4 rounded-lg ${
-                        isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    } shadow-inner`}>
-                        <p className="font-bold text-center text-lg">
-                            {isCorrect ? '✅ Correct!' : '❌ Incorrect! Try again.'}
-                        </p>
-                    </div>
-                )}
-
-                {showExplanation && (
-                    <div className="mt-6 p-4 bg-yellow-50 rounded-lg shadow-inner">
-                        <h3 className="font-bold mb-3 text-lg text-gray-800">Explanation:</h3>
-                        <p className="mb-3 text-gray-700">{currentQuestion.explanation}</p>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-white p-3 rounded-md">
-                                <p className="font-semibold mb-1">Original array:</p>
-                                <div className="flex gap-2">
-                                    {currentQuestion.initialArray.map((num, i) => (
-                                        <span key={`orig-${i}`} className="font-mono">{num}</span>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="bg-white p-3 rounded-md">
-                                <p className="font-semibold mb-1">Expected after first pass:</p>
-                                <div className="flex gap-2">
-                                    {currentQuestion.expectedArray.map((num, i) => (
-                                        <span key={`expected-${i}`} className="font-mono">{num}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );
+};
+
+SortingArrangement.propTypes = {
+    id: PropTypes.string.isRequired,
+    questions: PropTypes.arrayOf(
+        PropTypes.shape({
+            id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+            algorithm: PropTypes.string.isRequired,
+            initialArray: PropTypes.arrayOf(PropTypes.number).isRequired,
+            expectedArray: PropTypes.arrayOf(PropTypes.number).isRequired,
+            explanation: PropTypes.string.isRequired,
+            stepDescription: PropTypes.string.isRequired,
+        })
+    ).isRequired,
+    pointsMultiplier: PropTypes.number.isRequired,
 };
 
 export default SortingArrangement;
