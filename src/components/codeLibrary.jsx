@@ -128,7 +128,8 @@ const CodeLibrary = () => {
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
             <NavBar menuItems={codeMenu} />
-            <div className="flex flex-col justify-center items-center mt-25 mx-4 sm:mx-0">
+            <div className="flex flex-col justify-center items-center mt-15 mx-4 sm:mx-0">
+                <h1 className="text-center font-medium text-4xl sm:text-7xl mb-5 tracking-widest">CODE LIBRARY.</h1>
                 <div className="flex flex-col items-center justify-center max-w-120 w-full">
                     <label className="input w-full">
                         <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
