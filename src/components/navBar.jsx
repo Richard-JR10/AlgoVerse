@@ -42,7 +42,7 @@ const NavBar = ({ menuItems }) => {
 
 
     return (
-        <div className="navbar bg-base-100 sticky top-0 z-50 px-6 border-b-1 h-fit">
+        <div className="navbar bg-base-100 sticky top-0 z-50 px-4 md:px-6 border-b border-base-200 h-fit shadow-sm">
             <div className="navbar-start">
                 {menuItems.length !== 0 && (
                     <div className="dropdown">
