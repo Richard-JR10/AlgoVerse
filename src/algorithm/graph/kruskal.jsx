@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
-import { ErrorContext } from '../../context/errorContext.jsx';
+import axios from "axios";
 
 // Constants for visualization
 const COLORS = {
@@ -46,12 +46,14 @@ const Kruskal = () => {
     const [isSorting, setIsSorting] = useState(false);
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { setError } = useContext(ErrorContext);
+    const [error, setError] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const [size, setSize] = useState(6);
     const isInitializedRef = useRef(false);
+
+    const baseURL = 'https://algoverse-backend-python.onrender.com';
 
     const graphMenu = [
         { label: 'BFS', path: '/visualizer/graph/bfs' },
@@ -59,6 +61,13 @@ const Kruskal = () => {
         { label: 'Dijkstra', path: '/visualizer/graph/dijkstra' },
         { label: 'Kruskal', path: '/visualizer/graph/kruskal' },
     ];
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     // Input handlers
     const handleNodeInput = (e) => setNodeInput(e.target.value.toUpperCase());
@@ -540,47 +549,50 @@ const Kruskal = () => {
         resetHighlight();
 
         try {
-            const kruskalSteps = simulateKruskal(adjacencyList);
-            await animateKruskalSteps(kruskalSteps);
-        } catch (err) {
-            setError(err.message || 'Failed to process Kruskal traversal');
-        }
+            // Validate payload
+            if (!Object.keys(adjacencyList).length) {
+                throw new Error('Graph is empty');
+            }
+            for (const [node, edges] of Object.entries(adjacencyList)) {
+                if (typeof node !== 'string' || !node.trim()) {
+                    throw new Error('Node keys must be non-empty strings');
+                }
+                if (!Array.isArray(edges)) {
+                    throw new Error(`Edges of node '${node}' must be a list`);
+                }
+                for (const edge of edges) {
+                    if (typeof edge.toNode !== 'string' || !edge.toNode.trim()) {
+                        throw new Error(`Target node of edge from '${node}' must be a non-empty string`);
+                    }
+                    if (!(edge.toNode in adjacencyList)) {
+                        throw new Error(`Target node '${edge.toNode}' from '${node}' not found in graph`);
+                    }
+                    if (!Number.isInteger(edge.weight) || edge.weight <= 0) {
+                        throw new Error(`Weight of edge from '${node}' to '${edge.toNode}' must be a positive integer`);
+                    }
+                }
+            }
 
-        setIsSorting(false);
-    };
-
-    const simulateKruskal = (graph) => {
-        const steps = [];
-        const nodes = Object.keys(graph);
-        const uf = new UnionFind(nodes);
-
-        const edges = [];
-        const edgeMap = new Map();
-
-        Object.entries(graph).forEach(([source, neighbors]) => {
-            neighbors.forEach(({ toNode, weight }) => {
-                const key = [source, toNode].sort().join('-');
-                if (!edgeMap.has(key)) {
-                    edges.push({ source, target: toNode, weight });
-                    edgeMap.set(key, true);
+            const response = await axios.post(`${baseURL}/graph/kruskal`, {
+                adjacency_list: adjacencyList,
+                start_node: '' // Not used, but included for model compatibility
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
                 }
             });
-        });
 
-        edges.sort((a, b) => a.weight - b.weight);
-
-        for (const { source, target, weight } of edges) {
-            steps.push({ type: 'consider', source, target });
-
-            if (!uf.connected(source, target)) {
-                uf.union(source, target);
-                steps.push({ type: 'add', source, target });
+            if (response.data && Array.isArray(response.data)) {
+                await animateKruskalSteps(response.data);
             } else {
-                steps.push({ type: 'reject', source, target });
+                throw new Error('Received unexpected response format from server');
             }
+        } catch (err) {
+            console.error('Error during Kruskal traversal:', err);
+            setError(err.response?.data?.detail || err.message || 'Failed to process Kruskal traversal');
+        } finally {
+            setIsSorting(false);
         }
-
-        return steps;
     };
 
     const cancelTraversal = () => {
@@ -592,22 +604,13 @@ const Kruskal = () => {
         speedRef.current = speed;
     }, [speed]);
 
-    const helpText = (
-        <div className="text-sm text-center max-w-3xl mx-auto mb-4 text-gray-600">
-            <p>
-                <strong>Tips:</strong> Newly added nodes appear in yellow. Edges are undirected (A-B:weight connects A and B). Use format 'A-B:4' to add weighted edges.
-            </p>
-        </div>
-    );
-
     return (
-        <div className="flex flex-col h-full bg-base-200">
+        <div className="flex flex-col h-full bg-base-200 relative">
             <NavBar menuItems={graphMenu} />
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
             </div>
             <div className="flex flex-col items-center mb-4 p-4">
-                {helpText}
                 <div className="flex justify-center items-center flex-row flex-wrap gap-2 mb-4">
                     <button
                         className="btn btn-primary"
@@ -638,10 +641,9 @@ const Kruskal = () => {
                             placeholder="Add nodes (e.g., A,B,C)"
                             className="input join-item w-3/4"
                             onChange={handleNodeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                         <button
-                            className="btn join-item w-1/4"
+                            className="btn btn-accent join-item w-1/4"
                             onClick={addNodes}
                             disabled={isSorting || isSubmitting || !nodeInput.trim()}
                         >
@@ -655,10 +657,9 @@ const Kruskal = () => {
                             placeholder="Add edge (e.g., A-B:4)"
                             className="input join-item w-3/4"
                             onChange={handleEdgeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                         <button
-                            className="btn join-item w-1/4"
+                            className="btn btn-accent join-item w-1/4"
                             onClick={addEdge}
                             disabled={isSorting || isSubmitting || !edgeInput.trim()}
                         >
@@ -668,7 +669,7 @@ const Kruskal = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mt-4">
                     <div className="join w-full">
-                        <span className="join-item p-3 bg-base-200">Nodes</span>
+                        <span className="join-item p-2 bg-base-200 h-fit">Nodes</span>
                         <input
                             type="number"
                             value={size}
@@ -676,10 +677,10 @@ const Kruskal = () => {
                             max="26"
                             className="input join-item w-full"
                             onChange={handleSizeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                     </div>
                     <div className="flex items-center w-full gap-2">
+                        <span className="text-xs font-semibold">SPEED:</span>
                         <input
                             type="range"
                             min="50"
@@ -688,51 +689,21 @@ const Kruskal = () => {
                             value={speed}
                             className="range range-primary w-3/4"
                             onChange={(e) => setSpeed(Number(e.target.value))}
-                            disabled={isSorting || isSubmitting}
                         />
                         <span className="w-1/4 text-sm">{speed} ms</span>
                     </div>
                 </div>
             </div>
+            {error && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-20">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
-
-class UnionFind {
-    constructor(elements) {
-        this.parent = {};
-        this.rank = {};
-        elements.forEach(element => {
-            this.parent[element] = element;
-            this.rank[element] = 0;
-        });
-    }
-
-    find(x) {
-        if (this.parent[x] !== x) {
-            this.parent[x] = this.find(this.parent[x]);
-        }
-        return this.parent[x];
-    }
-
-    union(x, y) {
-        const rootX = this.find(x);
-        const rootY = this.find(y);
-        if (rootX === rootY) return;
-
-        if (this.rank[rootX] < this.rank[rootY]) {
-            this.parent[rootX] = rootY;
-        } else if (this.rank[rootX] > this.rank[rootY]) {
-            this.parent[rootY] = rootX;
-        } else {
-            this.parent[rootY] = rootX;
-            this.rank[rootX]++;
-        }
-    }
-
-    connected(x, y) {
-        return this.find(x) === this.find(y);
-    }
-}
 
 export default Kruskal;

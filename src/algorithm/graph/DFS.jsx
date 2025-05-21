@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
-import { ErrorContext } from '../../context/errorContext.jsx';
+import axios from "axios";
 
 // Constants for visualization
 const COLORS = {
@@ -47,11 +47,13 @@ const DFS = () => {
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [size, setSize] = useState(6);
-    const { setError } = useContext(ErrorContext);
+    const [error, setError] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
+
+    const baseURL = 'https://algoverse-backend-python.onrender.com';
 
     const graphMenu = [
         { label: 'BFS', path: '/visualizer/graph/bfs' },
@@ -59,6 +61,13 @@ const DFS = () => {
         { label: 'Dijkstra', path: '/visualizer/graph/dijkstra' },
         { label: 'Kruskal', path: '/visualizer/graph/kruskal' },
     ];
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     // Input handlers
     const handleNodeInput = (e) => setNodeInput(e.target.value.toUpperCase());
@@ -522,46 +531,26 @@ const DFS = () => {
         resetHighlight();
 
         try {
-            const dfsSteps = simulateDFS(adjacencyList, startNode);
-            await animateDFSSteps(dfsSteps);
+            const response = await axios.post(`${baseURL}/graph/dfs`, {
+                adjacency_list: adjacencyList,
+                start_node: startNode
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.data && Array.isArray(response.data)) {
+                await animateDFSSteps(response.data);
+            } else {
+                setError('Received unexpected response format from server');
+            }
         } catch (err) {
-            setError(err.message || 'Failed to process DFS traversal');
+            console.error('Error during DFS traversal:', err);
+            setError(err.response?.data?.detail || err.message || 'Failed to process DFS traversal');
         } finally {
             setIsSorting(false);
         }
-    };
-
-    const simulateDFS = (graph, start) => {
-        const steps = [];
-        const visited = new Set();
-        const stack = [start];
-
-        steps.push({ type: 'queue', node: start });
-
-        while (stack.length > 0) {
-            const current = stack.pop();
-            if (!visited.has(current)) {
-                steps.push({ type: 'dequeue', node: current });
-                visited.add(current);
-
-                const neighbors = graph[current] || [];
-                for (const neighbor of neighbors.slice().reverse()) {
-                    steps.push({ type: 'explore', source: current, target: neighbor });
-
-                    if (!visited.has(neighbor)) {
-                        stack.push(neighbor);
-                        steps.push({ type: 'visit', node: neighbor, from: current });
-                        steps.push({ type: 'queue', node: neighbor });
-                    } else {
-                        steps.push({ type: 'visited', source: current, target: neighbor });
-                    }
-                }
-
-                steps.push({ type: 'finish', node: current });
-            }
-        }
-
-        return steps;
     };
 
     const cancelTraversal = () => {
@@ -573,22 +562,13 @@ const DFS = () => {
         speedRef.current = speed;
     }, [speed]);
 
-    const helpText = (
-        <div className="text-sm text-center max-w-3xl mx-auto mb-4 text-gray-600">
-            <p>
-                <strong>Tips:</strong> Newly added nodes appear in yellow. Edges are directed (A-B means A points to B). Use format 'A-B' for edges.
-            </p>
-        </div>
-    );
-
     return (
-        <div className="flex flex-col h-full bg-base-200">
+        <div className="flex flex-col h-full bg-base-200 relative">
             <NavBar menuItems={graphMenu} />
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
             </div>
             <div className="flex flex-col items-center mb-4 p-4">
-                {helpText}
                 <div className="flex justify-center items-center flex-row flex-wrap gap-2 mb-4">
                     <button
                         className="btn btn-primary"
@@ -619,10 +599,9 @@ const DFS = () => {
                             placeholder="Add nodes (e.g., A,B,C)"
                             className="input join-item w-3/4"
                             onChange={handleNodeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                         <button
-                            className="btn join-item w-1/4"
+                            className="btn btn-accent join-item w-1/4"
                             onClick={addNodes}
                             disabled={isSorting || isSubmitting || !nodeInput.trim()}
                         >
@@ -636,10 +615,9 @@ const DFS = () => {
                             placeholder="Add edge (e.g., A-B)"
                             className="input join-item w-3/4"
                             onChange={handleEdgeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                         <button
-                            className="btn join-item w-1/4"
+                            className="btn btn-accent join-item w-1/4"
                             onClick={addEdge}
                             disabled={isSorting || isSubmitting || !edgeInput.trim()}
                         >
@@ -649,18 +627,17 @@ const DFS = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mt-4">
                     <div className="join w-full">
-                        <span className="join-item p-3 bg-base-200">Start Node</span>
+                        <span className="join-item p-2 bg-base-200 h-fit">Start</span>
                         <input
                             type="text"
                             value={startNode}
                             placeholder="Start node (e.g., A)"
                             className="input join-item w-full"
                             onChange={handleStartNodeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                     </div>
                     <div className="join w-full">
-                        <span className="join-item p-3 bg-base-200">Nodes</span>
+                        <span className="join-item p-2 bg-base-200 h-fit">Nodes</span>
                         <input
                             type="number"
                             value={size}
@@ -668,10 +645,10 @@ const DFS = () => {
                             max="26"
                             className="input join-item w-full"
                             onChange={handleSizeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                     </div>
                     <div className="flex items-center w-full gap-2">
+                        <span className="text-xs font-semibold">SPEED:</span>
                         <input
                             type="range"
                             min="50"
@@ -680,12 +657,19 @@ const DFS = () => {
                             value={speed}
                             className="range range-primary w-3/4"
                             onChange={(e) => setSpeed(Number(e.target.value))}
-                            disabled={isSorting || isSubmitting}
                         />
                         <span className="w-1/4 text-sm">{speed} ms</span>
                     </div>
                 </div>
             </div>
+            {error && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-20">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

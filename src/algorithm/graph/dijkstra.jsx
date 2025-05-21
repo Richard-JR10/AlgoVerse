@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef, useContext } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
-import { ErrorContext } from '../../context/errorContext.jsx';
+import axios from "axios";
 
 // Constants for visualization
 const COLORS = {
@@ -47,12 +47,14 @@ const Dijkstra = () => {
     const [isSorting, setIsSorting] = useState(false);
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { setError } = useContext(ErrorContext);
+    const [error, setError] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const [size, setSize] = useState(6);
     const isInitializedRef = useRef(false);
+
+    const baseURL = 'https://algoverse-backend-python.onrender.com';
 
     const graphMenu = [
         { label: 'BFS', path: '/visualizer/graph/bfs' },
@@ -60,6 +62,13 @@ const Dijkstra = () => {
         { label: 'Dijkstra', path: '/visualizer/graph/dijkstra' },
         { label: 'Kruskal', path: '/visualizer/graph/kruskal' },
     ];
+
+    useEffect(() => {
+        if (error) {
+            const timer = setTimeout(() => setError(null), 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [error]);
 
     // Input handlers
     const handleNodeInput = (e) => setNodeInput(e.target.value.toUpperCase());
@@ -620,82 +629,26 @@ const Dijkstra = () => {
         resetHighlight();
 
         try {
-            const dijkstraSteps = simulateDijkstra(adjacencyList, startNode);
-            await animateDijkstraSteps(dijkstraSteps);
-
-            const nodes = Object.keys(adjacencyList).map(id => ({ id, distance: Infinity }));
-            nodes.find(n => n.id === startNode).distance = 0;
-            const distances = {};
-            const previous = {};
-            dijkstraSteps.forEach(step => {
-                if (step.type === 'visit' || step.type === 'distance') {
-                    distances[step.node] = step.distance;
-                    previous[step.node] = step.from;
+            const response = await axios.post(`${baseURL}/graph/dijkstra`, {
+                adjacency_list: adjacencyList,
+                start_node: startNode
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
                 }
             });
 
-            for (let node in previous) {
-                let current = node;
-                while (previous[current] && previous[current] !== startNode) {
-                    animateDijkstraSteps([{ type: 'path', source: previous[current], target: current }]);
-                    current = previous[current];
-                }
-                if (previous[current] === startNode) {
-                    animateDijkstraSteps([{ type: 'path', source: startNode, target: current }]);
-                }
+            if (response.data && Array.isArray(response.data)) {
+                await animateDijkstraSteps(response.data);
+            } else {
+                throw new Error('Received unexpected response format from server');
             }
         } catch (err) {
-            setError(err.message || 'Failed to process Dijkstra traversal');
+            console.error('Error during Dijkstra traversal:', err);
+            setError(err.response?.data?.detail || err.message || 'Failed to process Dijkstra traversal');
+        } finally {
+            setIsSorting(false);
         }
-
-        setIsSorting(false);
-    };
-
-    const simulateDijkstra = (graph, start) => {
-        const steps = [];
-        const distances = {};
-        const previous = {};
-        const pq = new PriorityQueue((a, b) => distances[a] - distances[b]);
-        const visited = new Set();
-
-        for (let node in graph) {
-            distances[node] = Infinity;
-        }
-        distances[start] = 0;
-        pq.enqueue(start);
-
-        steps.push({ type: 'queue', node: start });
-
-        while (!pq.isEmpty()) {
-            const current = pq.dequeue();
-            if (visited.has(current)) continue;
-
-            steps.push({ type: 'dequeue', node: current });
-            visited.add(current);
-
-            const edges = graph[current] || [];
-            for (const { toNode, weight } of edges) {
-                steps.push({ type: 'explore', source: current, target: toNode });
-
-                const newDistance = distances[current] + weight;
-                if (newDistance < distances[toNode]) {
-                    distances[toNode] = newDistance;
-                    previous[toNode] = current;
-                    if (!visited.has(toNode)) {
-                        pq.enqueue(toNode);
-                        steps.push({ type: 'visit', node: toNode, distance: newDistance, from: current });
-                    } else {
-                        steps.push({ type: 'distance', node: toNode, distance: newDistance });
-                    }
-                } else {
-                    steps.push({ type: 'visited', source: current, target: toNode });
-                }
-            }
-
-            steps.push({ type: 'finish', node: current, distance: distances[current] });
-        }
-
-        return steps;
     };
 
     const cancelTraversal = () => {
@@ -707,22 +660,13 @@ const Dijkstra = () => {
         speedRef.current = speed;
     }, [speed]);
 
-    const helpText = (
-        <div className="text-sm text-center max-w-3xl mx-auto mb-4 text-gray-600">
-            <p>
-                <strong>Tips:</strong> Newly added nodes appear in yellow. Edges are directed (A-B:weight means A points to B with weight). Use format 'A-B:4' to add weighted edges.
-            </p>
-        </div>
-    );
-
     return (
-        <div className="flex flex-col h-full bg-base-200">
+        <div className="flex flex-col h-full bg-base-200 relative">
             <NavBar menuItems={graphMenu} />
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
             </div>
             <div className="flex flex-col items-center mb-4 p-4">
-                {helpText}
                 <div className="flex justify-center items-center flex-row flex-wrap gap-2 mb-4">
                     <button
                         className="btn btn-primary"
@@ -753,10 +697,9 @@ const Dijkstra = () => {
                             placeholder="Add nodes (e.g., A,B,C)"
                             className="input join-item w-3/4"
                             onChange={handleNodeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                         <button
-                            className="btn join-item w-1/4"
+                            className="btn btn-accent join-item w-1/4"
                             onClick={addNodes}
                             disabled={isSorting || isSubmitting || !nodeInput.trim()}
                         >
@@ -770,10 +713,9 @@ const Dijkstra = () => {
                             placeholder="Add edge (e.g., A-B:4)"
                             className="input join-item w-3/4"
                             onChange={handleEdgeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                         <button
-                            className="btn join-item w-1/4"
+                            className="btn btn-accent join-item w-1/4"
                             onClick={addEdge}
                             disabled={isSorting || isSubmitting || !edgeInput.trim()}
                         >
@@ -783,18 +725,17 @@ const Dijkstra = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mt-4">
                     <div className="join w-full">
-                        <span className="join-item p-3 bg-base-200">Start Node</span>
+                        <span className="join-item p-2 bg-base-200 h-fit">Start</span>
                         <input
                             type="text"
                             value={startNode}
                             placeholder="Start node (e.g., A)"
                             className="input join-item w-full"
                             onChange={handleStartNodeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                     </div>
                     <div className="join w-full">
-                        <span className="join-item p-3 bg-base-200">Nodes</span>
+                        <span className="join-item p-2 bg-base-200 h-fit">Nodes</span>
                         <input
                             type="number"
                             value={size}
@@ -802,10 +743,10 @@ const Dijkstra = () => {
                             max="26"
                             className="input join-item w-full"
                             onChange={handleSizeInput}
-                            disabled={isSorting || isSubmitting}
                         />
                     </div>
                     <div className="flex items-center w-full gap-2">
+                        <span className="text-xs font-semibold">SPEED:</span>
                         <input
                             type="range"
                             min="50"
@@ -814,70 +755,22 @@ const Dijkstra = () => {
                             value={speed}
                             className="range range-primary w-3/4"
                             onChange={(e) => setSpeed(Number(e.target.value))}
-                            disabled={isSorting || isSubmitting}
                         />
                         <span className="w-1/4 text-sm">{speed} ms</span>
                     </div>
                 </div>
             </div>
+            {error && (
+                <div className="fixed left-0 right-0 top-35 flex justify-center z-20">
+                    <div className="alert alert-error rounded-md flex flex-row items-center justify-between max-w-md">
+                        <span>{error}</span>
+                        <button onClick={() => setError(null)} className="btn btn-sm btn-ghost">×</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
-class PriorityQueue {
-    constructor(comparator = (a, b) => a - b) {
-        this.heap = [];
-        this.comparator = comparator;
-    }
-
-    enqueue(item) {
-        this.heap.push(item);
-        this.bubbleUp();
-    }
-
-    dequeue() {
-        const item = this.heap[0];
-        const last = this.heap.pop();
-        if (this.heap.length > 0) {
-            this.heap[0] = last;
-            this.bubbleDown();
-        }
-        return item;
-    }
-
-    isEmpty() {
-        return this.heap.length === 0;
-    }
-
-    bubbleUp() {
-        let index = this.heap.length - 1;
-        while (index > 0) {
-            const parentIndex = Math.floor((index - 1) / 2);
-            if (this.comparator(this.heap[index], this.heap[parentIndex]) >= 0) break;
-            [this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]];
-            index = parentIndex;
-        }
-    }
-
-    bubbleDown() {
-        let index = 0;
-        while (true) {
-            const leftChildIndex = 2 * index + 1;
-            const rightChildIndex = 2 * index + 2;
-            let smallest = index;
-
-            if (leftChildIndex < this.heap.length && this.comparator(this.heap[leftChildIndex], this.heap[smallest]) < 0) {
-                smallest = leftChildIndex;
-            }
-            if (rightChildIndex < this.heap.length && this.comparator(this.heap[rightChildIndex], this.heap[smallest]) < 0) {
-                smallest = rightChildIndex;
-            }
-
-            if (smallest === index) break;
-            [this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]];
-            index = smallest;
-        }
-    }
-}
 
 export default Dijkstra;
