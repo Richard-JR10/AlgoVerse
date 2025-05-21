@@ -7,6 +7,8 @@ export const ChallengeContext = createContext();
 
 export const ChallengeProvider = ({ children }) => {
     const [solvedChallenges, setSolvedChallenges] = useState([]);
+    const [points, setPoints] = useState(0);
+    const [currentRank, setCurrentRank] = useState(0);
     const [loading, setLoading] = useState(true);
     const { auth } = useAuth();
     const baseURL = "https://algoverse-backend-nodejs.onrender.com";
@@ -23,6 +25,7 @@ export const ChallengeProvider = ({ children }) => {
                         },
                     });
                     setSolvedChallenges(response.data.SolvedChallenges || []);
+                    setPoints(response.data.Points || 0);
                 } catch (err) {
                     console.error("Error fetching solved challenges:", err);
                 }
@@ -42,8 +45,13 @@ export const ChallengeProvider = ({ children }) => {
         });
     };
 
+    const addPoints = (newPoint) => {
+        const newTotalPoints = points + newPoint;
+        setPoints(newTotalPoints);
+    }
+
     return (
-        <ChallengeContext.Provider value={{ solvedChallenges, addSolvedChallenge, loading }}>
+        <ChallengeContext.Provider value={{ solvedChallenges, addSolvedChallenge, loading, points, currentRank, setCurrentRank, addPoints }}>
             {children}
         </ChallengeContext.Provider>
     );
