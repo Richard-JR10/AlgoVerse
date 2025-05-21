@@ -3,7 +3,7 @@ import { useAuth } from "../../Auth/AuthContext.jsx";
 import axios from "axios";
 import { ErrorContext } from "../../context/errorContext.jsx";
 import PropTypes from "prop-types";
-import {ChallengeContext} from "./ChallengeContext.jsx";
+import { ChallengeContext } from "./ChallengeContext.jsx";
 
 const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -19,8 +19,8 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     const { question, choices } = questions[currentQuestionIndex];
     const { setError } = useContext(ErrorContext);
     const { auth } = useAuth();
-    const { addSolvedChallenge } = useContext(ChallengeContext);
-    const baseURL = "http://127.0.0.1:3000";
+    const { addSolvedChallenge, addPoints } = useContext(ChallengeContext);
+    const baseURL = "https://algoverse-backend-nodejs.onrender.com";
 
     // Check completion status and fetch stored data
     useEffect(() => {
@@ -59,6 +59,12 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
         setCurrentQuestionIndex(currentQuestionIndex + 1);
     };
 
+    const handlePreviousQuestion = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(currentQuestionIndex - 1);
+        }
+    };
+
     const handleCompleteChallenge = async (totalPoints, answers, score) => {
         if (!auth.currentUser) {
             setError("You must be logged in to complete a challenge.");
@@ -77,6 +83,7 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
                 }
             );
             addSolvedChallenge(id);
+            addPoints(totalPoints);
             return true;
         } catch (err) {
             console.error("Error:", err);
@@ -102,8 +109,8 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
                 }
             );
             setRetryCount(prev => prev + 1);
-            setStoredAnswers(answers); // Update stored answers for reload
-            setStoredScore(score); // Update stored score for reload
+            setStoredAnswers(answers);
+            setStoredScore(score);
         } catch (err) {
             console.error("Error recording retry:", err);
             setError(err.response?.data?.error || "Failed to record retry.");
@@ -140,7 +147,9 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
         }, 0);
     };
 
-    if (loading) return <p className="text-center">Loading...</p>;
+    if (loading) {
+        return <p className="text-center">Loading...</p>;
+    }
 
     if (isSubmitted || (isCompleted && !isRetaking && !isSubmitted)) {
         const displayAnswers = isSubmitted ? answers : storedAnswers || answers;
@@ -167,9 +176,9 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
                                                 : "text-red-500"
                                         }
                                     >
-                    {" "}
+                                        {" "}
                                         ({displayAnswers[index].split(")")[0] === q.answer ? "Correct" : "Incorrect"})
-                  </span>
+                                    </span>
                                 )}
                             </div>
                             {!displayAnswers[index] || displayAnswers[index].split(")")[0] !== q.answer ? (
@@ -201,11 +210,11 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     return (
         <div className="flex flex-col items-center">
             <div className="text-lg font-medium mt-20 mb-10">{question}</div>
-            <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start gap-1">
                 {choices.map((choice, index) => (
                     <input
                         key={index}
-                        className="btn w-full justify-start items-center"
+                        className="btn w-full h-fit p-3 justify-start items-center"
                         type="radio"
                         name="choices"
                         aria-label={choice}
@@ -214,9 +223,16 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
                         onChange={() => handleAnswerSelect(choice)}
                     />
                 ))}
+                <button
+                    className="btn bg-gray-600 w-full mt-2"
+                    onClick={handlePreviousQuestion}
+                    disabled={currentQuestionIndex === 0}
+                >
+                    Previous
+                </button>
                 {currentQuestionIndex < questions.length - 1 ? (
                     <button
-                        className="btn btn-primary w-full mt-2"
+                        className="btn bg-gray-600 w-full mt-2"
                         onClick={handleNextQuestion}
                         disabled={!answers[currentQuestionIndex]}
                     >
@@ -224,7 +240,7 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
                     </button>
                 ) : (
                     <button
-                        className="btn btn-primary w-full mt-2"
+                        className="btn btn-success w-full mt-2"
                         onClick={handleSubmit}
                         disabled={!answers[currentQuestionIndex]}
                     >
