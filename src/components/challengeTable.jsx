@@ -20,8 +20,8 @@ const ArrowButton = ({id, difficulty, type, question}) => {
                         {/* if there is a button in form, it will close the modal */}
                         <button className="btn btn-lg btn-circle btn-ghost absolute right-2 top-2">✕</button>
                     </form>
-                    {type === 3 && <FillInBlanksQuiz questions={question} />}
-                    {type === 2 && <SortingArrangement questions={question} />}
+                    {type === 3 && <FillInBlanksQuiz id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
+                    {type === 2 && <SortingArrangement id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
                     {type === 1 && <MultipleChoices id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
                 </div>
             </dialog>
