@@ -207,8 +207,6 @@ const ProfilePage = () => {
                 return;
             }
 
-            console.log('Starting re-authentication process for:', providerId);
-
             try {
                 if (providerId === 'password') {
                     if (!deletePassword) {
@@ -216,29 +214,22 @@ const ProfilePage = () => {
                         setIsLoading(false);
                         return;
                     }
-                    console.log('Reauthenticating with password');
                     const credential = EmailAuthProvider.credential(currentUser.email, deletePassword);
                     await reauthenticateWithCredential(currentUser, credential);
-                    console.log('Password reauthentication successful');
                 } else if (providerId === 'google.com') {
-                    console.log('Reauthenticating with Google');
                     const provider = new GoogleAuthProvider();
                     await reauthenticateWithPopup(currentUser, provider);
-                    console.log('Google reauthentication successful');
                 }
             } catch (reauthError) {
                 console.error('Reauthentication error:', reauthError);
                 throw reauthError;
             }
 
-            console.log('Deleting user account...');
             try {
                 await currentUser.delete();
-                console.log('Account successfully deleted directly');
             } catch (directDeleteError) {
                 console.error('Direct delete failed, trying via context:', directDeleteError);
                 await deleteUser(currentUser);
-                console.log('Account successfully deleted via context');
             }
 
             setIsModalOpen(false);
