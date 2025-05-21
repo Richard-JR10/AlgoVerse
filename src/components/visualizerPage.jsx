@@ -22,7 +22,7 @@ const VisualizerPage = () => {
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
             <NavBar menuItems={visualizerMenu}/>
             <div className="flex justify-center items-center mt-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-fit">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-fit mb-4">
                         {cards.map((card, index) => (
                             <VisualizerCard key={index} imgUrl={card.imgUrl} title={card.title} desc={card.desc} btnUrl={card.url} />
                         ))}
