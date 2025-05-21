@@ -14,7 +14,7 @@ const ExampleView = ({ cardId, examples}) => {
                             <button className="btn btn-primary">Close</button>
                         </form>
                     </div>
-                    {examples.map(example => {
+                    {examples.map((example,index) => {
                         // Convert YouTube URL to embed format if needed
                         const getEmbedUrl = (url) => {
                             if (!url) return "";
@@ -32,11 +32,9 @@ const ExampleView = ({ cardId, examples}) => {
                         };
 
                         const embedUrl = getEmbedUrl(example.url);
-                        console.log("Original URL:", example.url);
-                        console.log("Embed URL:", embedUrl);
 
                         return (
-                            <div key={example.id}>
+                            <div key={index}>
                                 <h1 className="text-xl font-semibold mb-2">{example.title}</h1>
                                 <iframe
                                     className="mb-2 w-full"
