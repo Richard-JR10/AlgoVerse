@@ -9,7 +9,7 @@ export const ChallengeProvider = ({ children }) => {
     const [solvedChallenges, setSolvedChallenges] = useState([]);
     const [loading, setLoading] = useState(true);
     const { auth } = useAuth();
-    const baseURL = "http://127.0.0.1:3000";
+    const baseURL = "https://algoverse-backend-nodejs.onrender.com";
 
     // Fetch SolvedChallenges on mount
     useEffect(() => {
