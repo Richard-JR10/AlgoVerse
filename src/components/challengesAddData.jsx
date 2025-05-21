@@ -61,6 +61,17 @@ const ChallengesAddData = ({ onAddData }) => {
         const { name, value } = e.target;
         const updatedEntries = [...questionEntries];
         updatedEntries[index] = { ...updatedEntries[index], [name]: value };
+
+        if (challengeType === 3 && name === 'text') {
+            const blankCount = countBlanks(value);
+            const currentAnswers = updatedEntries[index].correctAnswers || [];
+            const newAnswers = Array(blankCount).fill('');
+            for (let i = 0; i < Math.min(blankCount, currentAnswers.length); i++) {
+                newAnswers[i] = currentAnswers[i] || '';
+            }
+            updatedEntries[index].correctAnswers = newAnswers;
+        }
+
         setQuestionEntries(updatedEntries);
     };
 
@@ -169,6 +180,11 @@ const ChallengesAddData = ({ onAddData }) => {
         if (e.key === 'Enter' || e.keyCode === 13) {
             e.preventDefault();
         }
+    };
+
+    const countBlanks = (text) => {
+        const matches = text.match(/____/g);
+        return matches ? matches.length : 0;
     };
 
     return (
