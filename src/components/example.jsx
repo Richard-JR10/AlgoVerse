@@ -25,7 +25,7 @@ const Example = () => {
     ];
 
     const CACHE_KEY = 'exampleEntries';
-    const CACHE_DURATION = 1000 * 60 * 60;
+    const CACHE_DURATION = 1000 * 60 * 5;
 
     useEffect(() => {
         const fetchExampleEntries = async () => {
@@ -129,7 +129,7 @@ const Example = () => {
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
             <NavBar menuItems={exampleMenu} />
-            <div className="flex flex-col justify-center items-center mt-25">
+            <div className="flex flex-col justify-center items-center mt-25  mx-4 sm:mx-0">
                 <div className="flex flex-col items-center justify-center max-w-120 w-full">
                     <label className="input w-full">
                         <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g strokeLinejoin="round" strokeLinecap="round" strokeWidth="2.5" fill="none" stroke="currentColor"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></g></svg>
