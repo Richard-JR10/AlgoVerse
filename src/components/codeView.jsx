@@ -4,7 +4,7 @@ import { downloadFile } from "./utils/downloadButton.jsx";
 import {useState} from "react";
 import PropTypes from "prop-types";
 
-const CodeView = ({ description, codeData, cardId }) => {
+const CodeView = ({title, description, codeData, cardId }) => {
     const [copied, setCopied] = useState(false);
 
     const [activeButton, setActiveButton] = useState(codeData[0].language);
@@ -22,7 +22,7 @@ const CodeView = ({ description, codeData, cardId }) => {
     };
 
     const handleDownload = () => {
-        downloadFile({content: code, fileName: activeButton});
+        downloadFile({content: code, fileName: `${title}_${activeButton}`});
     }
 
 
@@ -73,7 +73,7 @@ const CodeView = ({ description, codeData, cardId }) => {
                     </div>
                     <Highlight code={code.trim()} language={language} theme={themes.nightOwl}>
                         {({ className, style, tokens, getLineProps, getTokenProps }) => (
-                            <div className="rounded-br-lg rounded-bl-lg leading-relaxed overflow-auto mt-2 shadow-lg hide-scrollbar max-h-122">
+                            <div className="rounded-br-lg rounded-bl-lg leading-relaxed overflow-auto bg-nightOwl mt-2 shadow-lg hide-scrollbar max-h-122">
                                   <pre className={`${className} p-4`} style={style}>
                                         {tokens.map((line, i) => (
                                                 <div
@@ -113,6 +113,7 @@ const CodeView = ({ description, codeData, cardId }) => {
 }
 
 CodeView.propTypes = {
+    title: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     codeData: PropTypes.object.isRequired,
     cardId: PropTypes.string.isRequired,
