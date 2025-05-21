@@ -1,10 +1,10 @@
 import {useState, useEffect, useRef, useContext} from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import NavBar from "../components/navBar.jsx";
-import {ErrorContext} from "../context/errorContext.jsx";
+import NavBar from "../../components/navBar.jsx";
+import {ErrorContext} from "../../context/errorContext.jsx";
 
-const SelectSort = () => {
+const BubbleSort = () => {
     const [inputValue, setInputValue] = useState("");
     const [numberArr, setNumberArr] = useState([]);
     const [isSorting, setIsSorting] = useState(false);
@@ -28,7 +28,6 @@ const SelectSort = () => {
     const sortedColor = "orange";
     const swappingColor = "green";
     const compareColor = "yellow";
-    const minColor = "red";
     const defaultColor = "#EDE2F3";
     const FONT_COLOR = "#6E199F";
     const INDEX_COLOR = "#EDE2F3";
@@ -107,6 +106,14 @@ const SelectSort = () => {
         const input = generateRandomArray(size);
         await animateBars(input);
 
+    }
+
+    const handleSorted = async (e) => {
+        if (e) e.preventDefault();
+        if (isSubmitting) return;
+
+        const input = numberArr.sort((a, b) => a - b);
+        await animateBars(input);
     }
 
     const handleSubmit = async (e) => {
@@ -263,19 +270,6 @@ const SelectSort = () => {
             });
     };
 
-// New function specifically for highlighting compare operations
-    const highlightCompare = (indexes, sortedIndices = []) => {
-        d3.select(svgRef.current)
-            .selectAll(".bar-group rect")
-            .attr("fill", (d, i) => {
-                if (sortedIndices.includes(i)) return sortedColor;
-                if (i === indexes[0]) return "red";    // First comparison index as red
-                if (i === indexes[1]) return "yellow"; // Second comparison index as yellow
-                return defaultColor;
-            });
-    };
-
-
     const swapBars = async (index1, index2, array) => {
         if (isCancelledRef.current) return;
 
@@ -329,12 +323,8 @@ const SelectSort = () => {
 
         for (const step of steps) {
             if (isCancelledRef.current) break;
-            if (step.type === "minimum") {
-                highlightBars(step.indices, minColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
-            } else if (step.type === "compare") {
-                // For compare, we now use a special highlighting function
-                highlightCompare(step.indices, sortedIndices);
+            if (step.type === "compare") {
+                highlightBars(step.indices, compareColor, sortedIndices);
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "swap"){
                 highlightBars(step.indices, swappingColor, sortedIndices);
@@ -354,7 +344,7 @@ const SelectSort = () => {
             setIsSorting(true);
             isCancelledRef.current = false;
             try {
-                const response = await axios.post('https://algoverse-backend-python.onrender.com/sort/selection', {
+                const response = await axios.post('https://algoverse-backend-python.onrender.com/sort/bubble', {
                     array: numberArr
                 }, {
                     headers: {
@@ -384,60 +374,62 @@ const SelectSort = () => {
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
             </div>
-            <div className="flex flex-col items-center mb-4">
-                <div className="flex justify-center items-center flex-row">
-                    <button className="btn mr-2" onClick={handleRandom}>
-                        Random
-                    </button>
-                    <button className="btn mr-2">
+            <div className="lg:navbar md:flex sticky bottom-2 z-50 px-4 md:px-6 border-t border-base-200 h-fit min-h-[4rem] shadow-sm">
+                <div className="lg:navbar-start mb-2 md:mb-0 flex justify-center items-center">
+                    <div className="flex items-center gap-2 w-full">
+                        <span className="text-xs font-semibold">SPEED:</span>
+                        <input
+                            type="range"
+                            min={50}
+                            max="1000"
+                            value={speed}
+                            className="range range-primary range-xs w-24 md:w-32"
+                            onChange={(e) => setSpeed(Number(e.target.value))}
+                        />
+                        <span className="text-xs text-base-content/70 whitespace-nowrap">{speed} ms</span>
+                    </div>
+                </div>
+
+                <div className="lg:navbar-center flex-col sm:flex-row md:flex  justify-center items-center">
+                    <button className="btn btn-accent mr-2 sm:mr-2 mb-2 md:mb-0" onClick={handleSorted}>
                         Sorted
                     </button>
-                    <button className="btn mr-4" onClick={startSorting} disabled={isSorting}>
+                    <button className="btn btn-accent mr-0 sm:mr-4 mb-2 md:mb-0" onClick={startSorting} disabled={isSorting}>
                         Start Sorting
                     </button>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="join flex items-center mr-0 sm:mr-4 mb-2 md:mb-0">
                         <input
                             type="text"
                             value={inputValue}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg"
                             onChange={handleInput}
                         />
                         <button
-                            className="btn join-item"
+                            className="btn btn-primary join-item rounded-r-lg"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
                             Go
                         </button>
                     </div>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="lg:join flex items-center">
                         <input
                             type="number"
                             value={size}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg w-13"
                             onChange={handleSizeInput}
                         />
+                        <button className="btn btn-secondary join-item rounded-r-lg" onClick={handleRandom}>
+                            Random
+                        </button>
                     </div>
-                    <div className="flex justify-center w-full max-w-md">
-                        <input
-                            type="range"
-                            min={50}
-                            max="1000"
-                            value={speed}
-                            className="range range-primary"
-                            onChange={(e) => setSpeed(Number(e.target.value))}
-                        />
-                        <span>Speed: {speed} ms</span>
-                    </div>
+                </div>
+
+                <div className="lg:navbar-end">
                 </div>
             </div>
         </div>
     );
-}
-export default SelectSort
+};
 
-
-
-
-
-
+export default BubbleSort;

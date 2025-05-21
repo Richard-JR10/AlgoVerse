@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import NavBar from "../components/navBar.jsx";
-import { ErrorContext } from "../context/errorContext.jsx";
+import NavBar from "../../components/navBar.jsx";
+import { ErrorContext } from "../../context/errorContext.jsx";
 
 const MergeSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -30,7 +30,7 @@ const MergeSort = () => {
     const rightHalfColor = "#0000FF"; // Blue for right half
     const mergedColor = "#800080"; // Purple for merging
     const defaultColor = "#EDE2F3"; // Grey for default
-    const FONT_COLOR = "#000000"; // Black for text
+    const FONT_COLOR = "#6E199F"; // Black for text
     const INDEX_COLOR = "#FFFFFF"; // White for index labels
 
     const API_URL = 'https://algoverse-backend-python.onrender.com';
@@ -113,12 +113,12 @@ const MergeSort = () => {
     };
 
     const handleSorted = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (isSubmitting) return;
 
-        const input = generateRandomArray(size).sort((a, b) => a - b);
+        const input = numberArr.sort((a, b) => a - b);
         await animateBars(input);
-    };
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -537,87 +537,64 @@ const MergeSort = () => {
         }
     };
 
-    const test = async () => {
-        let depthMap = {};
-        depthMap[4] = 1;
-        depthMap[3] = 1;
-        depthMap[2] = 1;
-        depthMap[1] = 1;
-        depthMap[0] = 1;
-        const beforeArray = [57, 45, 45, 23, 12];
-        const afterArray = [12,23,45,45,57];
-        await animateMergeSwap(beforeArray, afterArray,0,4, depthMap);
-
-
-
-        //await drawBars(numberArr,true, depthMap);
-    }
-
-    const test1 = () => {
-        const svg = d3.select(svgRef.current);
-        console.log('Before Update SVG data:', svg.selectAll(".bar-group").data());
-
-        //await drawBars(numberArr,true, depthMap);
-    }
-
     return (
         <div className="flex flex-col h-full bg-base-200">
             <NavBar menuItems={sortingMenu} />
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
             </div>
-            <div className="flex flex-col items-center mb-4">
-                <div className="flex justify-center items-center flex-row">
-                    <button className="btn mr-2" onClick={handleRandom}>
-                        Random
-                    </button>
-                    <button className="btn mr-2" onClick={handleSorted}>
+            <div className="lg:navbar md:flex sticky bottom-2 z-50 px-4 md:px-6 border-t border-base-200 h-fit min-h-[4rem] shadow-sm">
+                <div className="lg:navbar-start mb-2 md:mb-0 flex justify-center items-center">
+                    <div className="flex items-center gap-2 w-full">
+                        <span className="text-xs font-semibold">SPEED:</span>
+                        <input
+                            type="range"
+                            min={50}
+                            max="1000"
+                            value={speed}
+                            className="range range-primary range-xs w-24 md:w-32"
+                            onChange={(e) => setSpeed(Number(e.target.value))}
+                        />
+                        <span className="text-xs text-base-content/70 whitespace-nowrap">{speed} ms</span>
+                    </div>
+                </div>
+
+                <div className="lg:navbar-center flex-col sm:flex-row md:flex  justify-center items-center">
+                    <button className="btn btn-accent mr-2 sm:mr-2 mb-2 md:mb-0" onClick={handleSorted}>
                         Sorted
                     </button>
-                    <button className="btn mr-4" onClick={startSorting} disabled={isSorting}>
+                    <button className="btn btn-accent mr-0 sm:mr-4 mb-2 md:mb-0" onClick={startSorting} disabled={isSorting}>
                         Start Sorting
                     </button>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="join flex items-center mr-0 sm:mr-4 mb-2 md:mb-0">
                         <input
                             type="text"
                             value={inputValue}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg"
                             onChange={handleInput}
-                            placeholder="Enter numbers"
                         />
                         <button
-                            className="btn join-item"
+                            className="btn btn-primary join-item rounded-r-lg"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
                             Go
                         </button>
                     </div>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="lg:join flex items-center">
                         <input
                             type="number"
                             value={size}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg w-13"
                             onChange={handleSizeInput}
-                            max="50"
-                            min="1"
-                            placeholder="Array size"
                         />
+                        <button className="btn btn-secondary join-item rounded-r-lg" onClick={handleRandom}>
+                            Random
+                        </button>
                     </div>
-                    <div className="flex justify-center w-full max-w-md">
-                        <input
-                            type="range"
-                            min={50}
-                            max="1000"
-                            value={speed}
-                            className="range range-primary"
-                            onChange={(e) => setSpeed(Number(e.target.value))}
-                        />
-                        <span>Speed: {speed} ms</span>
-                    </div>
-                    <button className="btn mr-2" onClick={test1}>
-                        Test
-                    </button>
+                </div>
+
+                <div className="lg:navbar-end">
                 </div>
             </div>
         </div>

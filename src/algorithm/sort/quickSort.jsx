@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useContext } from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import NavBar from "../components/navBar.jsx";
-import { ErrorContext } from "../context/errorContext.jsx";
-import PlayBackControls from "./playBackControls.jsx";
-
+import NavBar from "../../components/navBar.jsx";
+import { ErrorContext } from "../../context/errorContext.jsx";
 const QuickSort = () => {
     const [currentInput, setCurrentInput] = useState([]);
     const [inputValue, setInputValue] = useState("");
@@ -22,10 +20,6 @@ const QuickSort = () => {
     const sortingPromiseRef = useRef(null);
     const [size, setSize] = useState(10);
 
-    // Sync isPausedRef with isPaused
-    useEffect(() => {
-        isPausedRef.current = isPaused;
-    }, [isPaused]);
 
     const sortingMenu = [
         { label: 'Bubble Sort', path: '/visualizer/sort/bubble' },
@@ -144,15 +138,12 @@ const QuickSort = () => {
     };
 
     const handleSorted = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (isSubmitting) return;
-        setIsSorting(false);
 
-        const input = generateRandomArray(size).sort((a, b) => a - b);
-        setCurrentInput(input);
-        await cancelCurrentAnimation();
+        const input = numberArr.sort((a, b) => a - b);
         await animateBars(input);
-    };
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -364,21 +355,6 @@ const QuickSort = () => {
         }
     };
 
-    const handleTogglePause = () => {
-        setIsPaused(prev => {
-            const newPaused = !prev;
-            isPausedRef.current = newPaused;
-            return newPaused;
-        });
-    };
-
-    const handleRewind = () => {
-        setCurrentStepIndex(currentStepIndex);
-    }
-
-    const handleFastForward = () => {
-
-    }
 
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [stepsLength, setStepsLength] = useState(0);
@@ -391,34 +367,18 @@ const QuickSort = () => {
         let currentStepIndex = 0;
         setStepsLength(steps.length);
 
-        const waitWithPauseCheck = async (ms) => {
-            await new Promise(resolve => {
-                const checkPause = () => {
-                    if (isPausedRef.current) {
-                        setTimeout(checkPause, 100);
-                    } else if (isCancelledRef.current) {
-                        setTimeout(resolve, 1);
-                    } else {
-                        setTimeout(resolve, ms);
-                    }
-                };
-                checkPause();
-            });
-        };
 
         while (currentStepIndex < steps.length) {
             if (isCancelledRef.current) break;
             setCurrentStepIndex(currentStepIndex);
 
             const step = steps[currentStepIndex];
-            console.log('Processing step:', step.type, 'index:', currentStepIndex);
 
             if (step.type === "pivot") {
                 await highlightBars(
                     { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                     sortedIndices
                 );
-                await waitWithPauseCheck(speedRef.current);
                 if (isCancelledRef.current) break;
 
                 await new Promise(resolve => {
@@ -435,7 +395,6 @@ const QuickSort = () => {
                     },
                     sortedIndices
                 );
-                await waitWithPauseCheck(speedRef.current);
                 await new Promise(resolve => {
                     const timeout = setTimeout(resolve, speedRef.current);
                     sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -463,7 +422,6 @@ const QuickSort = () => {
                     },
                     sortedIndices
                 );
-                await waitWithPauseCheck(speedRef.current);
                 await new Promise(resolve => {
                     const timeout = setTimeout(resolve, speedRef.current);
                     sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -500,7 +458,6 @@ const QuickSort = () => {
                     },
                     sortedIndices
                 );
-                await waitWithPauseCheck(speedRef.current);
                 await new Promise(resolve => {
                     const timeout = setTimeout(resolve, speedRef.current);
                     sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -514,19 +471,17 @@ const QuickSort = () => {
                     { pivotIndex: step.pivot, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                     sortedIndices
                 );
-                await waitWithPauseCheck(speedRef.current);
                 await new Promise(resolve => {
                     const timeout = setTimeout(resolve, speedRef.current);
                     sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
                 });
             } else if (step.type === "sorted") {
                 if (isCancelledRef.current) break;
-                sortedIndices.push(step.index);
+                sortedIndices = [...new Set([...sortedIndices, ...step.indices])]; // Ensure no duplicates
                 await highlightBars(
                     { pivotIndex: null, compareIndices: [], lessThanIndices, greaterThanIndices },
                     sortedIndices
                 );
-                await waitWithPauseCheck(speedRef.current);
                 await new Promise(resolve => {
                     const timeout = setTimeout(resolve, speedRef.current);
                     sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -602,55 +557,60 @@ const QuickSort = () => {
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
             </div>
-            <div className="flex flex-col items-center mb-4">
-                <div className="flex justify-center items-center flex-row">
-                    <button className="btn mr-2" onClick={handleRandom}>
-                        Random
-                    </button>
-                    <button className="btn mr-2" onClick={handleSorted}>
+            <div className="lg:navbar md:flex sticky bottom-2 z-50 px-4 md:px-6 border-t border-base-200 h-fit min-h-[4rem] shadow-sm">
+                <div className="lg:navbar-start mb-2 md:mb-0 flex justify-center items-center">
+                    <div className="flex items-center gap-2 w-full">
+                        <span className="text-xs font-semibold">SPEED:</span>
+                        <input
+                            type="range"
+                            min={50}
+                            max="1000"
+                            value={speed}
+                            className="range range-primary range-xs w-24 md:w-32"
+                            onChange={(e) => setSpeed(Number(e.target.value))}
+                        />
+                        <span className="text-xs text-base-content/70 whitespace-nowrap">{speed} ms</span>
+                    </div>
+                </div>
+
+                <div className="lg:navbar-center flex-col sm:flex-row md:flex  justify-center items-center">
+                    <button className="btn btn-accent mr-2 sm:mr-2 mb-2 md:mb-0" onClick={handleSorted}>
                         Sorted
                     </button>
-                    <button className="btn mr-4" onClick={startSorting} disabled={isSorting}>
+                    <button className="btn btn-accent mr-0 sm:mr-4 mb-2 md:mb-0" onClick={startSorting} disabled={isSorting}>
                         Start Sorting
                     </button>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="join flex items-center mr-0 sm:mr-4 mb-2 md:mb-0">
                         <input
                             type="text"
                             value={inputValue}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg"
                             onChange={handleInput}
-                            placeholder="Enter numbers"
                         />
                         <button
-                            className="btn join-item"
+                            className="btn btn-primary join-item rounded-r-lg"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
                             Go
                         </button>
                     </div>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="lg:join flex items-center">
                         <input
                             type="number"
                             value={size}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg w-13"
                             onChange={handleSizeInput}
-                            max="50"
-                            min="1"
-                            placeholder="Array size"
                         />
+                        <button className="btn btn-secondary join-item rounded-r-lg" onClick={handleRandom}>
+                            Random
+                        </button>
                     </div>
                 </div>
+
+                <div className="lg:navbar-end">
+                </div>
             </div>
-            <PlayBackControls
-                isPaused={isPaused}
-                onPlayPause={handleTogglePause}
-                speed={speed}
-                onSpeedChange={(value) => setSpeed(Number(value))}
-                NotSorting={!isSorting}
-                currentStepIndex={Number(currentStepIndex)}
-                stepsLength={Number(stepsLength)}
-            />
         </div>
     );
 };

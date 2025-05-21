@@ -1,10 +1,10 @@
 import {useState, useEffect, useRef, useContext} from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
-import NavBar from "../components/navBar.jsx";
-import {ErrorContext} from "../context/errorContext.jsx";
+import NavBar from "../../components/navBar.jsx";
+import {ErrorContext} from "../../context/errorContext.jsx";
 
-const InsertSort = () => {
+const SelectSort = () => {
     const [inputValue, setInputValue] = useState("");
     const [numberArr, setNumberArr] = useState([]);
     const [isSorting, setIsSorting] = useState(false);
@@ -15,7 +15,6 @@ const InsertSort = () => {
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const [size, setSize] = useState(10);
-    const [movedBars, setMovedBars] = useState([]);
 
     const sortingMenu = [
         { label: 'Bubble Sort', path: '/visualizer/sort/bubble' },
@@ -28,8 +27,8 @@ const InsertSort = () => {
     // Sorting colors
     const sortedColor = "orange";
     const swappingColor = "green";
-    const selectedColor = "red";
     const compareColor = "yellow";
+    const minColor = "red";
     const defaultColor = "#EDE2F3";
     const FONT_COLOR = "#6E199F";
     const INDEX_COLOR = "#EDE2F3";
@@ -75,7 +74,7 @@ const InsertSort = () => {
             }
 
             setNumberArr(numArray);
-            await drawBars(numArray,true,[]);
+            await drawBars(numArray);
             setIsSubmitting(false);
             resetHighlight();
             isCancelledRef.current = false;
@@ -107,7 +106,14 @@ const InsertSort = () => {
 
         const input = generateRandomArray(size);
         await animateBars(input);
+    }
 
+    const handleSorted = async (e) => {
+        if (e) e.preventDefault();
+        if (isSubmitting) return;
+
+        const input = numberArr.sort((a, b) => a - b);
+        await animateBars(input);
     }
 
     const handleSubmit = async (e) => {
@@ -136,12 +142,12 @@ const InsertSort = () => {
 
 
 
-    const drawBars = (arr, animate = true, movedBarsArr) => {
+    const drawBars = (arr, animate = true) => {
         const svg = d3.select(svgRef.current);
         const width = svgRef.current.clientWidth;
-        const height = 350;
-        const margin = { top: 0, right: 20, bottom: 170, left: 40 };
-        const maxBarWidth = 50;
+        const height = 300;
+        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        const maxBarWidth = 75;
         const barSpacing = 10;
         const minBarHeight = 2;
 
@@ -150,6 +156,7 @@ const InsertSort = () => {
         }
 
         svg.attr("viewBox", `0 0 ${width} ${height + margin.top + margin.bottom}`);
+
 
         const yScale = d3.scaleLinear()
             .domain([d3.min([0, ...arr]) - 1, d3.max(arr)])
@@ -160,25 +167,7 @@ const InsertSort = () => {
         const centeredBarWidth = (width - margin.left - margin.right - arr.length * (barWidth + barSpacing)) / 2;
 
         const barGroups = svg.selectAll(".bar-group")
-            .data(arr, (d,i) => i); // Use the value as the key
-
-        const getYPosition = (d, i) => {
-            const baseY = yScale(d);
-            return movedBarsArr.includes(i) ? baseY + 270 : baseY;
-        };
-
-        const getLabelYPosition = (d, i) => {
-            const barHeight = Math.max(minBarHeight, height - margin.bottom - yScale(d));
-            const baseY = barHeight > 20 ? yScale(d) + barHeight - 10 : yScale(d) - 10;
-            return movedBarsArr.includes(i) ? baseY + 270 : baseY;
-        };
-
-        const getIndexYPosition = (d, i) => {
-            const baseY = height - margin.bottom + 25;
-            return movedBarsArr.includes(i) ? baseY + 270 : baseY;
-        };
-
-
+            .data(arr, (d, i) => i);
 
         // Enter phase
         const enter = barGroups.enter().append("g").attr("class", "bar-group");
@@ -190,7 +179,7 @@ const InsertSort = () => {
             .attr("height", 0)
             .transition()
             .duration(animate ? 500 : 0)
-            .attr("y", (d, i) => getYPosition(d, i))
+            .attr("y", d => yScale(d))
             .attr("height", d => Math.max(minBarHeight, height - margin.bottom - yScale(d)));
 
         enter.append("text")
@@ -201,8 +190,8 @@ const InsertSort = () => {
             .attr("font-weight", "bold")
             .attr("fill", FONT_COLOR)
             .text(d => d)
-            .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
-            .attr("y", (d, i) => getLabelYPosition(d, i));
+            .call(positionText);
+
         // Add index labels below bars
         enter.append("text")
             .attr("class", "index-label")
@@ -212,7 +201,7 @@ const InsertSort = () => {
             .attr("font-weight", "bold")
             .text((d, i) => i) // Display the index
             .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
-            .attr("y", (d, i) => getIndexYPosition(d, i));
+            .attr("y", height - margin.bottom + 25); // Position below the bar
 
         // Update phase
         const updateRects = barGroups.select("rect")
@@ -220,21 +209,20 @@ const InsertSort = () => {
             .duration(animate ? 500 : 0)
             .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth)
             .attr("width", barWidth)
-            .attr("y", (d, i) => getYPosition(d, i))
+            .attr("y", d => yScale(d))
             .attr("height", d => Math.max(minBarHeight, height - margin.bottom - yScale(d)));
 
         barGroups.select(".bar-label")
             .transition()
             .duration(animate ? 500 : 0)
-            .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
-            .attr("y", (d, i) => getLabelYPosition(d, i))
+            .call(positionText)
             .text(d => d);
 
         barGroups.select(".index-label")
             .transition()
             .duration(animate ? 500 : 0)
             .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
-            .attr("y", (d, i) => getIndexYPosition(d, i))
+            .attr("y", height - margin.bottom + 25)
             .text((d, i) => i);
 
         // Exit phase
@@ -247,6 +235,16 @@ const InsertSort = () => {
 
         exit.select(".bar-label").remove();
         exit.select(".index-label").remove();
+
+        function positionText(selection) {
+            selection
+                .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
+                .attr("y", d => {
+                    const barHeight = Math.max(minBarHeight, height - margin.bottom - yScale(d));
+                    return barHeight > 20 ? yScale(d) + barHeight - 10 : yScale(d) - 10;
+                })
+                .attr("fill", FONT_COLOR);
+        }
 
         const allTransitions = [
             ...(animate && enterRects.size() ? [enterRects.end()] : []),
@@ -267,12 +265,25 @@ const InsertSort = () => {
         d3.select(svgRef.current)
             .selectAll(".bar-group rect")
             .attr("fill", (d, i) => {
-                //if (sortedIndices.includes(i)) return sortedColor;
-                return indexes.includes(i) ? color : (sortedIndices.includes(i)) ? sortedColor : defaultColor;
+                if (sortedIndices.includes(i)) return sortedColor;
+                return indexes.includes(i) ? color : defaultColor;
             });
     };
 
-    const swapBars = async (index1, index2, array, movedBarsArr) => {
+// New function specifically for highlighting compare operations
+    const highlightCompare = (indexes, sortedIndices = []) => {
+        d3.select(svgRef.current)
+            .selectAll(".bar-group rect")
+            .attr("fill", (d, i) => {
+                if (sortedIndices.includes(i)) return sortedColor;
+                if (i === indexes[0]) return "red";    // First comparison index as red
+                if (i === indexes[1]) return "yellow"; // Second comparison index as yellow
+                return defaultColor;
+            });
+    };
+
+
+    const swapBars = async (index1, index2, array) => {
         if (isCancelledRef.current) return;
 
         const svg = d3.select(svgRef.current);
@@ -284,7 +295,6 @@ const InsertSort = () => {
         const barBX = barGroupB.select("rect").attr("x");
         const barWidth = barGroupA.select("rect").attr("width");
 
-        // Animate the swap visually
         await Promise.all([
             barGroupA.select("rect")
                 .transition()
@@ -317,139 +327,30 @@ const InsertSort = () => {
                 .attr("x", parseFloat(barAX) + parseFloat(barWidth) / 2)
                 .end()
         ]);
-        let newMovedBars = movedBars.filter((value) => value !== index1);
-        newMovedBars = [...newMovedBars,index2];
-        setMovedBars(newMovedBars);
 
-        await drawBars(array, false,newMovedBars);
-    };
-
-    const resetMovedBars = async (index) => {
-        if (isCancelledRef.current) return;
-
-        const svg = d3.select(svgRef.current);
-        const barGroups = svg.selectAll(".bar-group");
-        const barValue = numberArr[index];
-        const barSelected = barGroups.filter((value) => value === barValue);
-
-        const height = 350;
-        const margin = { top: 0, right: 20, bottom: 170, left: 40 };
-
-        const yScale = d3.scaleLinear()
-            .domain([d3.min([0, ...numberArr]) - 1, d3.max(numberArr)])
-            .range([height - margin.bottom, margin.top]);
-
-        // Get the current positions
-        const rect = barSelected.select("rect");
-        const barLabel = barSelected.select(".bar-label");
-        const barIndex = barSelected.select(".index-label");
-
-        const originalY = yScale(barValue);
-        const barHeight = parseFloat(rect.attr("height"));
-        const originalLabelY = barHeight > 20 ? originalY + barHeight - 10 : originalY - 10;
-        const originalIndexY = height - margin.bottom + 25;
-
-
-        try {
-            await Promise.all([
-                // Reset the bar to original position
-                rect
-                    .transition()
-                    .duration(speedRef.current / 2)
-                    .attr("y", originalY)
-                    .end(),
-
-                // Reset the label to original position
-                barLabel
-                    .transition()
-                    .duration(speedRef.current / 2)
-                    .attr("y", originalLabelY)
-                    .end(),
-
-                // Reset the index to original position
-                barIndex
-                    .transition()
-                    .duration(speedRef.current / 2)
-                    .attr("y", originalIndexY)
-                    .end()
-            ]);
-
-            // Clear the moved status for this bar
-            const newMovedBars = movedBars.filter((value) => value !== index);
-            setMovedBars(newMovedBars);
-
-            return newMovedBars
-        } catch (err) {
-            console.error("Error resetting bar positions:", err);
-        }
-    }
-
-    const moveDown = async (index) => {
-        if (isCancelledRef.current) return;
-
-        const svg = d3.select(svgRef.current);
-        const offsetY = 270;
-        const barGroups = svg.selectAll(".bar-group");
-        const barSelected = barGroups.filter((d, i) => i === index);
-
-        const rect = barSelected.select("rect");
-        const currentY = parseFloat(rect.attr("y"));
-
-        const barLabel = barSelected.select(".bar-label");
-        const currentLabelY = parseFloat(barLabel.attr("y"));
-
-        const barIndex = barSelected.select(".index-label");
-        const currentIndexY = parseFloat(barIndex.attr("y"));
-
-
-        const newMovedBars = [...movedBars, index];
-        setMovedBars(newMovedBars);
-        // Directly animate the elements
-        await Promise.all([
-            rect
-                .transition()
-                .duration(speedRef.current / 2)
-                .attr("y", currentY + offsetY)
-                .end(),
-            barLabel
-                .transition()
-                .duration(speedRef.current / 2)
-                .attr("y", currentLabelY + offsetY)
-                .end(),
-            barIndex
-                .transition()
-                .duration(speedRef.current / 2)
-                .attr("y", currentIndexY + offsetY)
-                .end()
-        ]);
-
-        return newMovedBars;
+        await drawBars(array, false);
     };
 
     const animateSortSteps = async (steps) => {
         let sortedIndices = [];
-        let currentMovedBars = [];
 
         for (const step of steps) {
             if (isCancelledRef.current) break;
-
-            if (step.type === "selected") {
-                highlightBars(step.indices, selectedColor, sortedIndices);
-                currentMovedBars = await moveDown(step.indices[0]);
-                sortedIndices.push(step.indices[0]);
+            if (step.type === "minimum") {
+                highlightBars(step.indices, minColor, sortedIndices);
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "compare") {
-                highlightBars(step.indices, compareColor, sortedIndices);
+                // For compare, we now use a special highlighting function
+                highlightCompare(step.indices, sortedIndices);
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "swap"){
                 highlightBars(step.indices, swappingColor, sortedIndices);
-                await swapBars(step.indices[0], step.indices[1], step.array, currentMovedBars);
+                await swapBars(step.indices[0], step.indices[1], step.array);
                 setNumberArr([...step.array]);
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
-                currentMovedBars = resetMovedBars(step.index);
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             }
         }
@@ -460,7 +361,7 @@ const InsertSort = () => {
             setIsSorting(true);
             isCancelledRef.current = false;
             try {
-                const response = await axios.post('https://algoverse-backend-python.onrender.com/sort/insertion', {
+                const response = await axios.post('https://algoverse-backend-python.onrender.com/sort/selection', {
                     array: numberArr
                 }, {
                     headers: {
@@ -470,6 +371,7 @@ const InsertSort = () => {
                 });
 
                 const data = response.data;
+
                 await animateSortSteps(data.steps);
             } catch (err) {
                 setError(err.response?.data.error || 'Failed to process');
@@ -478,7 +380,6 @@ const InsertSort = () => {
             setIsSorting(false);
         }
     };
-
 
     useEffect(() => {
         speedRef.current = speed;
@@ -490,56 +391,67 @@ const InsertSort = () => {
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
             </div>
-            <div className="flex flex-col items-center mb-4">
-                <div className="flex justify-center items-center flex-row">
-                    <button className="btn mr-2" onClick={handleRandom}>
-                        Random
-                    </button>
-                    <button className="btn mr-2">
+            <div className="lg:navbar md:flex sticky bottom-2 z-50 px-4 md:px-6 border-t border-base-200 h-fit min-h-[4rem] shadow-sm">
+                <div className="lg:navbar-start mb-2 md:mb-0 flex justify-center items-center">
+                    <div className="flex items-center gap-2 w-full">
+                        <span className="text-xs font-semibold">SPEED:</span>
+                        <input
+                            type="range"
+                            min={50}
+                            max="1000"
+                            value={speed}
+                            className="range range-primary range-xs w-24 md:w-32"
+                            onChange={(e) => setSpeed(Number(e.target.value))}
+                        />
+                        <span className="text-xs text-base-content/70 whitespace-nowrap">{speed} ms</span>
+                    </div>
+                </div>
+
+                <div className="lg:navbar-center flex-col sm:flex-row md:flex  justify-center items-center">
+                    <button className="btn btn-accent mr-2 sm:mr-2 mb-2 md:mb-0" onClick={handleSorted}>
                         Sorted
                     </button>
-                    <button className="btn mr-4" onClick={startSorting} disabled={isSorting}>
+                    <button className="btn btn-accent mr-0 sm:mr-4 mb-2 md:mb-0" onClick={startSorting} disabled={isSorting}>
                         Start Sorting
                     </button>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="join flex items-center mr-0 sm:mr-4 mb-2 md:mb-0">
                         <input
                             type="text"
                             value={inputValue}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg"
                             onChange={handleInput}
                         />
                         <button
-                            className="btn join-item"
+                            className="btn btn-primary join-item rounded-r-lg"
                             onClick={handleSubmit}
                             disabled={isSubmitting}
                         >
                             Go
                         </button>
                     </div>
-                    <div className="join flex items-center w-full max-w-md mr-4">
+                    <div className="lg:join flex items-center">
                         <input
                             type="number"
                             value={size}
-                            className="input join-item w-full"
+                            className="input join-item rounded-l-lg w-13"
                             onChange={handleSizeInput}
                         />
+                        <button className="btn btn-secondary join-item rounded-r-lg" onClick={handleRandom}>
+                            Random
+                        </button>
                     </div>
-                    <div className="flex justify-center w-full max-w-md">
-                        <input
-                            type="range"
-                            min={50}
-                            max="1000"
-                            value={speed}
-                            className="range range-primary"
-                            onChange={(e) => setSpeed(Number(e.target.value))}
-                        />
-                        <span>Speed: {speed} ms</span>
+                </div>
 
-                    </div>
+                <div className="lg:navbar-end">
                 </div>
             </div>
         </div>
     );
-};
+}
+export default SelectSort
 
-export default InsertSort;
+
+
+
+
+
