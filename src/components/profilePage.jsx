@@ -278,10 +278,10 @@ const ProfilePage = () => {
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200">
             <NavBar menuItems={[]} />
-            <div className="flex flex-col items-center justify-center">
+            <div className="flex flex-col items-center justify-center mt-4">
                 <div className="card w-full h-fit max-w-190 mb-2">
                     <div className="card-body bg-base-300 rounded-xl flex flex-row items-center gap-4">
-                        <ProfileImage size="24" type="circle"/>
+                        <ProfileImage src={user.photoURL} size="24" type="circle"/>
                         <div className="flex flex-col gap-3">
                             <button className="btn btn-outline btn-primary w-fit rounded-lg">Upload New</button>
                             <div className="text-sm">
