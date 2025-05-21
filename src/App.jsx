@@ -17,8 +17,8 @@ import UserManagement from "./components/userManagement.jsx";
 import LibraryManagement from "./components/libraryManagement.jsx";
 import ExampleManagement from "./components/exampleManagement.jsx";
 import Example from "./components/example.jsx";
-import SelectSort from "./algorithm/selectSort.jsx";
-import InsertSort from "./algorithm/insertSort.jsx";
+import SelectSort from "./algorithm/sort/selectSort.jsx";
+import InsertSort from "./algorithm/sort/insertSort.jsx";
 import Linear from "./algorithm/search/linear.jsx";
 import ProfilePage from "./components/profilePage.jsx";
 import Binary from "./algorithm/search/binary.jsx";
@@ -27,15 +27,13 @@ import DFS from "./algorithm/graph/DFS.jsx";
 import Kruskal from "./algorithm/graph/kruskal.jsx";
 import Dijkstra from "./algorithm/graph/dijkstra.jsx";
 import ChallengePage from "./components/challengePage.jsx";
-import SortingArrangement from "./components/challenges/SortingArrangement/SortingArrangement.jsx";
-import FillInTheBlanksQuiz from "./components/challenges/FIllInTheBlanksQuiz.jsx";
 import Factorial from "./algorithm/recursion/factorial.jsx";
 import Hanoi from "./algorithm/recursion/hanoi.jsx";
 import ChallengesManagement from "./components/challengesManagement.jsx";
 import {ChallengeProvider} from "./components/challenges/ChallengeContext.jsx";
-const BubbleSort = React.lazy(() => import("./algorithm/bubbleSort.jsx"));
-const MergeSort = React.lazy(() => import("./algorithm/mergeSort.jsx"));
-const QuickSort = React.lazy(() => import("./algorithm/quickSort.jsx"));
+const BubbleSort = React.lazy(() => import("./algorithm/sort/bubbleSort.jsx"));
+const MergeSort = React.lazy(() => import("./algorithm/sort/mergeSort.jsx"));
+const QuickSort = React.lazy(() => import("./algorithm/sort/quickSort.jsx"));
 
 // PrivateRoute component to protect routes
 const PrivateRoute = () => {
@@ -111,8 +109,6 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/recursion/factorial" element={<Factorial/>} />
                     <Route path="/visualizer/recursion/hanoi" element={<Hanoi/>} />
 
-                    <Route path="/task" element={<FillInTheBlanksQuiz />} />
-                    <Route path="/task1" element={<SortingArrangement />} />
                 </Route>
 
                 <Route element={<AdminRoute />}>
