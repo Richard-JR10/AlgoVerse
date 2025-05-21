@@ -6,7 +6,7 @@ const ExampleEditData = ({content, onEditData}) => {
 
     const [exampleEntries, setExampleEntries] = useState(examples);
 
-    const [exampleData, setExampleData] = useState({
+    const [exampleInfo, setExampleInfo] = useState({
         title: title,
         category: category,
         description: description,
@@ -14,7 +14,7 @@ const ExampleEditData = ({content, onEditData}) => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setExampleData((prev) => ({ ...prev, [name]: value }));
+        setExampleInfo((prev) => ({ ...prev, [name]: value }));
     }
 
     const handleCodeChange = (index, field, value) => {
@@ -32,10 +32,10 @@ const ExampleEditData = ({content, onEditData}) => {
     const handleSubmit = (e) => {
         e.preventDefault();
         onEditData(id, {
-            title: exampleData.title,
-            category: exampleData.category,
-            description: exampleData.description,
-            examples: exampleEntries,
+            title: exampleInfo.title,
+            category: exampleInfo.category,
+            description: exampleInfo.description,
+            examples: exampleEntries
         });
         document.getElementById(id).close();
     }
@@ -72,11 +72,11 @@ const ExampleEditData = ({content, onEditData}) => {
                         <h3 className="font-bold text-lg">Edit Data</h3>
                         <fieldset className="fieldset">
                             <legend className="fieldset-legend">Title</legend>
-                            <input name="title" value={exampleData.title} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
+                            <input name="title" value={exampleInfo.title} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
                             <legend className="fieldset-legend">Category</legend>
-                            <input name="category" value={exampleData.category} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
+                            <input name="category" value={exampleInfo.category} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
                             <legend className="fieldset-legend">Description</legend>
-                            <textarea name="description" value={exampleData.description} className="textarea resize-none w-full" placeholder="Type here" onChange={handleInputChange}></textarea>
+                            <textarea name="description" value={exampleInfo.description} className="textarea resize-none w-full" placeholder="Type here" onChange={handleInputChange}></textarea>
                             <div className="flex flex-row justify-between">
                                 <legend className="fieldset-legend">Example</legend>
                                 <button type="button" className="btn btn-primary btn-square" onClick={handleAddCode}>
