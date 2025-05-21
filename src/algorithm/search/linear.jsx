@@ -12,6 +12,9 @@ const Linear = () => {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const timeoutIdsRef = useRef([]); // Store timeout IDs for animation
+    const [speed, setSpeed] = useState(500);
+    const speedRef = useRef(speed);
+    const isCancelledRef = useRef(false);
 
     const searchMenu = [
         { label: 'Linear Search', path: '/visualizer/search/linear' },
@@ -36,6 +39,7 @@ const Linear = () => {
     const clearAnimationTimeouts = () => {
         timeoutIdsRef.current.forEach((id) => clearTimeout(id));
         timeoutIdsRef.current = []; // Reset the array
+        isCancelledRef.current = true; // Signal cancellation
     };
 
     function generateRandomArray(size) {
@@ -76,6 +80,7 @@ const Linear = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         clearAnimationTimeouts(); // Stop any ongoing animations
+        isCancelledRef.current = false; // Reset cancellation flag
         resetHighlighting();
         const inputArray = data.split(",").map(item => parseInt(item.trim())).filter(item => !isNaN(item));
         setData(inputArray);
@@ -87,27 +92,49 @@ const Linear = () => {
 
         d3.select(svgRef.current).selectAll("*").remove();
 
-        const margin = { top: 20, right: 20, bottom: 30, left: 40 };
+        const margin = { top: 20, right: 20, bottom: 30, left: 20 };
         const width = svgRef.current.clientWidth;
-        const height = 120 - margin.top - margin.bottom;
+        const minBoxWidth = 40; // Minimum box width for small screens
+        const maxBoxWidth = 60; // Maximum box width for large screens
+        const boxSpacing = width < 640 ? 3 : 5; // Smaller spacing on mobile
+        const rowSpacing = width < 640 ? 10 : 15; // Spacing between rows
+        const boxHeight = width < 640 ? 60 : 80; // Smaller height on mobile
+        const fontSizeValue = width < 640 ? 16 : 20; // Smaller font on mobile
+        const fontSizeIndex = width < 640 ? 12 : 16; // Smaller index font on mobile
+        const maxBoxesPerRow = 20; // Maximum boxes per row
+
+        // Calculate number of rows
+        const numRows = Math.ceil(arrayData.length / maxBoxesPerRow);
+        const boxesPerRow = Math.min(arrayData.length, maxBoxesPerRow);
+
+        // Calculate box width based on available width
+        let boxWidth = Math.min(
+            maxBoxWidth,
+            Math.max(minBoxWidth, (width - margin.left - margin.right) / boxesPerRow - boxSpacing)
+        );
+        const totalRowWidth = boxesPerRow * (boxWidth + boxSpacing) - boxSpacing; // Subtract final spacing
+        const startX = (width - totalRowWidth) / 2; // Center each row horizontally
+
+        // Set SVG height dynamically based on number of rows
+        const height = numRows * boxHeight + (numRows - 1) * rowSpacing + margin.top + margin.bottom;
 
         const svg = d3.select(svgRef.current);
-        svg.attr("viewBox", `0 0 ${width} ${height + margin.top + margin.bottom}`);
-
-        const boxWidth = 60;
-        const boxHeight = 80;
-        const boxSpacing = 5;
-
-        const totalArrayWidth = arrayData.length * boxWidth + (arrayData.length - 1) * boxSpacing;
-        const startX = (width - totalArrayWidth) / 2;
+        svg.attr("viewBox", `0 0 ${width} ${height}`);
 
         svg.selectAll(".outer-box")
             .data(arrayData)
             .enter()
             .append("rect")
             .attr("class", (d, i) => `outer-box outer-box-${i}`)
-            .attr("x", (d, i) => startX + i * (boxWidth + boxSpacing))
-            .attr("y", 0)
+            .attr("x", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                const col = i % maxBoxesPerRow;
+                return startX + col * (boxWidth + boxSpacing);
+            })
+            .attr("y", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                return margin.top + row * (boxHeight + rowSpacing);
+            })
             .attr("width", boxWidth)
             .attr("height", boxHeight)
             .attr("fill", "#4338ca")
@@ -119,12 +146,19 @@ const Linear = () => {
             .enter()
             .append("text")
             .attr("class", (d, i) => `value-text value-text-${i}`)
-            .attr("x", (d, i) => startX + i * (boxWidth + boxSpacing) + boxWidth / 2)
-            .attr("y", boxHeight * 0.35)
+            .attr("x", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                const col = i % maxBoxesPerRow;
+                return startX + col * (boxWidth + boxSpacing) + boxWidth / 2;
+            })
+            .attr("y", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                return margin.top + row * (boxHeight + rowSpacing) + boxHeight * 0.35;
+            })
             .attr("text-anchor", "middle")
             .attr("fill", "white")
             .attr("font-weight", "bold")
-            .attr("font-size", "20px")
+            .attr("font-size", `${fontSizeValue}px`)
             .text(d => d);
 
         svg.selectAll(".index-box")
@@ -132,9 +166,16 @@ const Linear = () => {
             .enter()
             .append("rect")
             .attr("class", (d, i) => `index-box index-box-${i}`)
-            .attr("x", (d, i) => startX + i * (boxWidth + boxSpacing) + 10)
-            .attr("y", boxHeight * 0.5)
-            .attr("width", boxWidth - 20)
+            .attr("x", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                const col = i % maxBoxesPerRow;
+                return startX + col * (boxWidth + boxSpacing) + boxWidth * 0.2;
+            })
+            .attr("y", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                return margin.top + row * (boxHeight + rowSpacing) + boxHeight * 0.5;
+            })
+            .attr("width", boxWidth * 0.6)
             .attr("height", boxHeight * 0.35)
             .attr("fill", "#8b5cf6")
             .attr("rx", 4)
@@ -145,11 +186,18 @@ const Linear = () => {
             .enter()
             .append("text")
             .attr("class", (d, i) => `index-text index-text-${i}`)
-            .attr("x", (d, i) => startX + i * (boxWidth + boxSpacing) + boxWidth / 2)
-            .attr("y", boxHeight * 0.72)
+            .attr("x", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                const col = i % maxBoxesPerRow;
+                return startX + col * (boxWidth + boxSpacing) + boxWidth / 2;
+            })
+            .attr("y", (d, i) => {
+                const row = Math.floor(i / maxBoxesPerRow);
+                return margin.top + row * (boxHeight + rowSpacing) + boxHeight * 0.72;
+            })
             .attr("text-anchor", "middle")
             .attr("fill", "white")
-            .attr("font-size", "16px")
+            .attr("font-size", `${fontSizeIndex}px`)
             .text((d, i) => i);
     };
 
@@ -157,7 +205,7 @@ const Linear = () => {
         d3.select(svgRef.current)
             .select(`.index-box-${index}`)
             .transition()
-            .duration(300)
+            .duration(speedRef.current)
             .attr("fill", color);
     };
 
@@ -165,13 +213,14 @@ const Linear = () => {
         d3.select(svgRef.current)
             .selectAll(".index-box")
             .transition()
-            .duration(300)
+            .duration(speedRef.current)
             .attr("fill", "#8b5cf6");
     };
 
     const startSearching = async () => {
         try {
             clearAnimationTimeouts(); // Stop any ongoing animations
+            isCancelledRef.current = false; // Reset cancellation flag
             resetHighlighting();
 
             let arrayToSearch;
@@ -194,7 +243,7 @@ const Linear = () => {
             });
 
             if (response.data && response.data.steps) {
-                await animateSearchSteps(response.data.steps); // Restart animation
+                await animateSearchSteps(response.data.steps); // Start animation
             } else {
                 setError("Received unexpected response format from server");
             }
@@ -204,31 +253,51 @@ const Linear = () => {
         }
     };
 
-    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const sleep = (ms) => new Promise((resolve, reject) => {
+        if (isCancelledRef.current) {
+            reject(new Error('Animation cancelled'));
+            return;
+        }
+        const id = setTimeout(() => {
+            if (isCancelledRef.current) {
+                reject(new Error('Animation cancelled'));
+            } else {
+                resolve();
+            }
+        }, ms);
+        timeoutIdsRef.current.push(id); // Store timeout ID
+    });
 
     const animateSearchSteps = async (steps) => {
         timeoutIdsRef.current = []; // Clear any previous timeout IDs
+        isCancelledRef.current = false; // Reset cancellation flag
         resetHighlighting();
         await sleep(500);
 
-        steps.forEach((step, stepIndex) => {
-            const timeoutId = setTimeout(() => {
+        for (const [stepIndex, step] of steps.entries()) {
+            if (isCancelledRef.current) break; // Stop if cancelled
+
+            try {
                 if (step.type === "checking") {
                     highlightIndex(step.index, "#ff0000"); // Red for checking
+                    await sleep(speedRef.current); // Use current speed
                 } else if (step.type === "found") {
                     highlightIndex(step.index, "#0fff00"); // Green for found
                     setSuccess(`Found ${searchValue} at index ${step.index}`);
+                    await sleep(speedRef.current); // Use current speed
                 } else if (step.type === "not_found") {
                     d3.select(svgRef.current)
                         .selectAll(".index-box")
                         .transition()
-                        .duration(300)
-                        .attr("fill", "#ff5555")
+                        .duration(speedRef.current / 2)
+                        .attr("fill", "#ff5555");
                     setError(`Value ${searchValue} not found in the array`);
+                    await sleep(speedRef.current); // Use current speed
                 }
-            }, stepIndex * 500);
-            timeoutIdsRef.current.push(timeoutId); // Store the timeout ID
-        });
+            } catch {
+                break; // Exit if cancelled during sleep
+            }
+        }
     };
 
     useEffect(() => {
@@ -245,49 +314,70 @@ const Linear = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    useEffect(() => {
+        speedRef.current = speed;
+    }, [speed]);
+
     return (
-        <div className="flex flex-col h-full relative bg-base-200">
+        <div className="flex flex-col min-h-screen bg-base-200 relative">
             <NavBar menuItems={searchMenu} />
-            <div className="flex items-center flex-grow">
-                <svg ref={svgRef} className="w-full h-30"></svg>
+            <div className="flex justify-center items-center flex-grow w-full px-4 sm:px-6 lg:px-8">
+                <div className="w-full max-w-7xl flex justify-center">
+                    <svg ref={svgRef} className="w-full max-w-[1200px] h-[150px] sm:h-[180px] lg:h-[200px] xl:h-[400px]"></svg>
+                </div>
             </div>
-            <div className="flex flex-col items-center mb-4">
-                <div className="flex justify-center items-center flex-row gap-3">
-                    <div className="flex flex-row items-center gap-1">
-                        <div className="font-semibold">N:</div>
-                        <div className="join">
+            <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col md:flex-row justify-center items-center gap-3 sm:gap-4 w-full md:w-auto">
+                    <div className="flex items-center gap-2 w-full mr-2 md:w-auto">
+                        <span className="text-xs font-semibold">SPEED:</span>
+                        <input
+                            type="range"
+                            min={50}
+                            max="1000"
+                            className="range range-primary range-xs w-full md:w-32"
+                            onChange={(e) => setSpeed(Number(e.target.value))}
+                        />
+                        <span className="text-xs text-base-content/70 whitespace-nowrap w-12">{speed} ms</span>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-1 w-full md:w-auto">
+                        <div className="font-semibold text-sm">N:</div>
+                        <div className="join w-full">
                             <input
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
-                                className="input join-item w-13"
+                                className="input join-item md:w-13 w-full"
                                 type="number"
+                                placeholder="Value"
                             />
                             <button className="btn btn-primary join-item" onClick={startSearching}>
                                 Search
                             </button>
                         </div>
                     </div>
-                    <div className="flex flex-row items-center gap-1">
-                        <div className="font-semibold">Array:</div>
-                        <div className="join">
+                    <div className="flex flex-row items-center gap-1 w-full">
+                        <div className="font-semibold text-sm">Array:</div>
+                        <div className="join w-full">
                             <input
-                                className="input join-item"
+                                className="input join-item w-full"
                                 value={Array.isArray(data) ? data.join(", ") : data}
                                 onChange={handleInputChange}
+                                placeholder="e.g., 5, 3, 8"
                             />
                             <button className="btn btn-secondary join-item" onClick={handleSubmit}>
                                 GO
                             </button>
                         </div>
                     </div>
-                    <div className="flex flex-row items-center gap-1">
-                        <div className="font-semibold">Size:</div>
-                        <div className="join">
+                    <div className="flex flex-row items-center gap-1 w-full md:w-auto">
+                        <div className="font-semibold text-sm">Size:</div>
+                        <div className="join w-full">
                             <input
                                 type="number"
-                                className="input join-item w-13"
+                                className="input join-item md:w-13 w-full"
                                 value={size}
                                 onChange={handleSize}
+                                placeholder="Size"
                             />
                             <button className="btn btn-primary join-item" onClick={handleRandom}>
                                 Random
