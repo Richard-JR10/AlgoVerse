@@ -66,8 +66,6 @@ const deleteAccount = async (user) => {
 
         // Call the Firebase deleteUser method on the user object directly
         await user.delete();
-
-        console.log('Account deleted successfully');
         return true;
     } catch (e) {
         console.error('Error deleting account:', e);
