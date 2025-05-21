@@ -7,6 +7,7 @@ import {useAuth} from "../Auth/AuthContext.jsx";
 import {ErrorContext} from "../context/errorContext.jsx";
 import FilterButton from "./challenges/filterButton.jsx";
 import {ChallengeContext} from "./challenges/ChallengeContext.jsx";
+import Leaderboard from "./leaderboard.jsx";
 
 const challengeMenu = [
     { label: 'Visualizer', path: '/visualizer' },
@@ -20,7 +21,7 @@ const ChallengePage = () => {
     const { auth } = useAuth();
     const [challengeEntries, setChallengeEntries] = useState([]);
     const { setError } = useContext(ErrorContext);
-    const { solvedChallenges } = useContext(ChallengeContext);
+    const { solvedChallenges, points, currentRank } = useContext(ChallengeContext);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredEntries, setFilteredEntries] = useState([]);
@@ -35,7 +36,7 @@ const ChallengePage = () => {
     });
 
     const CACHE_KEY = 'challengesEntries';
-    const CACHE_DURATION = 1000 * 60 * 60;
+    const CACHE_DURATION = 1000 * 60 * 5;
 
     const baseURL = 'https://algoverse-backend-nodejs.onrender.com';
 
@@ -170,6 +171,24 @@ const ChallengePage = () => {
     // Determine which entries to display
     const displayEntries = isFiltering ? filteredEntries : challengeEntries;
 
+    const toOrdinal = (number) => {
+        if (!Number.isInteger(number) || number < 0) return number.toString();
+
+        const lastTwoDigits = number % 100;
+        const lastDigit = number % 10;
+
+        // 11, 12, 13 use "th" (e.g., 11th, not 11st)
+        if (lastTwoDigits === 11 || lastTwoDigits === 12 || lastTwoDigits === 13) {
+            return `${number}th`;
+        }
+
+        // Otherwise, use last digit to determine suffix
+        const suffixes = { 1: 'st', 2: 'nd', 3: 'rd' };
+        const suffix = suffixes[lastDigit] || 'th';
+
+        return `${number}${suffix}`;
+    };
+
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200 flex flex-col items-center">
             <NavBar menuItems={challengeMenu} />
@@ -180,12 +199,14 @@ const ChallengePage = () => {
                     <div className="card w-full bg-base-300 shadow-xl">
                         <div className="card-body p-4 sm:p-6">
                             <div className="flex flex-row justify-between items-center">
-                                <div className="text-neutral-content font-medium text-sm sm:text-base">Rankings</div>
+                                <div className="text-neutral-content font-medium text-sm sm:text-base">Ranking</div>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" className="sm:w-[22px] sm:h-[22px]">
                                     <path fill="#e6d8d8" d="M12 5.5A3.5 3.5 0 0 1 15.5 9a3.5 3.5 0 0 1-3.5 3.5A3.5 3.5 0 0 1 8.5 9A3.5 3.5 0 0 1 12 5.5M5 8c.56 0 1.08.15 1.53.42c-.15 1.43.27 2.85 1.13 3.96C7.16 13.34 6.16 14 5 14a3 3 0 0 1-3-3a3 3 0 0 1 3-3m14 0a3 3 0 0 1 3 3a3 3 0 0 1-3 3c-1.16 0-2.16-.66-2.66-1.62a5.54 5.54 0 0 0 1.13-3.96c.45-.27.97-.42 1.53-.42M5.5 18.25c0-2.07 2.91-3.75 6.5-3.75s6.5 1.68 6.5 3.75V20h-13zM0 20v-1.5c0-1.39 1.89-2.56 4.45-2.9c-.59.68-.95 1.62-.95 2.65V20zm24 0h-3.5v-1.75c0-1.03-.36-1.97-.95-2.65c2.56.34 4.45 1.51 4.45 2.9z" />
                                 </svg>
                             </div>
-                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">0</div>
+                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">
+                                {toOrdinal(currentRank) === '0th' ? 'N/A' : toOrdinal(currentRank)}
+                            </div>
                         </div>
                     </div>
 
@@ -198,7 +219,9 @@ const ChallengePage = () => {
                                     <path fill="#e6d8d8" d="M139.61 35.5a12 12 0 0 0-17 0L58.93 98.81l-22.7-22.12a12 12 0 0 0-17 0L3.53 92.41a12 12 0 0 0 0 17l47.59 47.4a12.78 12.78 0 0 0 17.61 0l15.59-15.62L156.52 69a12.09 12.09 0 0 0 .09-17zm0 159.19a12 12 0 0 0-17 0l-63.68 63.72l-22.7-22.1a12 12 0 0 0-17 0L3.53 252a12 12 0 0 0 0 17L51 316.5a12.77 12.77 0 0 0 17.6 0l15.7-15.69l72.2-72.22a12 12 0 0 0 .09-16.9zM64 368c-26.49 0-48.59 21.5-48.59 48S37.53 464 64 464a48 48 0 0 0 0-96m432 16H208a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h288a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16m0-320H208a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h288a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16m0 160H208a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h288a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16" />
                                 </svg>
                             </div>
-                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">0</div>
+                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">
+                                {solvedChallenges.length}
+                            </div>
                         </div>
                     </div>
 
@@ -214,7 +237,7 @@ const ChallengePage = () => {
                                     </g>
                                 </svg>
                             </div>
-                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">0</div>
+                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">{points}</div>
                         </div>
                     </div>
 
@@ -269,13 +292,7 @@ const ChallengePage = () => {
                             </div>
                         </div>
                         {/* Side Card - Full width on mobile, 1/4 width on large screens */}
-                        <div className="col-span-1">
-                            <div className="card w-full bg-base-300 shadow-xl min-h-64">
-                                <div className="card-body p-4 sm:p-6">
-                                    <h2 className="card-title text-lg sm:text-xl">Leaderboard</h2>
-                                </div>
-                            </div>
-                        </div>
+                        <Leaderboard/>
                     </div>
                 </div>
             </div>
