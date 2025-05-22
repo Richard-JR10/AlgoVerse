@@ -1,5 +1,6 @@
 import NavBar from "./navBar.jsx";
 import ParticleBackground from "./utils/ParticleBackground.jsx";
+import {useNavigate} from "react-router-dom";
 
 const HomePage = () => {
     const homeMenu = [
@@ -7,8 +8,11 @@ const HomePage = () => {
         { label: 'Comparator', path: '/comparator' },
         { label: 'Challenges', path: '/challenge' },
         { label: 'Code Library', path: '/library' },
-        { label: 'Examples', path: '/example' }
+        { label: 'Examples', path: '/example' },
+        { label: 'About', path: '/about' }
     ];
+
+    const navigate = useNavigate();
 
     return (
         <div className="scrollbar-hide overflow-auto h-screen bg-base-200 relative">
@@ -19,9 +23,9 @@ const HomePage = () => {
                     <div className="max-w-md">
                         <h1 className="text-5xl font-bold">ALGOVERSE</h1>
                         <p className="py-6">
-                            Interactive <span className="font-bold">COMMON</span> AlgorithmS Visualizer with Gamification and AI-Powered Comparisons
+                            Interactive <span className="font-bold">COMMON</span> Algorithm Visualizer with Gamification and AI-Powered Comparisons
                         </p>
-                        <button className="btn btn-primary">Get Started</button>
+                        <button className="btn btn-primary" onClick={() => navigate('/login')}>Get Started</button>
                     </div>
                 </div>
             </div>
