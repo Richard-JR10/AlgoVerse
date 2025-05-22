@@ -116,7 +116,7 @@ const ChallengesManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.delete(
-                `${baseURL}/api/challenges/delete`,{
+                `${baseURL}/api/deleteChallenges`,{
                     data: {id: [id]},
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 });
@@ -133,7 +133,7 @@ const ChallengesManagement = () => {
         const token = await auth.currentUser.getIdToken();
         try {
             await axios.delete(
-                `${baseURL}/api/challenges/delete`,{
+                `${baseURL}/api/deleteChallenges`,{
                     data: {id: selectedId},
                     headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 });
