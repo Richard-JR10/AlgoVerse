@@ -263,37 +263,37 @@ const ChallengePage = () => {
                             <h3 className="font-bold text-lg">Badges Earned</h3>
                             {badges.includes(1) && (
                                 <div className="flex flex-col justify-center items-center">
-                                    <img className="w-80" src="../../public/Badges/algo_newbie.png" alt="Algo Newbie" />
+                                    <img className="w-80" src="/Badges/algo_newbie.png" alt="Algo Newbie" />
                                     <span className="text-[16px] sm:text-xl font-bold">First Question Answered</span>
                                 </div>
                             )}
                             {badges.includes(5) && (
                                 <div className="flex flex-col justify-center items-center">
-                                    <img className="w-80" src="../../public/Badges/loop_breaker.png" alt="Loop Breaker" />
+                                    <img className="w-80" src="/Badges/loop_breaker.png" alt="Loop Breaker" />
                                     <span className="text-[16px] sm:text-xl font-bold">Five Question Answered</span>
                                 </div>
                             )}
                             {badges.includes(10) && (
                                 <div className="flex flex-col justify-center items-center">
-                                    <img className="w-80" src="../../public/Badges/code_warrior.png" alt="Code Warrior" />
+                                    <img className="w-80" src="/Badges/code_warrior.png" alt="Code Warrior" />
                                     <span className="text-[16px] sm:text-xl font-bold">Ten Question Answered</span>
                                 </div>
                             )}
                             {badges.includes(20) && (
                                 <div className="flex flex-col justify-center items-center">
-                                    <img className="w-80" src="../../public/Badges/logic_hacker.png" alt="Logic Hacker" />
+                                    <img className="w-80" src="/Badges/logic_hacker.png" alt="Logic Hacker" />
                                     <span className="text-[16px] sm:text-xl font-bold">Twenty Question Answered</span>
                                 </div>
                             )}
                             {badges.includes(50) && (
                                 <div className="flex flex-col justify-center items-center">
-                                    <img className="w-80" src="../../public/Badges/runtime_raider.png" alt="Runtime Raider" />
+                                    <img className="w-80" src="/Badges/runtime_raider.png" alt="Runtime Raider" />
                                     <span className="text-[16px] sm:text-xl font-bold">Fifty Question Answered</span>
                                 </div>
                             )}
                             {badges.includes(100) && (
                                 <div className="flex flex-col justify-center items-center">
-                                    <img className="w-80" src="../../public/Badges/algorithm_overlord.png" alt="Algorithm Overlord" />
+                                    <img className="w-80" src="/Badges/algorithm_overlord.png" alt="Algorithm Overlord" />
                                     <span className="text-[16px] sm:text-xl font-bold">One Hundred Question Answered</span>
                                 </div>
                             )}
