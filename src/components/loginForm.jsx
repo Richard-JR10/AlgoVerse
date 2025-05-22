@@ -32,7 +32,7 @@ const LoginForm = () => {
     // Clear error after 5 seconds
     useEffect(() => {
         if (error) {
-            const timer = setTimeout(() => setError(null), 2000);
+            const timer = setTimeout(() => setError(null), 1000);
             return () => clearTimeout(timer);
         }
     }, [error]);
@@ -44,7 +44,7 @@ const LoginForm = () => {
                 setSuccess(null);
                 setIsLoggingIn(false); // End login process
                 navigate('/visualizer', { replace: true }); // Navigate to visualizer
-            }, 2000);
+            }, 1000);
             return () => clearTimeout(timer);
         }
     }, [success, navigate]);
