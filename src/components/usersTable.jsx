@@ -1,4 +1,4 @@
-import React from 'react'
+import 'react'
 import PropTypes from "prop-types";
 import ProfileImage from "./utils/ProfileImage.jsx";
 
@@ -27,8 +27,8 @@ const UsersTable = ({ usersInfo, onDelete, onDisable, onEnable, onCheckboxChange
                 </tr>
                 </thead>
                 <tbody>
-                    {usersInfo.map((user) => (
-                        <tr key={user.id}>
+                    {usersInfo.map((user,index) => (
+                        <tr key={index}>
                             <th>
                                 <label>
                                     <input type="checkbox"
