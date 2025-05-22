@@ -22,7 +22,7 @@ const ChallengePage = () => {
     const { auth } = useAuth();
     const [challengeEntries, setChallengeEntries] = useState([]);
     const { setError } = useContext(ErrorContext);
-    const { solvedChallenges, points, currentRank } = useContext(ChallengeContext);
+    const { solvedChallenges, points, currentRank, badgeCount, badges } = useContext(ChallengeContext);
 
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredEntries, setFilteredEntries] = useState([]);
@@ -243,7 +243,7 @@ const ChallengePage = () => {
                     </div>
 
                     {/* Badges Earned Card */}
-                    <div className="card w-full bg-base-300 shadow-xl">
+                    <div className="card w-full bg-base-300 shadow-xl hover:cursor-pointer" onClick={()=>document.getElementById('badges').showModal()}>
                         <div className="card-body p-4 sm:p-6">
                             <div className="flex flex-row justify-between items-center">
                                 <div className="text-neutral-content font-medium text-sm sm:text-base">Badges Earned</div>
@@ -251,9 +251,54 @@ const ChallengePage = () => {
                                     <path fill="#e6d8d8" d="M4.1 38.2C1.4 34.2 0 29.4 0 24.6C0 11 11 0 24.6 0h109.3c11.2 0 21.7 5.9 27.4 15.5l68.5 114.1c-48.2 6.1-91.3 28.6-123.4 61.9zm503.7 0L405.6 191.5c-32.1-33.3-75.2-55.8-123.4-61.9l68.5-114.1C356.5 5.9 366.9 0 378.1 0h109.3C501 0 512 11 512 24.6c0 4.8-1.4 9.6-4.1 13.6zM80 336a176 176 0 1 1 352 0a176 176 0 1 1-352 0m184.4-94.9c-3.4-7-13.3-7-16.8 0l-22.4 45.4c-1.4 2.8-4 4.7-7 5.1l-50.2 7.3c-7.7 1.1-10.7 10.5-5.2 16l36.3 35.4c2.2 2.2 3.2 5.2 2.7 8.3l-8.6 49.9c-1.3 7.6 6.7 13.5 13.6 9.9l44.8-23.6c2.7-1.4 6-1.4 8.7 0l44.8 23.6c6.9 3.6 14.9-2.2 13.6-9.9l-8.6-49.9c-.5-3 .5-6.1 2.7-8.3l36.3-35.4c5.6-5.4 2.5-14.8-5.2-16l-50.1-7.3c-3-.4-5.7-2.4-7-5.1z" />
                                 </svg>
                             </div>
-                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">0</div>
+                            <div className="stat-value text-xl sm:text-2xl md:text-3xl font-bold">{badgeCount}</div>
                         </div>
                     </div>
+                    <dialog id="badges" className="modal">
+                        <div className="modal-box max-h-9/10">
+                            <form method="dialog">
+                                {/* if there is a button in form, it will close the modal */}
+                                <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                            </form>
+                            <h3 className="font-bold text-lg">Badges Earned</h3>
+                            {badges.includes(1) && (
+                                <div className="flex flex-col justify-center items-center">
+                                    <img className="w-80" src="../../public/Badges/algo_newbie.png" alt="Algo Newbie" />
+                                    <span className="text-[16px] sm:text-xl font-bold">First Question Answered</span>
+                                </div>
+                            )}
+                            {badges.includes(5) && (
+                                <div className="flex flex-col justify-center items-center">
+                                    <img className="w-80" src="../../public/Badges/loop_breaker.png" alt="Loop Breaker" />
+                                    <span className="text-[16px] sm:text-xl font-bold">Five Question Answered</span>
+                                </div>
+                            )}
+                            {badges.includes(10) && (
+                                <div className="flex flex-col justify-center items-center">
+                                    <img className="w-80" src="../../public/Badges/code_warrior.png" alt="Code Warrior" />
+                                    <span className="text-[16px] sm:text-xl font-bold">Ten Question Answered</span>
+                                </div>
+                            )}
+                            {badges.includes(20) && (
+                                <div className="flex flex-col justify-center items-center">
+                                    <img className="w-80" src="../../public/Badges/logic_hacker.png" alt="Logic Hacker" />
+                                    <span className="text-[16px] sm:text-xl font-bold">Twenty Question Answered</span>
+                                </div>
+                            )}
+                            {badges.includes(50) && (
+                                <div className="flex flex-col justify-center items-center">
+                                    <img className="w-80" src="../../public/Badges/runtime_raider.png" alt="Runtime Raider" />
+                                    <span className="text-[16px] sm:text-xl font-bold">Fifty Question Answered</span>
+                                </div>
+                            )}
+                            {badges.includes(100) && (
+                                <div className="flex flex-col justify-center items-center">
+                                    <img className="w-80" src="../../public/Badges/algorithm_overlord.png" alt="Algorithm Overlord" />
+                                    <span className="text-[16px] sm:text-xl font-bold">One Hundred Question Answered</span>
+                                </div>
+                            )}
+                        </div>
+                    </dialog>
                 </div>
 
                 {/* Bottom Content Cards - Responsive grid that changes layout on different screens */}
