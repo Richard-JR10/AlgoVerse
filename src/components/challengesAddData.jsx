@@ -233,6 +233,7 @@ const ChallengesAddData = ({ onAddData }) => {
                         <fieldset className="fieldset">
                             <legend className="fieldset-legend">Title</legend>
                             <input
+                                required
                                 value={title}
                                 type="text"
                                 className="input w-full"
@@ -311,6 +312,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                         <>
                                             <legend className="fieldset-legend">Question</legend>
                                             <input
+                                                required
                                                 name="question"
                                                 value={entry.question}
                                                 type="text"
@@ -321,6 +323,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             />
                                             <legend className="fieldset-legend">Answer</legend>
                                             <input
+                                                required
                                                 name="answer"
                                                 value={entry.answer}
                                                 type="text"
@@ -332,6 +335,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             <legend className="fieldset-legend">Choices</legend>
                                             {entry.choices.map((choice, choiceIndex) => (
                                                 <input
+                                                    required
                                                     key={choiceIndex}
                                                     type="text"
                                                     className="input w-full mt-1.5"
@@ -347,6 +351,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                         <>
                                             <legend className="fieldset-legend">Algorithm</legend>
                                             <input
+                                                required
                                                 name="algorithm"
                                                 value={entry.algorithm}
                                                 type="text"
@@ -357,6 +362,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             />
                                             <legend className="fieldset-legend">Initial Array</legend>
                                             <input
+                                                required
                                                 name="initialArray"
                                                 value={entry.initialArray}
                                                 type="text"
@@ -367,6 +373,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             />
                                             <legend className="fieldset-legend">Expected Array</legend>
                                             <input
+                                                required
                                                 name="expectedArray"
                                                 value={entry.expectedArray}
                                                 type="text"
@@ -377,6 +384,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             />
                                             <legend className="fieldset-legend">Step Description</legend>
                                             <input
+                                                required
                                                 name="stepDescription"
                                                 value={entry.stepDescription}
                                                 type="text"
@@ -399,6 +407,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                         <>
                                             <legend className="fieldset-legend">Text</legend>
                                             <input
+                                                required
                                                 name="text"
                                                 value={entry.text}
                                                 type="text"
@@ -410,6 +419,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             <legend className="fieldset-legend">Correct Answers</legend>
                                             {entry.correctAnswers.map((answer, answerIndex) => (
                                                 <input
+                                                    required
                                                     key={answerIndex}
                                                     type="text"
                                                     className="input w-full mt-1.5"
@@ -422,6 +432,7 @@ const ChallengesAddData = ({ onAddData }) => {
                                             <legend className="fieldset-legend">Choices</legend>
                                             {entry.choices.map((choice, choiceIndex) => (
                                                 <input
+                                                    required
                                                     key={choiceIndex}
                                                     type="text"
                                                     className="input w-full mt-1.5"

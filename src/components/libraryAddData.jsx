@@ -83,9 +83,9 @@ const LibraryAddData = ({ onAddData }) => {
                         <h3 className="font-bold text-lg">Add Data</h3>
                         <fieldset className="fieldset">
                             <legend className="fieldset-legend">Title</legend>
-                            <input name="title" value={libraryData.title} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
+                            <input required name="title" value={libraryData.title} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
                             <legend className="fieldset-legend">Category</legend>
-                            <input name="category" value={libraryData.category} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
+                            <input required name="category" value={libraryData.category} type="text" className="input w-full" placeholder="Type here" onChange={handleInputChange} onKeyDown={preventEnterKey}/>
                             <legend className="fieldset-legend">Description</legend>
                             <textarea name="description" value={libraryData.description} className="textarea resize-none w-full" placeholder="Type here" onChange={handleInputChange}></textarea>
                             <div className="flex flex-row justify-between items-center">
@@ -112,6 +112,7 @@ const LibraryAddData = ({ onAddData }) => {
                                         placeholder="Language Name"
                                         value={item.language}
                                         title="Required"
+                                        required
                                         onKeyDown={preventEnterKey}
                                         onChange={(e) => handleCodeChange(i, 'language', e.target.value)}
                                     />
