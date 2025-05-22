@@ -190,9 +190,9 @@ const ChallengesAddData = ({ onAddData }) => {
     return (
         <div>
             <div className="join">
-                <select className="select join-item" onChange={handleTypeChange}>
-                    <option disabled selected>
-                        Type
+                <select defaultValue="Pick a Type" className="select join-item" onChange={handleTypeChange}>
+                    <option disabled>
+                        Pick a Type
                     </option>
                     <option>Multiple Choices</option>
                     <option>Sorting Arrangement</option>
