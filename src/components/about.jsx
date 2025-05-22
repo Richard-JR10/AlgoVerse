@@ -20,7 +20,7 @@ const About = () => {
                     <div className="hero-content flex-col lg:flex-row-reverse gap-12">
                         <div className="flex-1 max-w-md">
                             <img
-                                src="../../public/hero-picture-team.jpg"
+                                src="/hero-picture-team.jpg"
                                 className="w-full rounded-2xl shadow-2xl"
                                 alt="AlgoVerse team"
                             />
@@ -67,7 +67,7 @@ const About = () => {
                                 </div>
                                 <div className="flex-1 max-w-md">
                                     <img
-                                        src="../../public/goal.png"
+                                        src="/goal.png"
                                         className="w-full rounded-2xl shadow-lg"
                                         alt="Our mission"
                                     />
