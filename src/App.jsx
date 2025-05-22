@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from "./Auth/AuthContext.jsx";
 import { ErrorProvider } from "./context/errorContext.jsx";
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
 import LoginForm from "./components/loginForm.jsx";
-import LogoutForm from "./components/logoutForm.jsx";
 import HomePage from "./components/homePage.jsx";
 import VisualizerPage from "./components/visualizerPage.jsx";
 import SignupForm from "./components/signupForm.jsx";
@@ -31,6 +30,7 @@ import Factorial from "./algorithm/recursion/factorial.jsx";
 import Hanoi from "./algorithm/recursion/hanoi.jsx";
 import ChallengesManagement from "./components/challengesManagement.jsx";
 import {ChallengeProvider} from "./components/challenges/ChallengeContext.jsx";
+import About from "./components/about.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/sort/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/sort/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/sort/quickSort.jsx"));
@@ -67,6 +67,7 @@ const App = () => (
 );
 
 const AppRoutes = React.memo(() => {
+    const { user } = useAuth();
 
     // if (loading) {
     //     return <div className="flex justify-center items-center h-screen">Loading...</div>;
@@ -76,7 +77,7 @@ const AppRoutes = React.memo(() => {
         <Suspense fallback={<div>Loading...</div>}>
             <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<HomePage />} />
+                <Route path="/" element={!user ? <HomePage /> : <Navigate to="/visualizer" replace />} />
                 <Route path="/signup" element={<SignupForm />} />
                 <Route path="/login" element={<LoginForm />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -90,7 +91,7 @@ const AppRoutes = React.memo(() => {
                     <Route path="/library" element={<CodeLibrary />} />
                     <Route path="/example" element={<Example />} />
                     <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/logout" element={<LogoutForm />} />
+                    <Route path="/about" element={<About />} />
 
                     <Route path="/visualizer/sort/bubble" element={<BubbleSort />} />
                     <Route path="/visualizer/sort/select" element={<SelectSort/>} />
