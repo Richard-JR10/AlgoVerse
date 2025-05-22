@@ -31,6 +31,7 @@ import Hanoi from "./algorithm/recursion/hanoi.jsx";
 import ChallengesManagement from "./components/challengesManagement.jsx";
 import {ChallengeProvider} from "./components/challenges/ChallengeContext.jsx";
 import About from "./components/about.jsx";
+import AdminDashboard from "./components/adminDashboard.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/sort/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/sort/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/sort/quickSort.jsx"));
@@ -114,6 +115,7 @@ const AppRoutes = React.memo(() => {
 
                 <Route element={<AdminRoute />}>
                     <Route path="/admin" element={<AdminPanel />}>
+                        <Route path="dashboard" element={<AdminDashboard />} />
                         <Route path="users" element={<UserManagement />} />
                         <Route path="library" element={<LibraryManagement />} />
                         <Route path="example" element={<ExampleManagement />} />
