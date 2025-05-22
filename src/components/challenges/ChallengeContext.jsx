@@ -9,9 +9,30 @@ export const ChallengeProvider = ({ children }) => {
     const [solvedChallenges, setSolvedChallenges] = useState([]);
     const [points, setPoints] = useState(0);
     const [currentRank, setCurrentRank] = useState(0);
+    const [badgeCount, setBadgeCount] = useState(0);
+    const [badges, setBadges] = useState([]);
     const [loading, setLoading] = useState(true);
     const { auth } = useAuth();
     const baseURL = "https://algoverse-backend-nodejs.onrender.com";
+
+    const handleBadgeCount = (SolvedChallenges) => {
+        const length = SolvedChallenges.length;
+        let count = 0;
+        const milestones = [1, 5, 10, 20, 50, 100];
+        const achievedBadges = [];
+
+        for (const milestone of milestones) {
+            if (length >= milestone) {
+                achievedBadges.push(milestone);
+                count += 1;
+            } else {
+                break; // Stop checking once a milestone is not met
+            }
+        }
+
+        setBadges(achievedBadges);
+        setBadgeCount(count);
+    };
 
     // Fetch SolvedChallenges on mount
     useEffect(() => {
@@ -26,6 +47,7 @@ export const ChallengeProvider = ({ children }) => {
                     });
                     setSolvedChallenges(response.data.SolvedChallenges || []);
                     setPoints(response.data.Points || 0);
+                    handleBadgeCount(response.data.SolvedChallenges);
                 } catch (err) {
                     console.error("Error fetching solved challenges:", err);
                 }
@@ -51,7 +73,7 @@ export const ChallengeProvider = ({ children }) => {
     }
 
     return (
-        <ChallengeContext.Provider value={{ solvedChallenges, addSolvedChallenge, loading, points, currentRank, setCurrentRank, addPoints }}>
+        <ChallengeContext.Provider value={{ solvedChallenges, addSolvedChallenge, loading, points, currentRank, setCurrentRank, addPoints, badgeCount, badges }}>
             {children}
         </ChallengeContext.Provider>
     );
