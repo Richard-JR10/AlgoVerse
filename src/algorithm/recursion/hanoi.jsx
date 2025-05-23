@@ -308,6 +308,30 @@ const HanoiVisualization = () => {
         <div className="flex flex-col min-h-screen bg-base-200 text-white relative">
         <NavBar menuItems={visualizerMenu} />
 
+            {/* Header Section */}
+            <div className="mx-4 mt-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 className="text-sm sm:text-lg md:text-xl font-bold">
+                        Tower of Hanoi: {number} Disks
+                    </h2>
+                    <p className="text-xs sm:text-sm md:text-base">
+                        {isCalculating
+                            ? 'Moving disks...'
+                            : steps.length > 0
+                                ? 'Ready to start moves'
+                                : 'Enter number of disks to begin'}
+                    </p>
+                </div>
+                <div
+                    className="bg-indigo-700 p-2 sm:p-3 rounded-lg w-full sm:w-auto"
+                    aria-live="polite"
+                >
+                    <span className="font-bold text-sm sm:text-lg md:text-xl">
+                        Number of Moves: {(Math.pow(2, number) - 1).toLocaleString()}
+                    </span>
+                </div>
+            </div>
+
             {/* SVG Visualization */}
             <div className="flex-grow p-4 flex justify-center">
                 <svg
