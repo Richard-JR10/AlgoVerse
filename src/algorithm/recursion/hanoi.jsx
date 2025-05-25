@@ -8,15 +8,16 @@ const HanoiVisualization = () => {
     const [number, setNumber] = useState(3);
     const [steps, setSteps] = useState([]);
     const [isCalculating, setIsCalculating] = useState(false);
-    const [speed, setSpeed] = useState(1000);
+    const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [pegs, setPegs] = useState({});
     const [currentMove, setCurrentMove] = useState(null); // Track current move for accessibility
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
-
     const [error, setError] = useState(null);
+    const [currentStepIndex, setCurrentStepIndex] = useState(-1); // Track current step
+    const [currentPegsHistory, setCurrentPegsHistory] = useState([]); // Track peg states
 
     // Navigation menu items
     const visualizerMenu = [
@@ -26,7 +27,7 @@ const HanoiVisualization = () => {
 
     useEffect(() => {
         if (error) {
-            const timer = setTimeout(() => setError(null), 5000);
+            const timer = setTimeout(() => setTimeout(() => setError(null), 5000));
             return () => clearTimeout(timer);
         }
     }, [error]);
@@ -41,7 +42,7 @@ const HanoiVisualization = () => {
         setInputValue(e.target.value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (isSubmitting) return;
 
@@ -51,11 +52,12 @@ const HanoiVisualization = () => {
             return;
         }
 
+        await fetchSteps();
         setNumber(input);
         initializeVisualization(input);
     };
 
-    const initializeVisualization = (num) => {
+    const initializeVisualization = async (num) => {
         try {
             setIsSubmitting(true);
             if (isCalculating) {
@@ -74,6 +76,8 @@ const HanoiVisualization = () => {
                 C: [],
             };
             setPegs(initialPegs);
+            setCurrentStepIndex(-1); // Reset step index
+            setCurrentPegsHistory([JSON.parse(JSON.stringify(initialPegs))]); // Initialize history
 
             setIsSubmitting(false);
             isCancelledRef.current = false;
@@ -92,6 +96,7 @@ const HanoiVisualization = () => {
         const randomNum = Math.floor(Math.random() * 5) + 1;
         setInputValue(randomNum.toString());
         setNumber(randomNum);
+        await fetchSteps();
         initializeVisualization(randomNum);
     };
 
@@ -125,11 +130,129 @@ const HanoiVisualization = () => {
         }
     };
 
+    const animateSingleStep = async (step, currentPegs, svg) => {
+        if (step.type === "move") {
+            const { disk, from, to } = step;
+            const diskToMove = currentPegs[from].find(d => d.id === disk);
+            if (diskToMove) {
+                setCurrentMove({ disk, from, to });
+
+                const containerWidth = svgRef.current?.parentElement?.clientWidth || 900;
+                const baseWidth = Math.min(containerWidth, 900);
+                const scale = baseWidth / 900;
+                const width = baseWidth;
+                const height = 400 * scale;
+                svg.attr('viewBox', `0 0 ${width} ${height}`);
+
+                const fromX = (['A', 'B', 'C'].indexOf(from) + 0.5) * (width / 3);
+                const toX = (['A', 'B', 'C'].indexOf(to) + 0.5) * (width / 3);
+                const diskWidth = (diskToMove.size / number) * 120 * scale;
+                const initialY = 200 * scale - currentPegs[from].length * 20 * scale;
+                const liftY = 50 * scale;
+                const finalY = 200 * scale - (currentPegs[to].length + 1) * 20 * scale;
+
+                currentPegs[from] = currentPegs[from].filter(d => d.id !== disk);
+                svg.select(`g.disk-${diskToMove.id}`).remove();
+                console.log(`Removed disk-${diskToMove.id} from source peg ${from}`);
+
+                const movingElement = svg.append("g")
+                    .attr("class", `moving-disk-${diskToMove.id}`);
+
+                movingElement.append("rect")
+                    .attr("x", fromX - diskWidth / 2)
+                    .attr("y", initialY)
+                    .attr("width", diskWidth)
+                    .attr("height", 18 * scale)
+                    .attr("fill", diskToMove.color);
+
+                movingElement.append("text")
+                    .attr("x", fromX)
+                    .attr("y", initialY + (18 * scale) / 2)
+                    .attr("text-anchor", "middle")
+                    .attr("dy", ".35em")
+                    .attr("fill", FONT_COLOR)
+                    .attr("font-size", `${12 * scale}px`)
+                    .text(`Disk ${diskToMove.id}`);
+
+                console.log(`Disk ${disk} moving:`, { fromX, toX, initialY, liftY, finalY, diskWidth, scale });
+                console.log(`Moving element created:`, movingElement.node());
+
+                await new Promise(resolve => setTimeout(resolve, 50));
+
+                await new Promise((resolve) => {
+                    movingElement.transition()
+                        .duration(speedRef.current * 0.3)
+                        .attr("transform", `translate(0, ${liftY - initialY})`)
+                        .on("start", () => console.log(`Disk ${disk} lifting`))
+                        .transition()
+                        .duration(speedRef.current * 0.4)
+                        .attr("transform", `translate(${toX - fromX}, ${liftY - initialY})`)
+                        .on("start", () => console.log(`Disk ${disk} moving across`))
+                        .transition()
+                        .duration(speedRef.current * 0.3)
+                        .attr("transform", `translate(${toX - fromX}, ${finalY - initialY})`)
+                        .on("start", () => console.log(`Disk ${disk} dropping`))
+                        .on("end", () => {
+                            movingElement.remove();
+                            currentPegs[to] = [diskToMove, ...currentPegs[to]].sort((a, b) => a.size - b.size);
+                            setCurrentMove(null);
+                            console.log(`Disk ${disk} placed on peg ${to}`);
+                            resolve();
+                        });
+                });
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        return currentPegs;
+    };
+
+    const handleStepForward = async () => {
+        if (currentStepIndex >= steps.length - 1 || steps.length === 0 || isCalculating) return;
+
+        setIsCalculating(true);
+        const svg = d3.select(svgRef.current);
+        const nextIndex = currentStepIndex + 1;
+        const step = steps[nextIndex];
+        let currentPegs = JSON.parse(JSON.stringify(pegs));
+
+        currentPegs = await animateSingleStep(step, currentPegs, svg);
+        setPegs(currentPegs);
+        setCurrentPegsHistory([...currentPegsHistory, JSON.parse(JSON.stringify(currentPegs))]);
+        setCurrentStepIndex(nextIndex);
+        setIsCalculating(false);
+    };
+
+    const handleStepBackward = () => {
+        if (currentStepIndex <= -1 || steps.length === 0 || isCalculating) return;
+
+        setIsCalculating(true);
+        const prevIndex = currentStepIndex;
+        const prevPegs = JSON.parse(JSON.stringify(currentPegsHistory[prevIndex]));
+        setPegs(prevPegs);
+        setCurrentStepIndex(prevIndex - 1);
+        setIsCalculating(false);
+    };
+
     const animateCalculationSteps = async () => {
         setIsCalculating(true);
         isCancelledRef.current = false;
 
-        let currentPegs = JSON.parse(JSON.stringify(pegs)); // Deep copy
+        // Reset to initial state
+        const initialPegs = {
+            A: Array.from({ length: number }, (_, i) => ({
+                id: i + 1,
+                size: i + 1,
+                color: diskColors[i % diskColors.length],
+            })),
+            B: [],
+            C: [],
+        };
+        setPegs(initialPegs);
+        setCurrentStepIndex(-1);
+        setCurrentPegsHistory([JSON.parse(JSON.stringify(initialPegs))]);
+
+        let currentPegs = JSON.parse(JSON.stringify(initialPegs)); // Deep copy
         const svg = d3.select(svgRef.current);
 
         const steps = await fetchSteps();
@@ -142,6 +265,7 @@ const HanoiVisualization = () => {
         const height = 400 * scale; // Maintain aspect ratio
         svg.attr('viewBox', `0 0 ${width} ${height}`);
 
+        let stepIndex = -1;
         for (const step of steps) {
             if (isCancelledRef.current) break;
             if (step.type === "move") {
@@ -217,6 +341,11 @@ const HanoiVisualization = () => {
                                 resolve();
                             });
                     });
+
+                    // Update step index and history
+                    stepIndex += 1;
+                    setCurrentStepIndex(stepIndex);
+                    setCurrentPegsHistory(prev => [...prev, JSON.parse(JSON.stringify(currentPegs))]);
 
                     // Delay between moves
                     await new Promise(resolve => setTimeout(resolve, 100));
@@ -306,21 +435,34 @@ const HanoiVisualization = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-base-200 text-white relative">
-        <NavBar menuItems={visualizerMenu} />
+            <NavBar menuItems={visualizerMenu} />
 
             {/* Header Section */}
             <div className="mx-4 mt-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 className="text-sm sm:text-lg md:text-xl font-bold">
-                        Tower of Hanoi: {number} Disks
-                    </h2>
-                    <p className="text-xs sm:text-sm md:text-base">
-                        {isCalculating
-                            ? 'Moving disks...'
-                            : steps.length > 0
-                                ? 'Ready to start moves'
-                                : 'Enter number of disks to begin'}
-                    </p>
+                <div className="flex flex-row sm:flex-col w-full justify-between items-center sm:items-start">
+                    <div>
+                        <h2 className="text-sm sm:text-lg md:text-xl font-bold">
+                            Tower of Hanoi: {number} Disks
+                        </h2>
+                        <p className="text-xs sm:text-sm md:text-base mb-2">
+                            {isCalculating
+                                ? 'Moving disks...'
+                                : steps.length > 0
+                                    ? 'Ready to start moves'
+                                    : 'Enter number of disks to begin'}
+                        </p>
+                    </div>
+                    {/* Complexity Information */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm">
+                        <div className="bg-indigo-800 px-2 py-1 rounded">
+                            <span className="font-semibold text-indigo-200">Time:</span>
+                            <span className="ml-1 text-white">O(n)</span>
+                        </div>
+                        <div className="bg-indigo-800 px-2 py-1 rounded">
+                            <span className="font-semibold text-indigo-200">Space:</span>
+                            <span className="ml-1 text-white">O(n)</span>
+                        </div>
+                    </div>
                 </div>
                 <div
                     className="bg-indigo-700 p-2 sm:p-3 rounded-lg w-full sm:w-auto"
@@ -350,9 +492,9 @@ const HanoiVisualization = () => {
 
             {/* Control Panel */}
             <div className="p-4 bg-base-200 w-full">
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 max-w-4xl mx-auto">
+                <div className="flex flex-col lg:flex-row justify-center items-center gap-2 lg:gap-4 max-w-7xl mx-auto">
                     <button
-                        className="btn btn-accent btn-sm sm:btn-md w-full sm:w-auto"
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
                         onClick={handleRandom}
                         disabled={isCalculating}
                         aria-label="Generate random number of disks"
@@ -360,18 +502,34 @@ const HanoiVisualization = () => {
                         Random
                     </button>
                     <button
-                        className="btn btn-accent btn-sm sm:btn-md w-full sm:w-auto"
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
                         onClick={animateCalculationSteps}
-                        disabled={isCalculating}
+                        disabled={isCalculating || steps.length === 0}
                         aria-label="Start disk moves"
                     >
                         Start Moves
                     </button>
-                    <div className="join flex items-center w-full sm:max-w-sm">
+                    <button
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
+                        onClick={handleStepBackward}
+                        disabled={isCalculating || steps.length === 0 || currentStepIndex <= -1}
+                        aria-label="Move to previous step"
+                    >
+                        Step Backward
+                    </button>
+                    <button
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
+                        onClick={handleStepForward}
+                        disabled={isCalculating || steps.length === 0 || currentStepIndex >= steps.length - 1}
+                        aria-label="Move to next step"
+                    >
+                        Step Forward
+                    </button>
+                    <div className="join flex items-center w-full lg:max-w-sm">
                         <input
                             type="number"
                             value={inputValue}
-                            className="input input-bordered join-item w-full text-xs sm:text-sm"
+                            className="input input-bordered join-item w-full text-xs lg:text-sm"
                             onChange={handleInput}
                             min="1"
                             max="5"
@@ -386,8 +544,8 @@ const HanoiVisualization = () => {
                             Go
                         </button>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:max-w-sm">
-                        <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
+                    <div className="flex items-center gap-2 w-full lg:max-w-sm">
+                        <span className="text-xs lg:text-sm font-semibold whitespace-nowrap">
                             SPEED:
                         </span>
                         <input
@@ -400,7 +558,7 @@ const HanoiVisualization = () => {
                             onChange={(e) => setSpeed(Number(e.target.value))}
                             aria-label={`Animation speed: ${speed} milliseconds`}
                         />
-                        <span className="text-xs sm:text-sm text-base-content/70 whitespace-nowrap w-12">
+                        <span className="text-xs lg:text-sm text-base-content/70 whitespace-nowrap w-12">
                             {speed} ms
                         </span>
                     </div>

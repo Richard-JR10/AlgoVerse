@@ -10,6 +10,11 @@ const FactorialVisualization = () => {
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [cards, setCards] = useState([]);
+
+    // Add step navigation state
+    const [currentStep, setCurrentStep] = useState(-1);
+    const [isStepMode, setIsStepMode] = useState(false);
+
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
@@ -55,6 +60,10 @@ const FactorialVisualization = () => {
                 isCancelledRef.current = true;
                 setIsCalculating(false);
             }
+
+            // Reset step navigation
+            setCurrentStep(-1);
+            setIsStepMode(false);
 
             // Fetch steps from the API
             const response = await axios.post(
@@ -116,12 +125,130 @@ const FactorialVisualization = () => {
         speedRef.current = speed;
     }, [speed]);
 
+    // Step forward function
+    const stepForward = () => {
+        if (!isStepMode) {
+            setIsStepMode(true);
+            setCurrentStep(0);
+        } else if (currentStep < getTotalSteps() - 1) {
+            setCurrentStep(currentStep + 1);
+        }
+        updateCardsForStep(currentStep + 1);
+    };
+
+    // Step backward function
+    const stepBackward = () => {
+        if (isStepMode && currentStep > 0) {
+            setCurrentStep(currentStep - 1);
+            updateCardsForStep(currentStep - 1);
+        } else if (currentStep === 0) {
+            setCurrentStep(-1);
+            setIsStepMode(false);
+            // Reset all cards to initial state
+            const resetCards = cards.map(card => ({
+                ...card,
+                visible: false,
+                subValue: null,
+                returnValue: null,
+                showingSubValue: false,
+                showingReturnValue: false,
+            }));
+            setCards(resetCards);
+        }
+    };
+
+    // Get total number of steps
+    const getTotalSteps = () => {
+        if (steps.length === 0) return 0;
+        const uniqueNValues = [...new Set(steps.map((step) => step.n))];
+        return uniqueNValues.length * 3; // Show card, show subValue, show returnValue
+    };
+
+    // Update cards based on current step
+    const updateCardsForStep = (stepIndex) => {
+        if (stepIndex < 0 || steps.length === 0) return;
+
+        const uniqueNValues = [...new Set(steps.map((step) => step.n))].sort((a, b) => b - a);
+        const totalCards = uniqueNValues.length;
+
+        let updatedCards = [...cards];
+
+        // Reset all cards first
+        updatedCards = updatedCards.map(card => ({
+            ...card,
+            visible: false,
+            subValue: null,
+            returnValue: null,
+            showingSubValue: false,
+            showingReturnValue: false,
+        }));
+
+        // Phase 1: Show cards sequentially (steps 0 to totalCards-1)
+        if (stepIndex < totalCards) {
+            for (let i = 0; i <= stepIndex; i++) {
+                const cardIndex = updatedCards.findIndex(card => card.n === uniqueNValues[i]);
+                if (cardIndex !== -1) {
+                    updatedCards[cardIndex] = { ...updatedCards[cardIndex], visible: true };
+                }
+            }
+        } else {
+            // Show all cards
+            updatedCards = updatedCards.map(card => ({ ...card, visible: true }));
+
+            // Phase 2: Show values from bottom up
+            const phase2Step = stepIndex - totalCards;
+            const reversedNValues = [...uniqueNValues].reverse();
+
+            for (let i = 0; i <= Math.floor(phase2Step / 2); i++) {
+                const n = reversedNValues[i];
+                const cardIndex = updatedCards.findIndex(card => card.n === n);
+                if (cardIndex !== -1) {
+                    const step = steps.find(s => s.n === n && (s.type === 'base' || s.type === 'return'));
+                    if (step) {
+                        // Show subValue
+                        updatedCards[cardIndex] = {
+                            ...updatedCards[cardIndex],
+                            subValue: step.type === 'base' ? 1 : step.subValue,
+                            showingSubValue: true,
+                        };
+
+                        // Show returnValue if we're at the second sub-step
+                        if (phase2Step % 2 === 1 || phase2Step > i * 2 + 1) {
+                            updatedCards[cardIndex] = {
+                                ...updatedCards[cardIndex],
+                                returnValue: step.type === 'base' ? 1 : step.returnValue,
+                                showingReturnValue: true,
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        setCards(updatedCards);
+    };
+
     const animateCalculationSteps = async () => {
         setIsCalculating(true);
+        setIsStepMode(false);
+        setCurrentStep(-1);
         isCancelledRef.current = false;
 
+        // Clear all cards and reset to initial state
+        let updatedCards = cards.map(card => ({
+            ...card,
+            visible: false,
+            subValue: null,
+            returnValue: null,
+            showingSubValue: false,
+            showingReturnValue: false,
+        }));
+        setCards(updatedCards);
+
+        // Small delay to show the cleared state
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
         // First phase: Show all cards sequentially
-        let updatedCards = [...cards];
         for (let i = 0; i < updatedCards.length; i++) {
             if (isCancelledRef.current) break;
             updatedCards[i] = { ...updatedCards[i], visible: true };
@@ -157,6 +284,12 @@ const FactorialVisualization = () => {
             }
         }
 
+        // Set step mode to the final step after animation completes
+        if (!isCancelledRef.current) {
+            setIsStepMode(true);
+            setCurrentStep(getTotalSteps() - 1);
+        }
+
         setIsCalculating(false);
     };
 
@@ -171,17 +304,32 @@ const FactorialVisualization = () => {
 
             {/* Header Section */}
             <div className="mx-4 mt-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 className="text-sm sm:text-lg md:text-xl font-bold">
-                        Factorial Visualization: {number}!
-                    </h2>
-                    <p className="text-xs sm:text-sm md:text-base">
-                        {isCalculating
-                            ? 'Calculating...'
-                            : steps.length > 0
-                                ? 'Ready to start calculation'
-                                : 'Enter a number to begin'}
-                    </p>
+                <div className="flex flex-row sm:flex-col w-full justify-between items-center sm:items-start">
+                    <div>
+                        <h2 className="text-sm sm:text-lg md:text-xl font-bold">
+                            Factorial Visualization: {number}!
+                        </h2>
+                        <p className="text-xs sm:text-sm md:text-base mb-2">
+                            {isCalculating
+                                ? 'Calculating...'
+                                : isStepMode
+                                    ? `Step ${currentStep + 1} of ${getTotalSteps()}`
+                                    : steps.length > 0
+                                        ? 'Ready to start calculation'
+                                        : 'Enter a number to begin'}
+                        </p>
+                    </div>
+                    {/* Complexity Information */}
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 text-xs sm:text-sm">
+                        <div className="bg-indigo-800 px-2 py-1 rounded">
+                            <span className="font-semibold text-indigo-200">Time:</span>
+                            <span className="ml-1 text-white">O(n)</span>
+                        </div>
+                        <div className="bg-indigo-800 px-2 py-1 rounded">
+                            <span className="font-semibold text-indigo-200">Space:</span>
+                            <span className="ml-1 text-white">O(n)</span>
+                        </div>
+                    </div>
                 </div>
                 {getFactorialResult() !== null && (
                     <div
@@ -262,9 +410,9 @@ const FactorialVisualization = () => {
 
             {/* Control Panel */}
             <div className="p-4 bg-base-200 w-full">
-                <div className="flex flex-col sm:flex-row justify-center items-center gap-2 sm:gap-4 max-w-4xl mx-auto">
+                <div className="flex flex-col lg:flex-row justify-center items-center gap-2 lg:gap-4 max-w-7xl mx-auto">
                     <button
-                        className="btn btn-accent btn-sm sm:btn-md w-full sm:w-auto"
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
                         onClick={handleRandom}
                         disabled={isCalculating}
                         aria-label="Generate random number"
@@ -272,18 +420,37 @@ const FactorialVisualization = () => {
                         Random
                     </button>
                     <button
-                        className="btn btn-accent btn-sm sm:btn-md w-full sm:w-auto"
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
                         onClick={animateCalculationSteps}
                         disabled={isCalculating || steps.length === 0}
                         aria-label="Start factorial calculation"
                     >
                         Start Calculation
                     </button>
-                    <div className="join flex items-center w-full sm:max-w-sm">
+
+                    {/* Step Navigation Buttons */}
+                    <button
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
+                        onClick={stepBackward}
+                        disabled={isCalculating || steps.length === 0 || (!isStepMode && currentStep <= -1)}
+                        aria-label="Step backward"
+                    >
+                        Step Backward
+                    </button>
+                    <button
+                        className="btn btn-accent btn-sm lg:btn-md w-full lg:w-auto"
+                        onClick={stepForward}
+                        disabled={isCalculating || steps.length === 0 || (isStepMode && currentStep >= getTotalSteps() - 1)}
+                        aria-label="Step forward"
+                    >
+                        Step Forward
+                    </button>
+
+                    <div className="join flex items-center w-full lg:max-w-sm">
                         <input
                             type="number"
                             value={inputValue}
-                            className="input input-bordered join-item w-full text-xs sm:text-sm"
+                            className="input input-bordered join-item w-full text-xs lg:text-sm"
                             onChange={handleInput}
                             min="0"
                             max="12"
@@ -298,8 +465,8 @@ const FactorialVisualization = () => {
                             Go
                         </button>
                     </div>
-                    <div className="flex items-center gap-2 w-full sm:max-w-sm">
-                        <span className="text-xs sm:text-sm font-semibold whitespace-nowrap">
+                    <div className="flex items-center gap-2 w-full lg:max-w-sm">
+                        <span className="text-xs lg:text-sm font-semibold whitespace-nowrap">
                             SPEED:
                         </span>
                         <input
@@ -312,7 +479,7 @@ const FactorialVisualization = () => {
                             onChange={(e) => setSpeed(Number(e.target.value))}
                             aria-label={`Animation speed: ${speed} milliseconds`}
                         />
-                        <span className="text-xs sm:text-sm text-base-content/70 whitespace-nowrap w-12">
+                        <span className="text-xs lg:text-sm text-base-content/70 whitespace-nowrap w-12">
                             {speed} ms
                         </span>
                     </div>
