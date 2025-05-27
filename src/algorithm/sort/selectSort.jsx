@@ -2,6 +2,7 @@ import {useState, useEffect, useRef} from 'react';
 import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
+import AlgorithmNavbar from "../algorithmNavbar.jsx";
 
 const SelectSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -407,10 +408,11 @@ const SelectSort = () => {
     return (
         <div className="flex flex-col h-full bg-base-200 relative">
             <NavBar menuItems={sortingMenu}/>
+            <AlgorithmNavbar/>
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
             </div>
-            <div className="lg:navbar md:flex sticky bottom-2 z-50 px-4 md:px-6 border-t border-base-200 h-fit min-h-[4rem] shadow-sm">
+            <div className="lg:navbar md:flex sticky bottom-2 z-50 px-4 md:px-6 h-fit min-h-[4rem]">
                 <div className="lg:navbar-start mb-2 md:mb-0 flex justify-center items-center">
                     <div className="flex items-center gap-2 w-full">
                         <span className="text-xs font-semibold">SPEED:</span>
