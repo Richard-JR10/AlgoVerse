@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
 import axios from "axios";
+import AlgorithmNavbar from "../algorithmNavbar.jsx";
 
 // Constants for visualization
 const COLORS = {
@@ -55,13 +56,6 @@ const Dijkstra = () => {
     const isInitializedRef = useRef(false);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
-
-    const graphMenu = [
-        { label: 'BFS', path: '/visualizer/graph/bfs' },
-        { label: 'DFS', path: '/visualizer/graph/dfs' },
-        { label: 'Dijkstra', path: '/visualizer/graph/dijkstra' },
-        { label: 'Kruskal', path: '/visualizer/graph/kruskal' },
-    ];
 
     useEffect(() => {
         if (error) {
@@ -662,7 +656,8 @@ const Dijkstra = () => {
 
     return (
         <div className="flex flex-col h-full bg-base-200 relative">
-            <NavBar menuItems={graphMenu} />
+            <NavBar/>
+            <AlgorithmNavbar/>
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
             </div>

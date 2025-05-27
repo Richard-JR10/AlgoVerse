@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import NavBar from '../../components/navBar.jsx';
 import axios from 'axios';
+import AlgorithmNavbar from "../algorithmNavbar.jsx";
 
 const FactorialVisualization = () => {
     const [inputValue, setInputValue] = useState('10');
@@ -20,12 +21,6 @@ const FactorialVisualization = () => {
     const isCancelledRef = useRef(false);
 
     const [error, setError] = useState(null);
-
-    // Navigation menu items
-    const visualizerMenu = [
-        { label: 'Factorial', path: '/visualizer/recursion/factorial' },
-        { label: 'Tower of Hanoi', path: '/visualizer/recursion/hanoi' },
-    ];
 
     useEffect(() => {
         if (error) {
@@ -300,10 +295,11 @@ const FactorialVisualization = () => {
 
     return (
         <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 text-white relative">
-            <NavBar menuItems={visualizerMenu} />
+            <NavBar/>
+            <AlgorithmNavbar/>
 
             {/* Header Section */}
-            <div className="mx-4 mt-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="mx-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex flex-row sm:flex-col w-full justify-between items-center sm:items-start">
                     <div>
                         <h2 className="text-sm sm:text-lg md:text-xl font-bold">

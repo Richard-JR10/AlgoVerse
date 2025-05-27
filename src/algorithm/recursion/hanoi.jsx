@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
 import axios from 'axios';
+import AlgorithmNavbar from "../algorithmNavbar.jsx";
 
 const HanoiVisualization = () => {
     const [inputValue, setInputValue] = useState('3');
@@ -18,12 +19,6 @@ const HanoiVisualization = () => {
     const [error, setError] = useState(null);
     const [currentStepIndex, setCurrentStepIndex] = useState(-1); // Track current step
     const [currentPegsHistory, setCurrentPegsHistory] = useState([]); // Track peg states
-
-    // Navigation menu items
-    const visualizerMenu = [
-        { label: 'Factorial', path: '/visualizer/recursion/factorial' },
-        { label: 'Tower of Hanoi', path: '/visualizer/recursion/hanoi' },
-    ];
 
     useEffect(() => {
         if (error) {
@@ -435,10 +430,11 @@ const HanoiVisualization = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-base-200 text-white relative">
-            <NavBar menuItems={visualizerMenu} />
+            <NavBar/>
+            <AlgorithmNavbar/>
 
             {/* Header Section */}
-            <div className="mx-4 mt-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="mx-4 p-4 bg-indigo-900 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex flex-row sm:flex-col w-full justify-between items-center sm:items-start">
                     <div>
                         <h2 className="text-sm sm:text-lg md:text-xl font-bold">

@@ -2,6 +2,7 @@ import  { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import NavBar from "../../components/navBar.jsx";
 import axios from "axios";
+import AlgorithmNavbar from "../algorithmNavbar.jsx";
 
 const Linear = () => {
     const [data, setData] = useState([]);
@@ -13,13 +14,19 @@ const Linear = () => {
     const [success, setSuccess] = useState(null);
     const timeoutIdsRef = useRef([]); // Store timeout IDs for animation
     const [speed, setSpeed] = useState(500);
+    const [isSearching, setIsSearching] = useState(false);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
 
-    const searchMenu = [
-        { label: 'Linear Search', path: '/visualizer/search/linear' },
-        { label: 'Binary Search', path: '/visualizer/search/binary' }
-    ];
+    // New state for step controls
+    const [searchSteps, setSearchSteps] = useState([]);
+    const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+    const [isStepMode, setIsStepMode] = useState(false);
+
+    // State for complexity display
+    const [showComplexity, setShowComplexity] = useState(false);
+    const [executionTime, setExecutionTime] = useState(null);
+
 
     useEffect(() => {
         if (error) {
@@ -54,6 +61,7 @@ const Linear = () => {
     const handleRandom = async (e) => {
         if (e) e.preventDefault();
         clearAnimationTimeouts();
+        resetStepMode();
         const randomArray = generateRandomArray(size);
         setData(randomArray);
         await drawArray(randomArray);
@@ -82,9 +90,18 @@ const Linear = () => {
         clearAnimationTimeouts(); // Stop any ongoing animations
         isCancelledRef.current = false; // Reset cancellation flag
         resetHighlighting();
+        resetStepMode();
         const inputArray = data.split(",").map(item => parseInt(item.trim())).filter(item => !isNaN(item));
         setData(inputArray);
         drawArray(inputArray);
+    };
+
+    const resetStepMode = () => {
+        setSearchSteps([]);
+        setCurrentStepIndex(-1);
+        setIsStepMode(false);
+        setSuccess(null);
+        setError(null);
     };
 
     const drawArray = (arrayData) => {
@@ -217,11 +234,64 @@ const Linear = () => {
             .attr("fill", "#8b5cf6");
     };
 
+    const executeStep = (step) => {
+        if (step.type === "checking") {
+            highlightIndex(step.index, "#ff0000"); // Red for checking
+            setSuccess(null);
+            setError(null);
+        } else if (step.type === "found") {
+            highlightIndex(step.index, "#0fff00"); // Green for found
+            setSuccess(`Found ${searchValue} at index ${step.index}`);
+            setError(null);
+        } else if (step.type === "not_found") {
+            setError(`Value ${searchValue} not found in the array`);
+            setSuccess(null);
+        }
+    };
+
+    const stepForward = () => {
+        if (!isStepMode || currentStepIndex >= searchSteps.length - 1) return;
+
+        const nextStepIndex = currentStepIndex + 1;
+        setCurrentStepIndex(nextStepIndex);
+        executeStep(searchSteps[nextStepIndex]);
+    };
+
+
+    const stepBackward = () => {
+        if (!isStepMode || currentStepIndex < 0) return;
+
+        // Remove highlight from current step's index
+        const currentStep = searchSteps[currentStepIndex];
+        if (currentStep && currentStep.index !== undefined) {
+            d3.select(svgRef.current)
+                .select(`.index-box-${currentStep.index}`)
+                .transition()
+                .duration(speedRef.current / 2)
+                .attr("fill", "#8b5cf6"); // Reset to default purple
+        }
+
+        // Move to previous step
+        const prevStepIndex = currentStepIndex - 1;
+        setCurrentStepIndex(prevStepIndex);
+
+        // Execute the previous step if it exists, otherwise clear messages
+        if (prevStepIndex >= 0) {
+            executeStep(searchSteps[prevStepIndex]);
+        } else {
+            // If going back before first step, clear success/error messages
+            setSuccess(null);
+            setError(null);
+        }
+    };
+
     const startSearching = async () => {
         try {
+            setIsSearching(true);
             clearAnimationTimeouts(); // Stop any ongoing animations
             isCancelledRef.current = false; // Reset cancellation flag
             resetHighlighting();
+            resetStepMode();
 
             let arrayToSearch;
             if (Array.isArray(data)) {
@@ -233,6 +303,8 @@ const Linear = () => {
                 return;
             }
 
+            const startTime = performance.now();
+
             const response = await axios.post('https://algoverse-backend-python.onrender.com/search/linear', {
                 array: arrayToSearch,
                 value: parseInt(searchValue)
@@ -242,7 +314,14 @@ const Linear = () => {
                 }
             });
 
+            // Record end time and calculate execution time
+            const endTime = performance.now();
+            setExecutionTime((endTime - startTime) / 1000);
+
             if (response.data && response.data.steps) {
+                setSearchSteps(response.data.steps);
+                setIsStepMode(true);
+                setCurrentStepIndex(-1);
                 await animateSearchSteps(response.data.steps); // Start animation
             } else {
                 setError("Received unexpected response format from server");
@@ -250,6 +329,8 @@ const Linear = () => {
         } catch (err) {
             console.error("Error during search:", err);
             setError(err.response?.data?.error || 'Failed to process search request');
+        } finally {
+            setIsSearching(false);
         }
     };
 
@@ -278,22 +359,9 @@ const Linear = () => {
             if (isCancelledRef.current) break; // Stop if cancelled
 
             try {
-                if (step.type === "checking") {
-                    highlightIndex(step.index, "#ff0000"); // Red for checking
-                    await sleep(speedRef.current); // Use current speed
-                } else if (step.type === "found") {
-                    highlightIndex(step.index, "#0fff00"); // Green for found
-                    setSuccess(`Found ${searchValue} at index ${step.index}`);
-                    await sleep(speedRef.current); // Use current speed
-                } else if (step.type === "not_found") {
-                    d3.select(svgRef.current)
-                        .selectAll(".index-box")
-                        .transition()
-                        .duration(speedRef.current / 2)
-                        .attr("fill", "#ff5555");
-                    setError(`Value ${searchValue} not found in the array`);
-                    await sleep(speedRef.current); // Use current speed
-                }
+                setCurrentStepIndex(stepIndex);
+                executeStep(step);
+                await sleep(speedRef.current); // Use current speed
             } catch {
                 break; // Exit if cancelled during sleep
             }
@@ -319,34 +387,140 @@ const Linear = () => {
     }, [speed]);
 
     return (
-        <div className="flex flex-col min-h-screen bg-base-200 relative">
-            <NavBar menuItems={searchMenu} />
+        <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 relative">
+            <NavBar/>
+            <AlgorithmNavbar/>
+            {/* Complexity Information Panel */}
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="collapse collapse-arrow bg-base-100 shadow-xl border border-base-300 rounded-2xl overflow-hidden">
+                        <input
+                            type="checkbox"
+                            checked={showComplexity}
+                            onChange={(e) => setShowComplexity(e.target.checked)}
+                        />
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                            <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M20 12a2 2 0 0 0-.703.133l-2.398-1.963c.059-.214.101-.436.101-.67C17 8.114 15.886 7 14.5 7S12 8.114 12 9.5c0 .396.1.765.262 1.097l-2.909 3.438A2 2 0 0 0 9 14c-.179 0-.348.03-.512.074l-2.563-2.563C5.97 11.348 6 11.179 6 11c0-1.108-.892-2-2-2s-2 .892-2 2s.892 2 2 2c.179 0 .348-.03.512-.074l2.563 2.563A2 2 0 0 0 7 16c0 1.108.892 2 2 2s2-.892 2-2c0-.237-.048-.46-.123-.671l2.913-3.442c.227.066.462.113.71.113a2.5 2.5 0 0 0 1.133-.281l2.399 1.963A2 2 0 0 0 18 14c0 1.108.892 2 2 2s2-.892 2-2s-.892-2-2-2" />
+                                    </svg>
+                                </div>
+                                <span className="text-primary">
+                                   Algorithm Performance Analysis
+                               </span>
+                            </div>
+                        </div>
+                        <div className="collapse-content bg-base-50">
+                            <div className="pt-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* Theoretical Complexity */}
+                                    <div className="card bg-base-100 border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div className="card-body p-6">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                                                    <span className="text-white text-sm font-bold">T</span>
+                                                </div>
+                                                <h3 className="card-title text-primary text-lg">Theoretical Complexity</h3>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                    <span className="font-semibold text-base-content/80">Time Complexity:</span>
+                                                    <div className="badge badge-primary badge-lg font-mono font-bold">O(n)</div>
+                                                </div>
+                                                <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                    <span className="font-semibold text-base-content/80">Space Complexity:</span>
+                                                    <div className="badge badge-primary badge-outline badge-lg font-mono font-bold">O(1)</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-4 p-4 bg-info/10 rounded-xl border-l-4 border-info">
+                                                <p className="text-sm text-base-content/80 leading-relaxed">
+                                                    Linear search checks each element in a sequence one by one until a match is found or the end is reached,
+                                                    resulting in linear time complexity with constant space usage.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Execution Time */}
+                                    <div className="card bg-base-100 border border-secondary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div className="card-body p-6">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                                                    <span className="text-white text-sm font-bold">⚡</span>
+                                                </div>
+                                                <h3 className="card-title text-secondary text-lg">Execution Metrics</h3>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                {executionTime !== null ? (
+                                                    <>
+                                                        <div className="flex items-center justify-between p-3 bg-secondary/5 rounded-xl border border-secondary/10">
+                                                            <span className="font-semibold text-base-content/80">Execution Time:</span>
+                                                            <div className="badge badge-secondary badge-lg font-mono font-bold">
+                                                                {executionTime.toFixed(3)}s
+                                                            </div>
+                                                        </div>
+                                                        <div className="stats stats-vertical bg-success/5 rounded-xl border border-success/20">
+                                                            <div className="stat p-4">
+                                                                <div className="stat-title text-xs">Performance</div>
+                                                                <div className="stat-value text-lg text-success">
+                                                                    {executionTime < 0.001 ? 'Excellent' : executionTime < 0.01 ? 'Good' : 'Fair'}
+                                                                </div>
+                                                                <div className="stat-desc text-xs">
+                                                                    {executionTime < 0.001 ? '< 1ms execution' : `${(executionTime * 1000).toFixed(1)}ms`}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                ) : (
+                                                    <div className="flex flex-col items-center justify-center p-8 bg-neutral/5 rounded-xl border-2 border-dashed border-base-300">
+                                                        <div className="w-12 h-12 rounded-full bg-neutral/10 flex items-center justify-center mb-3">
+                                                            <span className="text-2xl">⏱️</span>
+                                                        </div>
+                                                        <p className="text-sm text-base-content/60 text-center">
+                                                            Run a search operation to see<br />detailed execution metrics
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="flex justify-center items-center flex-grow w-full px-4 sm:px-6 lg:px-8">
                 <div className="w-full max-w-7xl flex justify-center">
                     <svg ref={svgRef} className="w-full max-w-[1200px] h-[150px] sm:h-[180px] lg:h-[200px] xl:h-[400px]"></svg>
                 </div>
             </div>
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col md:flex-row justify-center items-center gap-3 sm:gap-4 w-full md:w-auto">
-                    <div className="flex items-center gap-2 w-full mr-2 md:w-auto">
+                <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">
+                    <div className="flex items-center gap-2 w-full mr-2 xl:w-auto">
                         <span className="text-xs font-semibold">SPEED:</span>
                         <input
                             type="range"
                             min={50}
                             max="1000"
-                            className="range range-primary range-xs w-full md:w-32"
+                            className="range range-primary range-xs w-full xl:w-32"
                             onChange={(e) => setSpeed(Number(e.target.value))}
                         />
                         <span className="text-xs text-base-content/70 whitespace-nowrap w-12">{speed} ms</span>
                     </div>
 
-                    <div className="flex flex-row items-center gap-1 w-full md:w-auto">
+                    <div className="flex flex-row items-center gap-1 w-full xl:w-auto">
                         <div className="font-semibold text-sm">N:</div>
                         <div className="join w-full">
                             <input
                                 value={searchValue}
                                 onChange={(e) => setSearchValue(e.target.value)}
-                                className="input join-item md:w-13 w-full"
+                                className="input join-item xl:w-13 w-full"
                                 type="number"
                                 placeholder="Value"
                             />
@@ -355,33 +529,60 @@ const Linear = () => {
                             </button>
                         </div>
                     </div>
-                    <div className="flex flex-row items-center gap-1 w-full">
-                        <div className="font-semibold text-sm">Array:</div>
-                        <div className="join w-full">
-                            <input
-                                className="input join-item w-full"
-                                value={Array.isArray(data) ? data.join(", ") : data}
-                                onChange={handleInputChange}
-                                placeholder="e.g., 5, 3, 8"
-                            />
-                            <button className="btn btn-secondary join-item" onClick={handleSubmit}>
-                                GO
-                            </button>
-                        </div>
+
+                    {/* Step Navigation Buttons */}
+                    <div className="flex flex-row gap-2 md:gap-4 items-center justify-center w-full">
+                        <button
+                            className={`btn btn-accent btn-sm lg:btn-md flex-1 lg:w-auto ${
+                                !isStepMode || currentStepIndex < 0 || isSearching ? 'btn-disabled' : ''
+                            }`}
+                            onClick={stepBackward}
+                            disabled={!isStepMode || currentStepIndex < 0 || isSearching}
+                            aria-label="Step backward"
+                        >
+                            Step Backward
+                        </button>
+                        <button
+                            className={`btn btn-accent btn-sm lg:btn-md flex-1 lg:w-auto ${
+                                !isStepMode || currentStepIndex >= searchSteps.length - 1 || isSearching ? 'btn-disabled' : ''
+                            }`}
+                            onClick={stepForward}
+                            disabled={!isStepMode || currentStepIndex >= searchSteps.length - 1 || isSearching}
+                            aria-label="Step forward"
+                        >
+                            Step Forward
+                        </button>
                     </div>
-                    <div className="flex flex-row items-center gap-1 w-full md:w-auto">
-                        <div className="font-semibold text-sm">Size:</div>
-                        <div className="join w-full">
-                            <input
-                                type="number"
-                                className="input join-item md:w-13 w-full"
-                                value={size}
-                                onChange={handleSize}
-                                placeholder="Size"
-                            />
-                            <button className="btn btn-primary join-item" onClick={handleRandom}>
-                                Random
-                            </button>
+
+                    <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center justify-center w-full">
+                        <div className="flex flex-row items-center gap-1 w-full min-w-3xs">
+                            <div className="font-semibold text-sm">Array:</div>
+                            <div className="join w-full">
+                                <input
+                                    className="input join-item w-full"
+                                    value={Array.isArray(data) ? data.join(", ") : data}
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 5, 3, 8"
+                                />
+                                <button className="btn btn-secondary join-item" onClick={handleSubmit}>
+                                    GO
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex flex-row items-center gap-1 w-full md:w-auto">
+                            <div className="font-semibold text-sm">Size:</div>
+                            <div className="join w-full">
+                                <input
+                                    type="number"
+                                    className="input join-item md:w-13 w-full"
+                                    value={size}
+                                    onChange={handleSize}
+                                    placeholder="Size"
+                                />
+                                <button className="btn btn-primary join-item" onClick={handleRandom}>
+                                    Random
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
