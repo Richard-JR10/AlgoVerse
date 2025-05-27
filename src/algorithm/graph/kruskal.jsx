@@ -22,10 +22,10 @@ const DIMENSIONS = {
     HEIGHT: 400,
     PADDING: 40,
     NODE_RADIUS: 20,
-    OVERLAP_THRESHOLD: 50, // 2 * nodeRadius + 10
-    MIN_DISTANCE: 60, // nodeRadius * 3
+    OVERLAP_THRESHOLD: 50,
+    MIN_DISTANCE: 60,
     MAX_DISTANCE: 300,
-    OFFSET_DISTANCE: 8 // Original offset for bidirectional edges
+    OFFSET_DISTANCE: 8
 };
 
 const SIMULATION_PARAMS = {
@@ -48,10 +48,15 @@ const Kruskal = () => {
     const [speed, setSpeed] = useState(500);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState(null);
+    const [steps, setSteps] = useState([]);
+    const [currentStepIndex, setCurrentStepIndex] = useState(-1);
+    const [isAnimating, setIsAnimating] = useState(false);
+    const [executionTime, setExecutionTime] = useState(null);
+    const [showComplexity, setShowComplexity] = useState(false);
+    const [size, setSize] = useState(6);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
-    const [size, setSize] = useState(6);
     const isInitializedRef = useRef(false);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
@@ -68,10 +73,34 @@ const Kruskal = () => {
     const handleEdgeInput = (e) => setEdgeInput(e.target.value.toUpperCase());
     const handleSizeInput = (e) => setSize(Math.max(1, Math.min(26, Number(e.target.value))));
 
+    // Fetch Kruskal steps
+    const fetchKruskalSteps = async (graph) => {
+        if (Object.keys(graph).length === 0) return;
+        try {
+            resetHighlight();
+            const startTime = performance.now();
+            const response = await axios.post(`${baseURL}/graph/kruskal`, {
+                adjacency_list: graph,
+                start_node: ''
+            }, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            const endTime = performance.now();
+            setExecutionTime((endTime - startTime) / 1000);
+            setSteps(response.data || []);
+            setCurrentStepIndex(-1);
+        } catch (err) {
+            setError(err.response?.data?.detail || 'Failed to fetch Kruskal steps');
+            setSteps([]);
+        }
+    };
+
     // Validate and add nodes
-    const addNodes = (e) => {
+    const addNodes = async (e) => {
         e.preventDefault();
-        if (isSubmitting) return;
+        if (isSubmitting || isAnimating) return;
         setIsSubmitting(true);
 
         try {
@@ -88,7 +117,7 @@ const Kruskal = () => {
 
             setAdjacencyList(newAdjacencyList);
             setNodeInput('');
-            drawGraph(newAdjacencyList, nodes);
+            await drawGraph(newAdjacencyList, nodes);
             setError(null);
         } catch (err) {
             setError(err.message);
@@ -98,9 +127,9 @@ const Kruskal = () => {
     };
 
     // Validate and add weighted undirected edge
-    const addEdge = (e) => {
+    const addEdge = async (e) => {
         e.preventDefault();
-        if (isSubmitting) return;
+        if (isSubmitting || isAnimating) return;
         setIsSubmitting(true);
 
         try {
@@ -142,7 +171,7 @@ const Kruskal = () => {
             const newNodes = [fromNode, toNode].filter(node => !adjacencyList[node]);
             setAdjacencyList(newAdjacencyList);
             setEdgeInput('');
-            drawGraph(newAdjacencyList, newNodes);
+            await drawGraph(newAdjacencyList, newNodes);
             setError(null);
         } catch (err) {
             setError(err.message);
@@ -197,15 +226,15 @@ const Kruskal = () => {
         return newAdjacencyList;
     };
 
-    const handleRandom = (e) => {
+    const handleRandom = async (e) => {
         if (e) e.preventDefault();
-        if (isSubmitting) return;
+        if (isSubmitting || isAnimating) return;
         setIsSubmitting(true);
 
         try {
             const randomGraph = generateRandomGraph(size);
             setAdjacencyList(randomGraph);
-            drawGraph(randomGraph, Object.keys(randomGraph));
+            await drawGraph(randomGraph, Object.keys(randomGraph));
             setError(null);
         } catch (err) {
             setError('Error generating random graph: ' + err.message);
@@ -214,20 +243,8 @@ const Kruskal = () => {
         }
     };
 
-    // Initial render
-    useEffect(() => {
-        const initializeVisualization = () => {
-            if (svgRef.current && !isInitializedRef.current) {
-                isInitializedRef.current = true;
-                handleRandom();
-            }
-        };
-        const timer = setTimeout(initializeVisualization, 100);
-        return () => clearTimeout(timer);
-    }, []);
-
     // Draw the graph using D3
-    const drawGraph = (graph, newNodes = []) => {
+    const drawGraph = async (graph, newNodes = []) => {
         if (!svgRef.current) return;
 
         const svg = d3.select(svgRef.current);
@@ -464,6 +481,8 @@ const Kruskal = () => {
             const iterations = Math.min(SIMULATION_PARAMS.MAX_ITERATIONS, Math.max(SIMULATION_PARAMS.MIN_ITERATIONS, nodeCount * 10));
             for (let i = 0; i < iterations; ++i) simulation.tick();
         }
+
+        await fetchKruskalSteps(graph);
     };
 
     const resetHighlight = () => {
@@ -514,22 +533,80 @@ const Kruskal = () => {
             .attr('stroke', COLORS.EDGE_DEFAULT);
     };
 
-    const animateKruskalSteps = async (steps) => {
-        for (const step of steps) {
-            if (isCancelledRef.current) break;
-
-            if (step.type === 'consider') {
-                highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
-            } else if (step.type === 'reject') {
-                resetEdgeHighlight(step.source, step.target);
-            } else if (step.type === 'add') {
-                highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
-                highlightNode(step.source, COLORS.NODE_VISITED);
-                highlightNode(step.target, COLORS.NODE_VISITED);
+    const animateSingleStep = async (step) => {
+        setIsAnimating(true);
+        try {
+            switch (step.type) {
+                case 'consider':
+                    highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                    break;
+                case 'reject':
+                    resetEdgeHighlight(step.source, step.target);
+                    break;
+                case 'add':
+                    highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
+                    highlightNode(step.source, COLORS.NODE_VISITED);
+                    highlightNode(step.target, COLORS.NODE_VISITED);
+                    break;
             }
-
-            await new Promise(resolve => setTimeout(resolve, speedRef.current));
+            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+        } catch (err) {
+            setError(`Error in step: ${err.message}`);
+        } finally {
+            setIsAnimating(false);
         }
+    };
+
+    const handleStepForward = async () => {
+        if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
+
+        const nextStepIndex = currentStepIndex + 1;
+        setCurrentStepIndex(nextStepIndex);
+        await animateSingleStep(steps[nextStepIndex]);
+    };
+
+    const handleStepBackward = async () => {
+        if (isAnimating || currentStepIndex <= -1 || steps.length === 0) return;
+
+        setIsAnimating(true);
+        const prevStepIndex = currentStepIndex - 1;
+        setCurrentStepIndex(prevStepIndex);
+
+        try {
+            resetHighlight();
+            for (let i = 0; i <= prevStepIndex; i++) {
+                const step = steps[i];
+                switch (step.type) {
+                    case 'consider':
+                        highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                        break;
+                    case 'reject':
+                        resetEdgeHighlight(step.source, step.target);
+                        break;
+                    case 'add':
+                        highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
+                        highlightNode(step.source, COLORS.NODE_VISITED);
+                        highlightNode(step.target, COLORS.NODE_VISITED);
+                        break;
+                }
+            }
+        } catch (err) {
+            setError(`Error in step backward: ${err.message}`);
+        } finally {
+            setIsAnimating(false);
+        }
+    };
+
+    const animateKruskalSteps = async (steps) => {
+        setIsAnimating(true);
+        setIsSorting(true);
+        for (let i = 0; i < steps.length; i++) {
+            if (isCancelledRef.current) break;
+            setCurrentStepIndex(i);
+            await animateSingleStep(steps[i]);
+        }
+        setIsAnimating(false);
+        setIsSorting(false);
     };
 
     const startTraversalKruskal = async () => {
@@ -538,143 +615,158 @@ const Kruskal = () => {
             return;
         }
 
+        if (isSorting || isAnimating) return;
+
         setIsSorting(true);
+        setIsAnimating(true);
         isCancelledRef.current = false;
         resetHighlight();
+        setCurrentStepIndex(-1);
 
         try {
-            // Validate payload
-            if (!Object.keys(adjacencyList).length) {
-                throw new Error('Graph is empty');
-            }
-            for (const [node, edges] of Object.entries(adjacencyList)) {
-                if (typeof node !== 'string' || !node.trim()) {
-                    throw new Error('Node keys must be non-empty strings');
-                }
-                if (!Array.isArray(edges)) {
-                    throw new Error(`Edges of node '${node}' must be a list`);
-                }
-                for (const edge of edges) {
-                    if (typeof edge.toNode !== 'string' || !edge.toNode.trim()) {
-                        throw new Error(`Target node of edge from '${node}' must be a non-empty string`);
-                    }
-                    if (!(edge.toNode in adjacencyList)) {
-                        throw new Error(`Target node '${edge.toNode}' from '${node}' not found in graph`);
-                    }
-                    if (!Number.isInteger(edge.weight) || edge.weight <= 0) {
-                        throw new Error(`Weight of edge from '${node}' to '${edge.toNode}' must be a positive integer`);
-                    }
-                }
-            }
-
-            const response = await axios.post(`${baseURL}/graph/kruskal`, {
-                adjacency_list: adjacencyList,
-                start_node: '' // Not used, but included for model compatibility
-            }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.data && Array.isArray(response.data)) {
-                await animateKruskalSteps(response.data);
-            } else {
-                throw new Error('Received unexpected response format from server');
-            }
+            await fetchKruskalSteps(adjacencyList);
+            await animateKruskalSteps(steps);
+            setCurrentStepIndex(steps.length - 1);
         } catch (err) {
-            console.error('Error during Kruskal traversal:', err);
-            setError(err.response?.data?.detail || err.message || 'Failed to process Kruskal traversal');
+            setError(err.response?.data?.detail || 'Failed to process Kruskal traversal');
         } finally {
             setIsSorting(false);
+            setIsAnimating(false);
+            isCancelledRef.current = false;
         }
     };
 
     const cancelTraversal = () => {
         isCancelledRef.current = true;
         setIsSorting(false);
+        setIsAnimating(false);
+        resetHighlight();
+        setCurrentStepIndex(-1);
     };
 
+    // Initial render
     useEffect(() => {
         speedRef.current = speed;
+        const initializeVisualization = async () => {
+            if (svgRef.current && !isInitializedRef.current) {
+                isInitializedRef.current = true;
+                await handleRandom();
+            }
+        };
+        const timer = setTimeout(initializeVisualization, 100);
+        return () => clearTimeout(timer);
     }, [speed]);
 
     return (
-        <div className="flex flex-col h-full bg-base-200 relative">
+        <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 relative">
             <NavBar/>
             <AlgorithmNavbar/>
+            {/* Algorithm Performance Analysis */}
+            <div className="w-full px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto">
+                    <div className="collapse collapse-arrow bg-base-100 shadow-xl border border-base-300 rounded-2xl overflow-hidden">
+                        <input
+                            type="checkbox"
+                            checked={showComplexity}
+                            onChange={(e) => setShowComplexity(e.target.checked)}
+                        />
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                            <div className="flex items-center gap-3">
+                                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                                        <path fill="currentColor" d="M20 12a2 2 0 0 0-.703.133l-2.398-1.963c.059-.214.101-.436.101-.67C17 8.114 15.886 7 14.5 7S12 8.114 12 9.5c0 .396.1.765.262 1.097l-2.909 3.438A2 2 0 0 0 9 14c-.179 0-.348.03-.512.074l-2.563-2.563C5.97 11.348 6 11.179 6 11c0-1.108-.892-2-2-2s-2 .892-2 2s.892 2 2 2c.179 0 .348-.03.512-.074l2.563 2.563A2 2 0 0 0 7 16c0 1.108.892 2 2 2s2-.892 2-2c0-.237-.048-.46-.123-.671l2.913-3.442c.227.066.462.113.71.113a2.5 2.5 0 0 0 1.133-.281l2.399 1.963A2 2 0 0 0 18 14c0 1.108.892 2 2 2s2-.892 2-2s-.892-2-2-2" />
+                                    </svg>
+                                </div>
+                                <span className="text-primary">Algorithm Performance Analysis</span>
+                            </div>
+                        </div>
+                        <div className="collapse-content bg-base-100">
+                            <div className="pt-6">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    {/* Theoretical Complexity */}
+                                    <div className="card bg-base-100 border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div className="card-body p-6">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+                                                    <span className="text-white text-sm font-bold">T</span>
+                                                </div>
+                                                <h3 className="card-title text-primary text-lg">Theoretical Complexity</h3>
+                                            </div>
+                                            <div className="space-y-4">
+                                                <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                    <span className="font-semibold text-base-content/80">Time Complexity:</span>
+                                                    <div className="badge badge-primary badge-lg font-mono font-bold">O(E log E)</div>
+                                                </div>
+                                                <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
+                                                    <span className="font-semibold text-base-content/80">Space Complexity:</span>
+                                                    <div className="badge badge-primary badge-outline badge-lg font-mono font-bold">O(V + E)</div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-4 p-4 bg-info/10 rounded-xl border-l-4 border-info">
+                                                <p className="text-sm text-base-content/80 leading-relaxed">
+                                                    Kruskal's algorithm sorts all edges by weight and processes them using a Union-Find structure, where V is the number of vertices and E is the number of edges.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {/* Execution Time */}
+                                    <div className="card bg-base-100 border border-secondary/20 shadow-lg hover:shadow-xl transition-all duration-300">
+                                        <div className="card-body p-6">
+                                            <div className="flex items-center gap-3 mb-4">
+                                                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                                                    <span className="text-white text-sm font-bold">⚡</span>
+                                                </div>
+                                                <h3 className="card-title text-secondary text-lg">Execution Metrics</h3>
+                                            </div>
+                                            {executionTime !== null ? (
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between p-3 bg-secondary/5 rounded-xl border border-secondary/10">
+                                                        <span className="font-semibold text-base-content/80">Execution Time:</span>
+                                                        <div className="badge badge-secondary badge-lg font-mono font-bold">
+                                                            {executionTime.toFixed(3)}s
+                                                        </div>
+                                                    </div>
+                                                    <div className="stats stats-vertical bg-success/5 rounded-xl border border-success/20">
+                                                        <div className="stat p-4">
+                                                            <div className="stat-title text-xs">Performance</div>
+                                                            <div className="stat-value text-lg text-success">
+                                                                {executionTime < 0.001 ? 'Excellent' : executionTime < 0.01 ? 'Good' : 'Fair'}
+                                                            </div>
+                                                            <div className="stat-desc text-xs">
+                                                                {executionTime < 0.001 ? '< 1ms execution' : `${(executionTime * 1000).toFixed(1)}ms`}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="h-full">
+                                                    <div className="flex flex-col h-full items-center justify-center p-8 bg-neutral/5 rounded-xl border-2 border-dashed border-base-300">
+                                                        <div className="flex flex-col items-center justify-center">
+                                                            <div className="w-12 h-12 rounded-full bg-neutral/10 flex items-center justify-center mb-3">
+                                                                <span className="text-2xl">⏱️</span>
+                                                            </div>
+                                                            <p className="flex-1 text-sm text-base-content/60 text-center">
+                                                                Run a Kruskal traversal to see<br />detailed execution metrics
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
             </div>
-            <div className="flex flex-col items-center mb-4 p-4">
-                <div className="flex justify-center items-center flex-row flex-wrap gap-2 mb-4">
-                    <button
-                        className="btn btn-primary"
-                        onClick={handleRandom}
-                        disabled={isSorting || isSubmitting}
-                    >
-                        Random Graph
-                    </button>
-                    {isSorting ? (
-                        <button className="btn btn-error" onClick={cancelTraversal}>
-                            Stop
-                        </button>
-                    ) : (
-                        <button
-                            className="btn btn-success"
-                            onClick={startTraversalKruskal}
-                            disabled={Object.keys(adjacencyList).length === 0 || isSubmitting}
-                        >
-                            Start Kruskal
-                        </button>
-                    )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
-                    <div className="join w-full">
-                        <input
-                            type="text"
-                            value={nodeInput}
-                            placeholder="Add nodes (e.g., A,B,C)"
-                            className="input join-item w-3/4"
-                            onChange={handleNodeInput}
-                        />
-                        <button
-                            className="btn btn-accent join-item w-1/4"
-                            onClick={addNodes}
-                            disabled={isSorting || isSubmitting || !nodeInput.trim()}
-                        >
-                            Add Nodes
-                        </button>
-                    </div>
-                    <div className="join w-full">
-                        <input
-                            type="text"
-                            value={edgeInput}
-                            placeholder="Add edge (e.g., A-B:4)"
-                            className="input join-item w-3/4"
-                            onChange={handleEdgeInput}
-                        />
-                        <button
-                            className="btn btn-accent join-item w-1/4"
-                            onClick={addEdge}
-                            disabled={isSorting || isSubmitting || !edgeInput.trim()}
-                        >
-                            Add Edge
-                        </button>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl mt-4">
-                    <div className="join w-full">
-                        <span className="join-item p-2 bg-base-200 h-fit">Nodes</span>
-                        <input
-                            type="number"
-                            value={size}
-                            min="1"
-                            max="26"
-                            className="input join-item w-full"
-                            onChange={handleSizeInput}
-                        />
-                    </div>
-                    <div className="flex items-center w-full gap-2">
+            <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">
+                    <div className="flex items-center gap-2 w-full xl:w-auto">
                         <span className="text-xs font-semibold">SPEED:</span>
                         <input
                             type="range"
@@ -682,10 +774,101 @@ const Kruskal = () => {
                             max="1000"
                             step="50"
                             value={speed}
-                            className="range range-primary w-3/4"
+                            className="range range-primary range-xs w-full xl:w-32"
                             onChange={(e) => setSpeed(Number(e.target.value))}
                         />
-                        <span className="w-1/4 text-sm">{speed} ms</span>
+                        <span className="text-xs text-base-content/70 whitespace-nowrap w-12">{speed} ms</span>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-1 w-full xl:w-auto">
+                        <div className="join w-full">
+                            <span className="join-item p-2 bg-base-200 text-sm font-semibold">Size</span>
+                            <input
+                                type="number"
+                                value={size}
+                                min="1"
+                                max="26"
+                                className="input join-item rounded-l-lg w-full xl:w-24"
+                                onChange={handleSizeInput}
+                            />
+                            <button
+                                className="join-item btn btn-primary rounded-r-lg w-auto btn-md xl:w-24"
+                                onClick={handleRandom}
+                                disabled={isSorting || isSubmitting || isAnimating}
+                            >
+                                Random
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-row items-center gap-1 w-full xl:w-70">
+                        <div className="join w-full">
+                            <button
+                                className="join-item btn btn-success rounded-lg w-full btn-md"
+                                onClick={startTraversalKruskal}
+                                disabled={Object.keys(adjacencyList).length === 0 || isSubmitting || isAnimating || isSorting}
+                            >
+                                Start Kruskal
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-row gap-2 md:gap-4 items-center justify-center w-full xl:w-auto">
+                        <button
+                            className={`btn btn-accent btn-sm rounded-lg lg:btn-md flex-1 lg:w-auto ${isAnimating || currentStepIndex <= -1 || steps.length === 0 ? 'btn-disabled' : ''}`}
+                            onClick={handleStepBackward}
+                            aria-label="Step backward"
+                        >
+                            Backward
+                        </button>
+                        <button
+                            className={`btn btn-accent btn-sm rounded-lg lg:btn-md flex-1 lg:w-auto ${isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0 ? 'btn-disabled' : ''}`}
+                            onClick={handleStepForward}
+                            aria-label="Step forward"
+                        >
+                            Forward
+                        </button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center justify-center w-full">
+                        <div className="flex flex-row items-center gap-1 w-full">
+                            <div className="join w-full">
+                                <span className="join-item p-2 bg-base-200 text-sm font-semibold">Nodes</span>
+                                <input
+                                    type="text"
+                                    value={nodeInput}
+                                    placeholder="e.g., A,B,C"
+                                    className="input join-item rounded-l-lg w-full"
+                                    onChange={handleNodeInput}
+                                />
+                                <button
+                                    className="btn btn-accent join-item rounded-r-lg"
+                                    onClick={addNodes}
+                                    disabled={isSorting || isSubmitting || isAnimating || !nodeInput.trim()}
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex flex-row items-center gap-1 w-full">
+                            <div className="join w-full">
+                                <span className="join-item p-2 bg-base-200 text-sm font-semibold">Edge</span>
+                                <input
+                                    type="text"
+                                    value={edgeInput}
+                                    placeholder="e.g., A-B:4"
+                                    className="input join-item rounded-l-lg w-full"
+                                    onChange={handleEdgeInput}
+                                />
+                                <button
+                                    className="btn btn-accent join-item rounded-r-lg"
+                                    onClick={addEdge}
+                                    disabled={isSorting || isSubmitting || isAnimating || !edgeInput.trim()}
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
