@@ -3,7 +3,7 @@ import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../Auth/AuthContext.jsx";
 import ProfileImage from "./utils/ProfileImage.jsx";
 
-const NavBar = ({ menuItems }) => {
+const NavBar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -11,7 +11,14 @@ const NavBar = ({ menuItems }) => {
 
     const location = useLocation();
 
-
+    const menuItems = [
+        { label: 'Visualizer', path: '/visualizer' },
+        { label: 'Comparator', path: '/comparator' },
+        { label: 'Challenges', path: '/challenge' },
+        { label: 'Code Library', path: '/library' },
+        { label: 'Examples', path: '/example' },
+        { label: 'About', path: '/about' }
+    ];
 
     const handleProfileClick = () => {
         setIsDropdownOpen(!isDropdownOpen); // Toggle dropdown on click
