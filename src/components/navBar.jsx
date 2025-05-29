@@ -80,8 +80,15 @@ const NavBar = () => {
                         </ul>
                     </div>
                 )}
+                <img
+                    src="/web-app-manifest-512x512.png"
+                    alt="logo"
+                    className="w-8 h-8 rounded-lg hidden lg:block"
+                />
                 {user ? (
-                    <Link to="/visualizer" className="btn btn-ghost text-xl text-accent">AlgoVerse</Link>
+                    <Link to="/visualizer" className="btn btn-ghost text-xl text-accent">
+                        <span>AlgoVerse</span>
+                    </Link>
                 ):(
                     <Link to="/" className="btn btn-ghost text-xl text-accent">AlgoVerse</Link>
                 )}
