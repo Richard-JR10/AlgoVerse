@@ -61,7 +61,7 @@ const BFS = () => {
     const [queue, setQueue] = useState([]);
     const [visited, setVisited] = useState([]);
 
-    const baseURL = 'http://127.0.0.1:8000';
+    const baseURL = 'https://algoverse-backend-python.onrender.com';
 
     useEffect(() => {
         if (error) {
