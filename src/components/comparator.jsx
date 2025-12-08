@@ -11,7 +11,7 @@ const Comparator = () => {
     const [result, setResult] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const { setError } = useContext(ErrorContext);
-    const BASEURL = "http://127.0.0.1:8000";
+    const BASEURL = "https://algoverse-backend-python.onrender.com";
 
     const comparatorMenu = [
         { label: 'Visualizer', path: '/visualizer' },
