@@ -346,14 +346,14 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
                         {currentQuestion.algorithm.toUpperCase()} Visualization
                     </h1>
                 </div>
-                <p className="mb-2 text-center text-neutral-content/80">
+                <p className="mb-2 text-center dark:text-neutral-content/80 light:text-black">
                     Question {currentQuestionIndex + 1} of {questions.length}
                 </p>
-                <p className="mb-6 text-center text-neutral-content/80 font-medium">
+                <p className="mb-6 text-center dark:text-neutral-content/80 light:text-black/75 font-medium">
                     {currentQuestion.stepDescription}
                 </p>
 
-                <div className="mb-8 bg-white p-4 rounded-lg shadow-inner">
+                <div className="mb-8 light:bg-base-200 dark:bg-white p-4 rounded-lg shadow-inner">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}

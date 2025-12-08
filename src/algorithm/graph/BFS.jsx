@@ -58,8 +58,10 @@ const BFS = () => {
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
+    const [queue, setQueue] = useState([]);
+    const [visited, setVisited] = useState([]);
 
-    const baseURL = 'https://algoverse-backend-python.onrender.com';
+    const baseURL = 'http://127.0.0.1:8000';
 
     useEffect(() => {
         if (error) {
@@ -518,12 +520,20 @@ const BFS = () => {
             switch (step.type) {
                 case 'queue':
                     highlightNode(step.node, COLORS.NODE_QUEUED);
+                    setQueue(prev => [...prev, step.node]);
+                    if (step.visited) {
+                        setVisited(step.visited);
+                    }
                     break;
                 case 'dequeue':
                     highlightNode(step.node, COLORS.NODE_CURRENT);
+                    setQueue(prev => prev.filter(n => n !== step.node));
                     break;
                 case 'explore':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                    if (step.visited) {  // Add this check
+                        setVisited(step.visited);
+                    }
                     break;
                 case 'visited':
                     resetEdgeHighlight(step.source, step.target);
@@ -558,17 +568,27 @@ const BFS = () => {
 
         try {
             resetHighlight();
+            setQueue([]);
+            setVisited([]);
             for (let i = 0; i <= prevStepIndex; i++) {
                 const step = steps[i];
                 switch (step.type) {
                     case 'queue':
                         highlightNode(step.node, COLORS.NODE_QUEUED);
+                        setQueue(prev => [...prev, step.node]);
+                        if (step.visited) {  // Add this check
+                            setVisited(step.visited);
+                        }
                         break;
                     case 'dequeue':
                         highlightNode(step.node, COLORS.NODE_CURRENT);
+                        setQueue(prev => prev.filter(n => n !== step.node));
                         break;
                     case 'explore':
                         highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                        if (step.visited) {  // Add this check
+                            setVisited(step.visited);
+                        }
                         break;
                     case 'visited':
                         resetEdgeHighlight(step.source, step.target);
@@ -616,6 +636,8 @@ const BFS = () => {
         isCancelledRef.current = false;
         resetHighlight();
         setCurrentStepIndex(-1);
+        setVisited([]);
+        setQueue([]);
 
         try {
             await fetchBFSSteps(adjacencyList, startNode);
@@ -757,9 +779,44 @@ const BFS = () => {
                 </div>
             </div>
 
-            <div className="flex justify-center flex-grow">
-                <svg ref={svgRef} className="w-full h-full"></svg>
+            <div className="flex justify-center flex-grow relative">
+                <svg ref={svgRef} className="lg:ml-[10%] flex-1 flex"></svg>
+                <div className="hidden lg:flex gap-2 items-start mr-12 mt-4">
+                    <div className="flex flex-col items-center z-20 border-r-4 border-l-4 border-base-300 bg-base-100 xl:w-32 h-fit">
+                        <div className="w-full text-center text-sm font-bold bg-primary text-primary-content py-2 border-b-2 border-base-300">
+                            QUEUE STATUS
+                        </div>
+                        <div className="px-8 xl:py-4 w-full">
+                            {[...queue].reverse().map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={`xl:px-4 py-2 w-full text-center text-sm xl:text-xl font-bold`}
+                                >
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col items-center z-20 border-r-2 border-l-2 border-b-2 border-base-300 bg-base-100 xl:w-32 h-fit">
+                        <div className="w-full text-center text-sm font-bold bg-primary text-primary-content py-2 border-b-2 border-base-300">
+                            OUTPUT
+                        </div>
+                        <div className="px-8 xl:py-4 w-full">
+                            {visited.map((item, index) => (
+                                <div
+                                    key={index}
+                                    className={`xl:px-4 py-2 w-full text-center text-sm xl:text-xl font-bold`}
+                                >
+                                    {item}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
             </div>
+
+
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">
                     <div className="flex items-center gap-2 w-full xl:w-auto">

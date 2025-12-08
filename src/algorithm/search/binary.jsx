@@ -333,7 +333,7 @@ const Binary = () => {
                     .attr("x", x)
                     .attr("y", baseY)
                     .attr("text-anchor", "middle")
-                    .attr("fill", "#ffffff")
+                    .attr("fill", "#d3d3d3")
                     .attr("font-size", `${fontSize * (data.length > 25 ? 25 / data.length : 1)}px`)
                     .text(label);
             }

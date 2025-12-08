@@ -292,7 +292,7 @@ const ProfilePage = () => {
                 </div>
                 <div className="card w-full max-w-190 mb-2">
                     <div className="card-body bg-base-300 p-6 rounded-lg">
-                        <h3 className="text-xl font-bold text-white">Personal Information</h3>
+                        <h3 className="text-xl font-bold dark:text-white/90 light:text-black/90">Personal Information</h3>
                         <form onSubmit={handleUpdateProfile}>
                             <div className="flex flex-col md:flex-row lg:flex-row items-center gap-2">
                                 <fieldset className="fieldset w-full">
@@ -301,7 +301,7 @@ const ProfilePage = () => {
                                         type="text"
                                         value={firstName}
                                         onChange={(e) => setFirstName(e.target.value)}
-                                        className="input w-full p-3 rounded text-white"
+                                        className="input w-full p-3 rounded dark:text-white/90 light:text-black/90"
                                         placeholder="First Name"
                                     />
                                 </fieldset>
@@ -311,7 +311,7 @@ const ProfilePage = () => {
                                         type="text"
                                         value={lastName}
                                         onChange={(e) => setLastName(e.target.value)}
-                                        className="input w-full p-3 rounded text-white"
+                                        className="input w-full p-3 rounded dark:text-white/90 light:text-black/90"
                                         placeholder="Last Name"
                                     />
                                 </fieldset>
@@ -342,7 +342,7 @@ const ProfilePage = () => {
                 </div>
                 <div className="card w-full max-w-190 mb-2">
                     <div className="card-body bg-base-300 p-6 rounded-lg">
-                        <h3 className="text-xl font-bold text-white">Change Password</h3>
+                        <h3 className="text-xl font-bold dark:text-white/90 light:text-black/90">Change Password</h3>
                         {isGoogleUser ? (
                             <div className="text-info">
                                 <p>You are signed in with a Google account. To change your password, please visit your <a href="https://myaccount.google.com/security" target="_blank" rel="noopener noreferrer" className="link link-primary">Google Account settings</a>.</p>
@@ -356,7 +356,7 @@ const ProfilePage = () => {
                                             type={showCurrentPassword ? "text" : "password"}
                                             value={currentPassword}
                                             onChange={(e) => setCurrentPassword(e.target.value)}
-                                            className="input w-full p-3 rounded text-white"
+                                            className="input w-full p-3 rounded"
                                             placeholder="Enter current password"
                                         />
                                         <PasswordToggleIcon showPassword={showCurrentPassword} onToggle={toggleCurrentPasswordVisibility} />
@@ -369,7 +369,7 @@ const ProfilePage = () => {
                                             type={showNewPassword ? "text" : "password"}
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
-                                            className="input w-full p-3 rounded text-white"
+                                            className="input w-full p-3 rounded"
                                             placeholder="Enter new password"
                                         />
                                         <PasswordToggleIcon showPassword={showNewPassword} onToggle={toggleNewPasswordVisibility} />
@@ -382,7 +382,7 @@ const ProfilePage = () => {
                                             type={showCurrentNewPassword ? "text" : "password"}
                                             value={currentNewPassword}
                                             onChange={(e) => setCurrentNewPassword(e.target.value)}
-                                            className="input w-full p-3 rounded text-white"
+                                            className="input w-full p-3 rounded "
                                             placeholder="Confirm new password"
                                         />
                                         <PasswordToggleIcon showPassword={showCurrentNewPassword} onToggle={toggleCurrentNewPasswordVisibility} />

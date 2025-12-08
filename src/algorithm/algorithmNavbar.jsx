@@ -57,20 +57,19 @@ const AlgorithmNavbar = () => {
             <div className="hidden md:flex justify-center overflow-x-auto w-full">
                 <div className="join my-2 flex-nowrap whitespace-nowrap">
                     {algorithms.map((algo) => (
-                        <input
+                        <button
                             key={algo.id}
-                            type="radio"
-                            name="algorithm"
-                            aria-label={algo.label}
-                            className={`join-item btn ${selectedAlgo === algo.id ? "bg-primary" : ""}`}
-                            onChange={() => handleChange(algo)}
-                        />
+                            className={`btn join-item ${selectedAlgo === algo.id ? "btn-active bg-primary light:text-base-200" : ""}`}
+                            onClick={() => handleChange(algo)}
+                        >
+                            {algo.label}
+                        </button>
                     ))}
                 </div>
             </div>
             <div className="block md:hidden my-2 px-4">
                 <select
-                    className="select select-bordered w-full"
+                    className="select select-bordered w-full light:text-black/90"
                     value={selectedAlgo}
                     onChange={(e) => handleChangeById(e.target.value)}
                 >

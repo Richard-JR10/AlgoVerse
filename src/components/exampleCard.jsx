@@ -9,7 +9,7 @@ const ExampleCard = ({ cardInfo }) => {
             <div className="card-body p-5">
                 <div className="flex flex-row w-full justify-between mb-3.75">
                     <h2 className="text-xl font-semibold line-clamp-1">{title}</h2>
-                    <div className="badge badge-accent rounded-full text-base-300">{category}</div>
+                    <div className="badge dark:bg-accent light:bg-accent-content rounded-full text-base-300">{category}</div>
                 </div>
 
                 <p className="mb-4 line-clamp-4">{description}</p>

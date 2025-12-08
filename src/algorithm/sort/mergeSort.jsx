@@ -28,8 +28,6 @@ const MergeSort = () => {
     const rightHalfColor = "#0000FF"; // Blue for right half
     const mergedColor = "#800080"; // Purple for merging
     const defaultColor = "#EDE2F3"; // Grey for default
-    const FONT_COLOR = "#6E199F"; // Black for text
-    const INDEX_COLOR = "#FFFFFF"; // White for index labels
 
     useEffect(() => {
         if (error) {
@@ -237,7 +235,7 @@ const MergeSort = () => {
             .attr("dominant-baseline", "middle")
             .attr("font-size", "16px")
             .attr("font-weight", "bold")
-            .attr("fill", FONT_COLOR)
+            .attr("fill", "var(--visual-font)")
             .text((d) => d.value)
             .attr("x", (d) => margin.left + d.index * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
             .attr("y", (d) => getLabelYPosition(d));
@@ -246,7 +244,7 @@ const MergeSort = () => {
             .attr("class", "index-label")
             .attr("text-anchor", "middle")
             .attr("font-size", "16px")
-            .attr("fill", INDEX_COLOR)
+            .attr("fill", "var(--index-color)")
             .attr("font-weight", "bold")
             .text((d) => d.index)
             .attr("x", (d) => margin.left + d.index * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)

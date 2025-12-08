@@ -32,8 +32,6 @@ const SelectSort = () => {
     const compareColor = "yellow";
     const minColor = "red";
     const defaultColor = "#EDE2F3";
-    const FONT_COLOR = "#6E199F";
-    const INDEX_COLOR = "#EDE2F3";
 
     useEffect(() => {
         if (error) {
@@ -223,7 +221,7 @@ const SelectSort = () => {
             .attr("dominant-baseline", "middle")
             .attr("font-size", "16px")
             .attr("font-weight", "bold")
-            .attr("fill", FONT_COLOR)
+            .attr("fill", "var(--visual-font)")
             .text(d => d)
             .call(positionText);
 
@@ -231,7 +229,7 @@ const SelectSort = () => {
             .attr("class", "index-label")
             .attr("text-anchor", "middle")
             .attr("font-size", "16px")
-            .attr("fill", INDEX_COLOR)
+            .attr("fill", "var(--index-color)")
             .attr("font-weight", "bold")
             .text((d, i) => i)
             .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
@@ -275,7 +273,7 @@ const SelectSort = () => {
                     const barHeight = Math.max(minBarHeight, height - margin.bottom - yScale(d));
                     return barHeight > 20 ? yScale(d) + barHeight - 10 : yScale(d) - 10;
                 })
-                .attr("fill", FONT_COLOR);
+                .attr("fill", "var(--visual-font)")
         }
 
         const allTransitions = [

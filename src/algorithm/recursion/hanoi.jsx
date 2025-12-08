@@ -33,7 +33,7 @@ const HanoiVisualization = () => {
 
     // Visualization colors
     const diskColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEEAD'];
-    const pegColor = '#EDE2F3';
+    const pegColor = '#e9c9fd';
     const FONT_COLOR = '#6E199F';
 
     const handleInput = (e) => {
@@ -437,7 +437,7 @@ const HanoiVisualization = () => {
     }, [pegs]);
 
     return (
-        <div className="flex flex-col min-h-screen bg-base-200 text-white relative">
+        <div className="flex flex-col min-h-screen bg-base-200 relative">
             <NavBar/>
             <AlgorithmNavbar/>
 
@@ -691,7 +691,7 @@ const HanoiVisualization = () => {
                         </button>
                     </div>
                     <div className="flex items-center gap-2 w-full lg:max-w-sm">
-                        <span className="text-xs lg:text-sm font-semibold whitespace-nowrap">
+                        <span className="text-xs lg:text-sm font-semibold whitespace-nowrap light:text-black/80">
                             SPEED:
                         </span>
                         <input

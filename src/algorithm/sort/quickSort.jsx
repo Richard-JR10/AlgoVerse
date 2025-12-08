@@ -34,9 +34,7 @@ const QuickSort = () => {
     const pivotColor = "yellow";
     const compareColor = "red";
     const swapColor = "green";
-    const defaultColor = "#EDE2F3";
-    const FONT_COLOR = "#6E199F";
-    const INDEX_COLOR = "#FFFFFF";
+    const defaultColor = "#EDE2F3"
     const lessThanPivotColor = "#3cb371";
     const greaterThanPivotColor = "#9932cc";
 
@@ -256,7 +254,7 @@ const QuickSort = () => {
             .attr("dominant-baseline", "middle")
             .attr("font-size", "16px")
             .attr("font-weight", "bold")
-            .attr("fill", FONT_COLOR)
+            .attr("fill", "var(--visual-font)")
             .text((d) => d.value)
             .attr("x", (d) => margin.left + d.index * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
             .attr("y", getLabelYPosition);
@@ -265,7 +263,7 @@ const QuickSort = () => {
             .attr("class", "index-label")
             .attr("text-anchor", "middle")
             .attr("font-size", "16px")
-            .attr("fill", INDEX_COLOR)
+            .attr("fill", "var(--index-color)")
             .attr("font-weight", "bold")
             .text((d) => d.index)
             .attr("x", (d) => margin.left + d.index * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)

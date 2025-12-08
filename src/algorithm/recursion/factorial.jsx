@@ -303,7 +303,7 @@ const FactorialVisualization = () => {
     };
 
     return (
-        <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 text-white relative">
+        <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 relative">
             <NavBar/>
             <AlgorithmNavbar/>
 
@@ -497,7 +497,7 @@ const FactorialVisualization = () => {
             </div>
 
             {/* Card Grid Section */}
-            <div className="flex-grow p-4 w-full mx-auto">
+            <div className="flex-grow p-4 w-full mx-auto text-white">
                 <div
                     className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 max-w-7xl mx-auto"
                     style={{ minHeight: '200px' }}
@@ -619,7 +619,7 @@ const FactorialVisualization = () => {
                         </button>
                     </div>
                     <div className="flex items-center gap-2 w-full lg:max-w-sm">
-                        <span className="text-xs lg:text-sm font-semibold whitespace-nowrap">
+                        <span className="text-xs lg:text-sm font-semibold whitespace-nowrap light:text-black/80">
                             SPEED:
                         </span>
                         <input

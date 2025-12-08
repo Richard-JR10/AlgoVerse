@@ -39,7 +39,7 @@ const SortableItem = ({ id, value }) => {
             style={style}
             {...attributes}
             {...listeners}
-            className={`px-4 py-2 rounded-lg shadow cursor-grab bg-gray-600
+            className={`px-4 py-2 rounded-lg shadow cursor-grab bg-gray-600 text-white
                 ${isDragging ? 'opacity-50' : 'opacity-100'}`
             }
         >
@@ -74,7 +74,7 @@ const Blank = ({ id, questionId, blankIndex, filledAnswer }) => {
         >
             {filledAnswer && (
                 <div
-                    className={`px-2 py-1.5 rounded-lg bg-gray-600`}
+                    className={`px-2 py-1.5 rounded-lg bg-gray-600 text-white`}
                 >
                     {filledAnswer}
                 </div>
@@ -473,14 +473,14 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
                         Fill in the Blanks Quiz
                     </h1>
                 </div>
-                <p className="mb-2 text-center text-neutral-content/80">
+                <p className="mb-2 text-center dark:text-neutral-content/80 light:text-black">
                     Question {currentQuestionIndex + 1} of {questions.length}
                 </p>
-                <p className="mb-6 text-center text-neutral-content/80 font-medium">
+                <p className="mb-6 text-center dark:text-neutral-content/80 light:text-black/75 font-medium">
                     Drag the correct answers to fill in the blanks
                 </p>
 
-                <div className="mb-8 p-4 rounded-lg shadow-inner">
+                <div className="mb-8 p-4 rounded-lg">
                     <DndContext
                         sensors={sensors}
                         collisionDetection={closestCenter}

@@ -393,7 +393,7 @@ const Kruskal = () => {
             .attr('class', 'edge-label')
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'middle')
-            .attr('fill', 'white')
+            .attr("fill", "var(--index-color)")
             .attr('font-size', '16px')
             .attr('font-weight', 'bold')
             .text(d => d.weight)

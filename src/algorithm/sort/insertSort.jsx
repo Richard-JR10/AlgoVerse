@@ -32,8 +32,6 @@ const InsertSort = () => {
     const selectedColor = "red";
     const compareColor = "yellow";
     const defaultColor = "#EDE2F3";
-    const FONT_COLOR = "#6E199F";
-    const INDEX_COLOR = "#EDE2F3";
 
     useEffect(() => {
         if (error) {
@@ -231,7 +229,7 @@ const InsertSort = () => {
             .attr("dominant-baseline", "middle")
             .attr("font-size", "16px")
             .attr("font-weight", "bold")
-            .attr("fill", FONT_COLOR)
+            .attr("fill", "var(--visual-font)")
             .text(d => d)
             .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)
             .attr("y", (d, i) => getLabelYPosition(d, i));
@@ -240,7 +238,7 @@ const InsertSort = () => {
             .attr("class", "index-label")
             .attr("text-anchor", "middle")
             .attr("font-size", "16px")
-            .attr("fill", INDEX_COLOR)
+            .attr("fill", "var(--index-color)")
             .attr("font-weight", "bold")
             .text((d, i) => i)
             .attr("x", (d, i) => margin.left + i * (barWidth + barSpacing) + centeredBarWidth + barWidth / 2)

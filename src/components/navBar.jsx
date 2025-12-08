@@ -2,6 +2,7 @@ import React, {useEffect, useRef, useState} from 'react'
 import {Link, useLocation, useNavigate} from "react-router-dom";
 import {useAuth} from "../Auth/AuthContext.jsx";
 import ProfileImage from "./utils/ProfileImage.jsx";
+import ThemeToggle from "./utils/themeToggle.jsx";
 
 const NavBar = () => {
     const { user, logout } = useAuth();
@@ -53,13 +54,12 @@ const NavBar = () => {
             <div className="navbar-start">
                 {menuItems.length !== 0 && (
                     <div className="dropdown">
-                        <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
+                        <div tabIndex={0} role="button" className="btn btn-ghost light:stroke-black/90 dark:stroke-white/90 lg:hidden">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 className="h-5 w-5"
                                 fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor">
+                                viewBox="0 0 24 24">
                                 <path
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
@@ -69,7 +69,7 @@ const NavBar = () => {
                         </div>
                         <ul
                             tabIndex={0}
-                            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow text-accent">
+                            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow light:text-black/90">
                             {menuItems.map((item, index) => (
                                 <li key={index}>
                                     <Link to={item.path} className={`${location.pathname === item.path && location.pathname.startsWith('/visualizer/') ? 'bg-primary' : ''}`}>
@@ -86,19 +86,19 @@ const NavBar = () => {
                     className="w-8 h-8 rounded-lg hidden lg:block"
                 />
                 {user ? (
-                    <Link to="/visualizer" className="btn btn-ghost text-xl text-accent">
-                        <span>AlgoVerse</span>
+                    <Link to="/visualizer" className="btn btn-ghost text-xl">
+                        <span className="light:text-black/80">AlgoVerse</span>
                     </Link>
                 ):(
-                    <Link to="/" className="btn btn-ghost text-xl text-accent">AlgoVerse</Link>
+                    <Link to="/" className="btn btn-ghost text-xl">AlgoVerse</Link>
                 )}
             </div>
             {user && (
-                <div className="navbar-center hidden lg:flex text-accent">
+                <div className="navbar-center hidden lg:flex">
                     <ul className="menu menu-horizontal px-1">
                         {menuItems.map((item, index) => (
                             <li key={index}>
-                                <Link to={item.path} className={`${location.pathname === item.path && location.pathname.startsWith('/visualizer/') ? 'bg-primary' : ''}`}>
+                                <Link to={item.path} className={`light:text-black/90 ${location.pathname === item.path && location.pathname.startsWith('/visualizer/') ? 'bg-primary' : ''}`}>
                                     {item.label}
                                 </Link>
                             </li>
@@ -107,14 +107,15 @@ const NavBar = () => {
                 </div>
             )}
             <div className="navbar-end">
+                <ThemeToggle />
                 {user ? (
-                    <div className="relative" draggable="false" ref={dropdownRef}>
+                    <div className="relative light:[data-theme=light] dark:[data-theme=dark]" draggable="false" ref={dropdownRef}>
                         <button className="avatar cursor-pointer" onClick={handleProfileClick}>
                             <div className="w-10 rounded-full">
                                 <ProfileImage src={user.photoURL} size="10" type="circle"/>
                                 <svg
                                     xmlns="http://www.w3.org/2000/svg"
-                                    className="h-3 w-3 fill-accent absolute bottom-1 right-1 transform translate-x-1 translate-y-1"
+                                    className="h-3 w-3 fill-black dark:fill-accent absolute bottom-1 right-1 transform translate-x-1 translate-y-1"
                                     viewBox="0 0 512 512"
                                 >
                                     <path d="M256 0a256 256 0 1 0 0 512A256 256 0 1 0 256 0zM135 241c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l87 87 87-87c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9L273 345c-9.4 9.4-24.6 9.4-33.9 0L135 241z" />
@@ -176,7 +177,7 @@ const NavBar = () => {
 
                     </div>
                     ) : (
-                        <a className="btn btn-outline text-accent" onClick={() => navigate('/login')}>
+                        <a className="btn btn-outline" onClick={() => navigate('/login')}>
                             Login
                         </a>
                     )}

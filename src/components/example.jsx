@@ -153,7 +153,7 @@ const Example = () => {
                         {['Sorting', 'Search', 'Graph', 'Recursion'].map(filter => (
                             <input
                                 key={filter}
-                                className="btn btn-accent btn-sm rounded-3xl text-base-300 shadow-sm ml-2"
+                                className="btn dark:btn-accent light:bg-accent-content border-none btn-sm rounded-3xl text-base-300 shadow-sm ml-2"
                                 type="radio"
                                 name="frameworks"
                                 aria-label={filter}

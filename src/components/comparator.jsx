@@ -11,6 +11,7 @@ const Comparator = () => {
     const [result, setResult] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const { setError } = useContext(ErrorContext);
+    const BASEURL = "http://127.0.0.1:8000";
 
     const comparatorMenu = [
         { label: 'Visualizer', path: '/visualizer' },
@@ -56,7 +57,7 @@ const Comparator = () => {
                 setError('Select Category and Input Size.');
                 return;
             }
-            const response = await axios.post('https://algoverse-backend-python.onrender.com/compare', formData, {
+            const response = await axios.post(BASEURL + "/compare", formData, {
                 headers: { 'Content-Type': 'application/json' },
             });
             setResult(response.data);
@@ -79,7 +80,7 @@ const Comparator = () => {
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-2">
                             <select
                                 defaultValue="Select Algorithm"
-                                className="select border-neutral-content bg-base-300 rounded-lg w-full sm-w-auto sm:flex-1"
+                                className="select border-neutral-content light:border-neutral bg-base-300 rounded-lg w-full sm-w-auto sm:flex-1"
                                 onChange={handleCategorySelect}
                             >
                                 <option disabled={true}>Select Algorithm</option>
@@ -90,7 +91,7 @@ const Comparator = () => {
                             </select>
                             <select
                                 defaultValue="Input Size Range"
-                                className="select border-neutral-content bg-base-300 rounded-lg w-full sm-w-auto sm:flex-1"
+                                className="select border-neutral-content light:border-neutral bg-base-300 rounded-lg w-full sm-w-auto sm:flex-1"
                                 onChange={handleInputSizeSelect}
                             >
                                 <option disabled={true}>Input Size Range</option>
@@ -118,16 +119,16 @@ const Comparator = () => {
                                         <p className="text-sm mb-6 text-center">Select algorithm categories and input size range above to start comparing algorithms.</p>
                                         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                                             <div className="flex flex-row items-center justify-center px-4 py-2 bg-accent-content rounded-lg gap-2 w-full sm:w-auto">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="17.5" height="14" viewBox="0 0 640 512"><path fill="currentColor" d="M32 64c17.7 0 32 14.3 32 32v320c0 17.7-14.3 32-32 32S0 433.7 0 416V96c0-17.7 14.3-32 32-32m214.6 73.4c12.5 12.5 12.5 32.8 0 45.3L205.3 224h229.5l-41.4-41.4c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l96 96c12.5 12.5 12.5 32.8 0 45.3l-96 96c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l41.3-41.3H205.2l41.4 41.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0l-96-96c-12.5-12.5-12.5-32.8 0-45.3l96-96c12.5-12.5 32.8-12.5 45.3 0M640 96v320c0 17.7-14.3 32-32 32s-32-14.3-32-32V96c0-17.7 14.3-32 32-32s32 14.3 32 32"/></svg>
-                                                <div>Compare Performance</div>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="17.5" height="14" viewBox="0 0 640 512"><path fill="white" d="M32 64c17.7 0 32 14.3 32 32v320c0 17.7-14.3 32-32 32S0 433.7 0 416V96c0-17.7 14.3-32 32-32m214.6 73.4c12.5 12.5 12.5 32.8 0 45.3L205.3 224h229.5l-41.4-41.4c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l96 96c12.5 12.5 12.5 32.8 0 45.3l-96 96c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l41.3-41.3H205.2l41.4 41.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0l-96-96c-12.5-12.5-12.5-32.8 0-45.3l96-96c12.5-12.5 32.8-12.5 45.3 0M640 96v320c0 17.7-14.3 32-32 32s-32-14.3-32-32V96c0-17.7 14.3-32 32-32s32 14.3 32 32"/></svg>
+                                                <div className="light:text-white">Compare Performance</div>
                                             </div>
                                             <div className="flex flex-row items-center justify-center px-4 py-2 bg-accent-content rounded-lg gap-2 w-full sm:w-auto">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="10.5" height="14" viewBox="0 0 384 512"><path fill="currentColor" d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c19.8 27.1 39.7 54.4 49.2 86.2h160zm-80 128c44.2 0 80-35.8 80-80v-16H112v16c0 44.2 35.8 80 80 80m-80-336c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80"/></svg>
-                                                <div>Get AI Insights</div>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="10.5" height="14" viewBox="0 0 384 512"><path fill="white" d="M272 384c9.6-31.9 29.5-59.1 49.2-86.2c5.2-7.1 10.4-14.2 15.4-21.4c19.8-28.5 31.4-63 31.4-100.3C368 78.8 289.2 0 192 0S16 78.8 16 176c0 37.3 11.6 71.9 31.4 100.3c5 7.2 10.2 14.3 15.4 21.4c19.8 27.1 39.7 54.4 49.2 86.2h160zm-80 128c44.2 0 80-35.8 80-80v-16H112v16c0 44.2 35.8 80 80 80m-80-336c0 8.8-7.2 16-16 16s-16-7.2-16-16c0-61.9 50.1-112 112-112c8.8 0 16 7.2 16 16s-7.2 16-16 16c-44.2 0-80 35.8-80 80"/></svg>
+                                                <div className="light:text-white">Get AI Insights</div>
                                             </div>
                                             <div className="flex flex-row items-center justify-center px-4 py-2 bg-accent-content rounded-lg gap-2 w-full sm:w-auto">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="17.5" height="14" viewBox="0 0 640 512"><path fill="currentColor" d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3l89.3 89.4l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3"/></svg>
-                                                <div>View Implementation</div>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="17.5" height="14" viewBox="0 0 640 512"><path fill="white" d="M392.8 1.2c-17-4.9-34.7 5-39.6 22l-128 448c-4.9 17 5 34.7 22 39.6s34.7-5 39.6-22l128-448c4.9-17-5-34.7-22-39.6m80.6 120.1c-12.5 12.5-12.5 32.8 0 45.3l89.3 89.4l-89.4 89.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l112-112c12.5-12.5 12.5-32.8 0-45.3l-112-112c-12.5-12.5-32.8-12.5-45.3 0zm-306.7 0c-12.5-12.5-32.8-12.5-45.3 0l-112 112c-12.5 12.5-12.5 32.8 0 45.3l112 112c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L77.3 256l89.4-89.4c12.5-12.5 12.5-32.8 0-45.3"/></svg>
+                                                <div className="light:text-white">View Implementation</div>
                                             </div>
                                         </div>
                                     </div>

@@ -21,8 +21,8 @@ const HomePage = () => {
             <div className="hero bg-transparent text-accent" style={{ minHeight: "calc(100vh - var(--navbar-height))" }}>
                 <div className="hero-content text-center">
                     <div className="max-w-md">
-                        <h1 className="text-5xl font-bold">ALGOVERSE</h1>
-                        <p className="py-6">
+                        <h1 className="text-5xl font-bold light:text-black/80">ALGOVERSE</h1>
+                        <p className="py-6 light:text-black/80">
                             Interactive <span className="font-bold">COMMON</span> Algorithm Visualizer with Gamification and AI-Powered Comparisons
                         </p>
                         <button className="btn btn-primary" onClick={() => navigate('/login')}>Get Started</button>
