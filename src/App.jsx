@@ -33,6 +33,7 @@ import ChallengesManagement from "./components/challengesManagement.jsx";
 import {ChallengeProvider} from "./components/challenges/ChallengeContext.jsx";
 import About from "./components/about.jsx";
 import AdminDashboard from "./components/adminDashboard.jsx";
+import RadixSort from "./algorithm/sort/radixSort.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/sort/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/sort/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/sort/quickSort.jsx"));
@@ -102,6 +103,7 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/sort/insert" element={<InsertSort/>} />
                     <Route path="/visualizer/sort/merge" element={<MergeSort/>} />
                     <Route path="/visualizer/sort/quick" element={<QuickSort/>} />
+                    <Route path="/visualizer/sort/radix" element={<RadixSort/>} />
 
                     <Route path="/visualizer/search/linear" element={<Linear/>} />
                     <Route path="/visualizer/search/binary" element={<Binary/>} />

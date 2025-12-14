@@ -7,7 +7,8 @@ const algorithmGroups = {
         { id: "merge", label: "Merge Sort", path: '/visualizer/sort/merge' },
         { id: "selection", label: "Selection Sort", path: '/visualizer/sort/select' },
         { id: "insert", label: "Insertion Sort", path: '/visualizer/sort/insert' },
-        { id: "quick", label: "Quick Sort", path: '/visualizer/sort/quick' }
+        { id: "quick", label: "Quick Sort", path: '/visualizer/sort/quick' },
+        { id: "radix", label: "Radix Sort", path: '/visualizer/sort/radix' },
     ],
     graph: [
         { id: "bfs", label: "BFS", path: "/visualizer/graph/bfs" },
