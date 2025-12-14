@@ -37,6 +37,7 @@ import RadixSort from "./algorithm/sort/radixSort.jsx";
 import HeapSort from "./algorithm/sort/heapSort.jsx";
 import Jump from "./algorithm/search/jump.jsx";
 import Interpolation from "./algorithm/search/interpolation.jsx";
+import TreeTraversal from "./algorithm/graph/treeTraversal.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/sort/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/sort/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/sort/quickSort.jsx"));
@@ -118,6 +119,7 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/graph/dfs" element={<DFS/>} />
                     <Route path="/visualizer/graph/dijkstra" element={<Dijkstra/>} />
                     <Route path="/visualizer/graph/kruskal" element={<Kruskal/>} />
+                    <Route path="/visualizer/graph/treetraversal" element={<TreeTraversal/>} />
 
                     <Route path="/visualizer/recursion/factorial" element={<Factorial/>} />
                     <Route path="/visualizer/recursion/hanoi" element={<Hanoi/>} />

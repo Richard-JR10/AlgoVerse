@@ -16,6 +16,7 @@ const algorithmGroups = {
         { id: "dfs", label: "DFS", path: "/visualizer/graph/dfs" },
         { id: "dijkstra", label: 'Dijkstra', path: '/visualizer/graph/dijkstra' },
         { id: "kruskal", label: 'Kruskal', path: '/visualizer/graph/kruskal' },
+        { id: "treetraversal", label: 'Tree Traversal', path: '/visualizer/graph/treetraversal' },
     ],
     search: [
         { id: "linear", label: "Linear Search", path: "/visualizer/search/linear" },
