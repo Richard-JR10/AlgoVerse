@@ -9,6 +9,7 @@ const algorithmGroups = {
         { id: "insert", label: "Insertion Sort", path: '/visualizer/sort/insert' },
         { id: "quick", label: "Quick Sort", path: '/visualizer/sort/quick' },
         { id: "radix", label: "Radix Sort", path: '/visualizer/sort/radix' },
+        { id: "heap", label: "Heap Sort", path: '/visualizer/sort/heap' }
     ],
     graph: [
         { id: "bfs", label: "BFS", path: "/visualizer/graph/bfs" },
