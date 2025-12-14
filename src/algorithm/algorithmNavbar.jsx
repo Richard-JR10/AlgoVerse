@@ -19,7 +19,8 @@ const algorithmGroups = {
     ],
     search: [
         { id: "linear", label: "Linear Search", path: "/visualizer/search/linear" },
-        { id: "binary", label: "Binary Search", path: "/visualizer/search/binary" }
+        { id: "binary", label: "Binary Search", path: "/visualizer/search/binary" },
+        { id: "jump", label: "Jump Search", path: "/visualizer/search/jump" }
     ],
     recursion: [
         { id: "factorial", label: 'Factorial', path: '/visualizer/recursion/factorial' },
