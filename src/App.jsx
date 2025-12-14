@@ -36,6 +36,7 @@ import AdminDashboard from "./components/adminDashboard.jsx";
 import RadixSort from "./algorithm/sort/radixSort.jsx";
 import HeapSort from "./algorithm/sort/heapSort.jsx";
 import Jump from "./algorithm/search/jump.jsx";
+import Interpolation from "./algorithm/search/interpolation.jsx";
 const BubbleSort = React.lazy(() => import("./algorithm/sort/bubbleSort.jsx"));
 const MergeSort = React.lazy(() => import("./algorithm/sort/mergeSort.jsx"));
 const QuickSort = React.lazy(() => import("./algorithm/sort/quickSort.jsx"));
@@ -111,6 +112,7 @@ const AppRoutes = React.memo(() => {
                     <Route path="/visualizer/search/linear" element={<Linear/>} />
                     <Route path="/visualizer/search/binary" element={<Binary/>} />
                     <Route path="/visualizer/search/jump" element={<Jump/>} />
+                    <Route path="/visualizer/search/interpolation" element={<Interpolation/>} />
 
                     <Route path="/visualizer/graph/bfs" element={<BFS/>} />
                     <Route path="/visualizer/graph/dfs" element={<DFS/>} />
