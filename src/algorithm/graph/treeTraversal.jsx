@@ -567,18 +567,18 @@ const TreeTraversal = () => {
                     </div>
 
                     <div className="flex flex-row items-center gap-1 w-full xl:w-auto">
+                        <span className="join-item p-2 bg-base-200 text-sm font-semibold">Size</span>
                         <div className="join w-full">
-                            <span className="join-item p-2 bg-base-200 text-sm font-semibold">Size</span>
                             <input
                                 type="number"
                                 value={size}
                                 min="1"
                                 max="15"
-                                className="input join-item rounded-l-lg w-full xl:w-24"
+                                className="input join-item w-full xl:w-24"
                                 onChange={(e) => setSize(e.target.value)}
                             />
                             <button
-                                className="join-item btn btn-primary rounded-r-lg w-auto btn-md xl:w-24"
+                                className="join-item btn btn-primary w-auto btn-md xl:w-24"
                                 onClick={generateRandomTree}
                                 disabled={isAnimating}
                             >
@@ -600,7 +600,7 @@ const TreeTraversal = () => {
                                 <option value="postorder">Post-Order</option>
                             </select>
                             <button
-                                className="join-item btn btn-success rounded-r-lg w-auto btn-md xl:w-32"
+                                className="join-item btn btn-success w-auto btn-md xl:w-32"
                                 onClick={startTraversal}
                                 disabled={!tree || isAnimating}
                             >
@@ -611,14 +611,14 @@ const TreeTraversal = () => {
 
                     <div className="flex flex-row gap-2 md:gap-4 items-center justify-center w-full xl:w-auto">
                         <button
-                            className={`btn btn-accent btn-sm lg:btn-md rounded-lg flex-1 lg:w-auto ${isAnimating || currentStepIndex <= -1 || steps.length === 0 ? 'btn-disabled' : ''}`}
+                            className={`btn btn-accent btn-sm lg:btn-md flex-1 lg:w-auto ${isAnimating || currentStepIndex <= -1 || steps.length === 0 ? 'btn-disabled' : ''}`}
                             onClick={handleStepBackward}
                             aria-label="Step backward"
                         >
                             Backward
                         </button>
                         <button
-                            className={`btn btn-accent btn-sm lg:btn-md rounded flex-1 lg:w-auto ${isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0 ? 'btn-disabled' : ''}`}
+                            className={`btn btn-accent btn-sm lg:btn-md flex-1 lg:w-auto ${isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0 ? 'btn-disabled' : ''}`}
                             onClick={handleStepForward}
                             aria-label="Step forward"
                         >
@@ -627,17 +627,17 @@ const TreeTraversal = () => {
                     </div>
 
                     <div className="flex flex-row items-center gap-1 w-full xl:w-auto">
+                        <span className="join-item p-2 bg-base-200 text-sm font-semibold">Tree:</span>
                         <div className="join w-full">
-                            <span className="join-item p-2 bg-base-200 text-sm font-semibold">Tree</span>
                             <input
                                 type="text"
                                 value={nodeInput}
                                 placeholder="e.g., 1,2,3,null,5"
-                                className="input join-item rounded-l-lg w-full xl:w-48"
+                                className="input join-item w-full xl:w-48"
                                 onChange={(e) => setNodeInput(e.target.value)}
                             />
                             <button
-                                className="btn btn-accent join-item rounded-r-lg"
+                                className="btn btn-accent join-item"
                                 onClick={handleAddTree}
                                 disabled={isAnimating || !nodeInput.trim()}
                             >
