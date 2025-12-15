@@ -342,7 +342,7 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
         <div className="max-w-3xl mx-auto p-0 sm:p-6 rounded-xl flex flex-col justify-center">
             <div className="mt-20">
                 <div className={`mb-4 p-2 rounded-lg ${getAlgorithmColor().replace('500', '100')} border-l-4 ${getAlgorithmColor()} border-opacity-75`}>
-                    <h1 className="text-2xl font-bold text-center text-gray-800">
+                    <h1 className="text-2xl font-bold text-center text-white">
                         {currentQuestion.algorithm.toUpperCase()} Visualization
                     </h1>
                 </div>

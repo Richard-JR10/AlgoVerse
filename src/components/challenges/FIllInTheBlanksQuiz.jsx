@@ -469,7 +469,7 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
                         '200'
                     )} border-l-4 ${getQuestionColor()} border-opacity-75`}
                 >
-                    <h1 className="text-2xl font-bold text-center text-gray-800">
+                    <h1 className="text-2xl font-bold text-center text-white">
                         Fill in the Blanks Quiz
                     </h1>
                 </div>
