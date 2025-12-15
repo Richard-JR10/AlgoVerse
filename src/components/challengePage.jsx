@@ -197,7 +197,7 @@ const ChallengePage = () => {
                 {/* Top Cards - Responsive grid that adjusts from 1 column on mobile to 4 on large screens */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full">
                     {/* Rankings Card */}
-                    <div className="card w-full bg-base-300 shadow-xl">
+                    <div className="card w-full bg-base-100 shadow-xl">
                         <div className="card-body p-4 sm:p-6">
                             <div className="flex flex-row justify-between items-center">
                                 <div className="light:text-black text-neutral-content font-medium text-sm sm:text-base">Ranking</div>
@@ -212,7 +212,7 @@ const ChallengePage = () => {
                     </div>
 
                     {/* Completed Tasks Card */}
-                    <div className="card w-full bg-base-300 shadow-xl">
+                    <div className="card w-full bg-base-100 shadow-xl">
                         <div className="card-body p-4 sm:p-6">
                             <div className="flex flex-row justify-between items-center">
                                 <div className="light:text-black text-neutral-content font-medium text-sm sm:text-base">Completed Tasks</div>
@@ -227,7 +227,7 @@ const ChallengePage = () => {
                     </div>
 
                     {/* Total Points Card */}
-                    <div className="card w-full bg-base-300 shadow-xl">
+                    <div className="card w-full bg-base-100 shadow-xl">
                         <div className="card-body p-4 sm:p-6">
                             <div className="flex flex-row justify-between items-center">
                                 <div className="light:text-black text-neutral-content font-medium text-sm sm:text-base">Total Points</div>
@@ -243,7 +243,7 @@ const ChallengePage = () => {
                     </div>
 
                     {/* Badges Earned Card */}
-                    <div className="card w-full bg-base-300 shadow-xl hover:cursor-pointer" onClick={()=>document.getElementById('badges').showModal()}>
+                    <div className="card w-full bg-base-100 shadow-xl hover:cursor-pointer" onClick={()=>document.getElementById('badges').showModal()}>
                         <div className="card-body p-4 sm:p-6">
                             <div className="flex flex-row justify-between items-center">
                                 <div className="light:text-black text-neutral-content font-medium text-sm sm:text-base">Badges Earned</div>
@@ -306,7 +306,7 @@ const ChallengePage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 sm:gap-4">
                         {/* Main Content Card - Full width on mobile, 3/4 width on large screens */}
                         <div className="col-span-1 lg:col-span-3">
-                            <div className="card w-full bg-base-300 shadow-xl min-h-64">
+                            <div className="card w-full bg-base-100 shadow-xl min-h-64">
                                 <div className="card-body p-4 sm:p-6">
                                     <div className="flex flex-row items-start justify-end lg:items-center gap-3 lg:gap-0">
                                         {/* Search bar - Full width on mobile to md, auto width on lg */}

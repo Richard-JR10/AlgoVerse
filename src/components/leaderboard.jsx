@@ -43,7 +43,7 @@ const Leaderboard = () => {
     if (loading) {
         return (
             <div className="col-span-1">
-                <div className="card w-full bg-base-300 shadow-xl min-h-64">
+                <div className="card w-full bg-base-100 shadow-xl min-h-64">
                     <div className="card-body p-4 sm:p-6">
                         <h2 className="card-title text-lg sm:text-xl">Leaderboard</h2>
                         <div className="overflow-x-auto">
@@ -74,7 +74,7 @@ const Leaderboard = () => {
     if (!result || !result.leaderboard || result.leaderboard.length === 0) {
         return (
             <div className="col-span-1">
-                <div className="card w-full bg-base-300 shadow-xl min-h-64">
+                <div className="card w-full bg-base-100 shadow-xl min-h-64">
                     <div className="card-body p-4 sm:p-6">
                         <h2 className="card-title text-lg sm:text-xl">Leaderboard</h2>
                         <p className="text-center text-gray-700 text-lg font-semibold mt-15">No leaderboard data available</p>
@@ -87,7 +87,7 @@ const Leaderboard = () => {
 
     return (
         <div className="col-span-1">
-            <div className="card w-full bg-base-300 shadow-xl min-h-64">
+            <div className="card w-full bg-base-100 shadow-xl min-h-64">
                 <div className="card-body p-4 sm:p-6">
                     <h2 className="card-title text-lg sm:text-xl">Leaderboard</h2>
                     <div className="overflow-x-auto">
