@@ -641,13 +641,13 @@ const InterpolationSearch = () => {
                 <div className="flex flex-wrap gap-4 justify-center mb-6">
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-cyan-300 border-2 border-cyan-500 rounded relative">
-                            <span className="absolute -top-1 -right-1 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-current font-bold">L</span>
+                            <span className="absolute -top-1 -right-1 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-current font-bold text-black/80">L</span>
                         </div>
                         <span className="text-sm">Low Index</span>
                     </div>
                     <div className="flex items-center gap-2">
                         <div className="w-8 h-8 bg-indigo-300 border-2 border-indigo-500 rounded relative">
-                            <span className="absolute -top-1 -right-1 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-current font-bold">H</span>
+                            <span className="absolute -top-1 -right-1 text-xs bg-white rounded-full w-4 h-4 flex items-center justify-center border border-current font-bold text-black/80">H</span>
                         </div>
                         <span className="text-sm">High Index</span>
                     </div>
