@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import * as Tone from 'tone';
 
 const BubbleSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -22,12 +23,22 @@ const BubbleSort = () => {
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
+    const synthRef = useRef(null);
 
     // Sorting colors
     const sortedColor = "orange";
     const swappingColor = "green";
     const compareColor = "yellow";
     const defaultColor = "#EDE2F3";
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     useEffect(() => {
         if (error) {
@@ -348,26 +359,44 @@ const BubbleSort = () => {
 
         if (step.type === "compare") {
             highlightBars(step.indices, compareColor, sortedIndices);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (isForward) {
+                synthRef.current.triggerAttackRelease('C4', '8n');
+                await delay(100);
+                synthRef.current.triggerAttackRelease('D4', '8n');
+                await delay(speedRef.current / 2 - 200);
+            } else {
+                await delay(speedRef.current / 2);
+            }
         } else if (step.type === "swap") {
             highlightBars(step.indices, swappingColor, sortedIndices);
+            if (isForward) {
+                synthRef.current.triggerAttackRelease('E4', '8n');
+                await delay(100);
+                synthRef.current.triggerAttackRelease('F4', '8n');
+            }
             await swapBars(
                 step.indices[isForward ? 0 : 1],
                 step.indices[isForward ? 1 : 0],
                 step.array
             );
             setNumberArr([...step.array]);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            await delay(speedRef.current / 2);
         } else if (step.type === "sorted") {
             sortedIndices.push(step.index);
             highlightBars(sortedIndices, sortedColor);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (isForward) {
+                synthRef.current.triggerAttackRelease('G4', '8n');
+                await delay(100);
+            }
+            await delay(speedRef.current / 2);
         }
         setIsAnimating(false);
     };
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
+
+        await Tone.start();
 
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -420,6 +449,7 @@ const BubbleSort = () => {
 
     const startSorting = async () => {
         if (numberArr.length > 0 && !isSorting && !isAnimating) {
+            await Tone.start();
             setIsSorting(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -474,16 +504,24 @@ const BubbleSort = () => {
             const step = steps[i];
             if (step.type === "compare") {
                 highlightBars(step.indices, compareColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                synthRef.current.triggerAttackRelease('C4', '8n');
+                await delay(100);
+                synthRef.current.triggerAttackRelease('D4', '8n');
+                await delay(speedRef.current / 2 - 200);
             } else if (step.type === "swap") {
                 highlightBars(step.indices, swappingColor, sortedIndices);
+                synthRef.current.triggerAttackRelease('E4', '8n');
+                await delay(100);
+                synthRef.current.triggerAttackRelease('F4', '8n');
                 await swapBars(step.indices[0], step.indices[1], step.array);
                 setNumberArr([...step.array]);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                await delay(speedRef.current / 2);
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                synthRef.current.triggerAttackRelease('G4', '8n');
+                await delay(100);
+                await delay(speedRef.current / 2);
             }
         }
         setIsAnimating(false);
@@ -563,40 +601,40 @@ const BubbleSort = () => {
                                             </div>
 
 
-                                                {executionTime !== null ? (
-                                                    <div className="space-y-4">
-                                                        <div className="flex items-center justify-between p-3 bg-secondary/5 rounded-xl border border-secondary/10">
-                                                            <span className="font-semibold text-base-content/80">Execution Time:</span>
-                                                            <div className="badge badge-secondary badge-lg font-mono font-bold">
-                                                                {executionTime.toFixed(3)}s
-                                                            </div>
+                                            {executionTime !== null ? (
+                                                <div className="space-y-4">
+                                                    <div className="flex items-center justify-between p-3 bg-secondary/5 rounded-xl border border-secondary/10">
+                                                        <span className="font-semibold text-base-content/80">Execution Time:</span>
+                                                        <div className="badge badge-secondary badge-lg font-mono font-bold">
+                                                            {executionTime.toFixed(3)}s
                                                         </div>
-                                                        <div className="stats stats-vertical bg-success/5 rounded-xl border border-success/20">
-                                                            <div className="stat p-4">
-                                                                <div className="stat-title text-xs">Performance</div>
-                                                                <div className="stat-value text-lg text-success">
-                                                                    {executionTime < 0.001 ? 'Excellent' : executionTime < 0.01 ? 'Good' : 'Fair'}
-                                                                </div>
-                                                                <div className="stat-desc text-xs">
-                                                                    {executionTime < 0.001 ? '< 1ms execution' : `${(executionTime * 1000).toFixed(1)}ms`}
-                                                                </div>
+                                                    </div>
+                                                    <div className="stats stats-vertical bg-success/5 rounded-xl border border-success/20">
+                                                        <div className="stat p-4">
+                                                            <div className="stat-title text-xs">Performance</div>
+                                                            <div className="stat-value text-lg text-success">
+                                                                {executionTime < 0.001 ? 'Excellent' : executionTime < 0.01 ? 'Good' : 'Fair'}
+                                                            </div>
+                                                            <div className="stat-desc text-xs">
+                                                                {executionTime < 0.001 ? '< 1ms execution' : `${(executionTime * 1000).toFixed(1)}ms`}
                                                             </div>
                                                         </div>
                                                     </div>
-                                                ) : (
-                                                    <div className="h-full">
-                                                        <div className="flex flex-col h-full items-center justify-center p-8 bg-neutral/5 rounded-xl border-2 border-dashed border-base-300">
-                                                            <div className="flex flex-col items-center justify-center">
-                                                                <div className="w-12 h-12 rounded-full bg-neutral/10 flex items-center justify-center mb-3">
-                                                                    <span className="text-2xl">⏱️</span>
-                                                                </div>
-                                                                <p className="flex-1 text-sm text-base-content/60 text-center">
-                                                                    Run a search operation to see<br />detailed execution metrics
-                                                                </p>
+                                                </div>
+                                            ) : (
+                                                <div className="h-full">
+                                                    <div className="flex flex-col h-full items-center justify-center p-8 bg-neutral/5 rounded-xl border-2 border-dashed border-base-300">
+                                                        <div className="flex flex-col items-center justify-center">
+                                                            <div className="w-12 h-12 rounded-full bg-neutral/10 flex items-center justify-center mb-3">
+                                                                <span className="text-2xl">⏱️</span>
                                                             </div>
+                                                            <p className="flex-1 text-sm text-base-content/60 text-center">
+                                                                Run a search operation to see<br />detailed execution metrics
+                                                            </p>
                                                         </div>
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
