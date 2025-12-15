@@ -49,7 +49,7 @@ const ChallengesAdminTable = ({ challengesInfo, onDelete, onCheckboxChange, sele
                             <span className={`badge 
                                 ${content.difficulty === 'Easy' ?
                                 'badge-success'
-                                : content.difficulty === 'Med.' ? 'badge-warning' : 'badge-error'}
+                                : content.difficulty === 'Medium' ? 'badge-warning' : 'badge-error'}
                                  font-semibold`}>
                                 {content.difficulty}
                             </span>

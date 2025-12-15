@@ -76,7 +76,7 @@ const ChallengeTable = ({ challenges }) => {
                                 <span className={`badge 
                                 ${question.difficulty === 'Easy' ? 
                                     'badge-success' 
-                                    : question.difficulty === 'Med.' ? 'badge-warning' : 'badge-error'}
+                                    : question.difficulty === 'Medium' ? 'badge-warning' : 'badge-error'}
                                  font-semibold`}>
                                     {question.difficulty}
                                 </span>
