@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../Auth/AuthContext.jsx";
 import ProfileImage from "./utils/ProfileImage.jsx";
+import ThemeToggle from "./utils/themeToggle.jsx";
 
 const AdminPanel = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -201,6 +202,7 @@ const AdminPanel = () => {
 
                         {/* Right side - Back to App + Profile */}
                         <div className="navbar-end">
+                            <ThemeToggle/>
                             <button
                                 className="btn btn-ghost btn-sm mr-2"
                                 onClick={() => navigate('/visualizer')}
