@@ -59,6 +59,7 @@ const Dijkstra = () => {
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
+    const [visited, setVisited] = useState([]);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
 
@@ -609,12 +610,18 @@ const Dijkstra = () => {
             switch (step.type) {
                 case 'queue':
                     highlightNode(step.node, COLORS.NODE_QUEUED);
+                    if (step.visited) {
+                        setVisited(step.visited);
+                    }
                     break;
                 case 'dequeue':
                     highlightNode(step.node, COLORS.NODE_CURRENT);
                     break;
                 case 'explore':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                    if (step.visited) {
+                        setVisited(step.visited);
+                    }
                     break;
                 case 'visited':
                     resetEdgeHighlight(step.source, step.target);
@@ -652,17 +659,24 @@ const Dijkstra = () => {
         setCurrentStepIndex(prevStepIndex);
         try {
             resetHighlight();
+            setVisited([]);
             for (let i = 0; i <= prevStepIndex; i++) {
                 const step = steps[i];
                 switch (step.type) {
                     case 'queue':
                         highlightNode(step.node, COLORS.NODE_QUEUED);
+                        if (step.visited) {
+                            setVisited(step.visited);
+                        }
                         break;
                     case 'dequeue':
                         highlightNode(step.node, COLORS.NODE_CURRENT);
                         break;
                     case 'explore':
                         highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                        if (step.visited) {
+                            setVisited(step.visited);
+                        }
                         break;
                     case 'visited':
                         resetEdgeHighlight(step.source, step.target);
@@ -713,6 +727,7 @@ const Dijkstra = () => {
         isCancelledRef.current = false;
         resetHighlight();
         setCurrentStepIndex(-1);
+        setVisited([]);
         try {
             await fetchDijkstraSteps(adjacencyList, startNode);
             await animateDijkstraSteps(steps);
@@ -754,7 +769,7 @@ const Dijkstra = () => {
             {/* Algorithm Performance Analysis */}
             <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
-                    <div className="collapse collapse-arrow bg-base-100 shadow-xl border border-base-300 rounded-2xl overflow-hidden">
+                    <div className="collapse collapse-arrow bg-base-100 shadow-md border border-base-300 rounded-2xl overflow-hidden">
                         <input
                             type="checkbox"
                             checked={showComplexity}
@@ -853,6 +868,54 @@ const Dijkstra = () => {
 
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
+                <div className="hidden lg:flex gap-2 items-start mr-12 mt-4">
+                    <div className="flex flex-col items-center z-20 border-2 border-primary/30 bg-base-100 rounded-xl shadow-xl w-40 h-fit overflow-hidden">
+                        <div className="w-full text-center text-sm font-bold bg-gradient-to-r from-primary to-secondary text-primary-content py-3 border-b-2 border-primary/30">
+                            <div className="flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <span>TRAVERSAL</span>
+                            </div>
+                        </div>
+                        <div className="px-4 py-3 w-full min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-base-200">
+                            {visited.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-base-content/40">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span className="text-xs text-center">Start traversal<br/>to see output</span>
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    {visited.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="relative"
+                                        >
+                                            <div className="badge badge-lg bg-gradient-to-br from-primary to-secondary text-primary-content font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 border-2 border-primary/50 px-4 py-3">
+                                                {item}
+                                            </div>
+                                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-content rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                                                {index + 1}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        {visited.length > 0 && (
+                            <div className="w-full px-4 py-2 bg-base-200/50 border-t border-primary/20">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-base-content/60">Total:</span>
+                                    <span className="badge badge-sm badge-primary font-bold">{visited.length}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">

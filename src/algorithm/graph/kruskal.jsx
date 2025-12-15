@@ -58,6 +58,7 @@ const Kruskal = () => {
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
+    const [visited, setVisited] = useState([]);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
 
@@ -664,7 +665,7 @@ const Kruskal = () => {
             {/* Algorithm Performance Analysis */}
             <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="max-w-7xl mx-auto">
-                    <div className="collapse collapse-arrow bg-base-100 shadow-xl border border-base-300 rounded-2xl overflow-hidden">
+                    <div className="collapse collapse-arrow bg-base-100 shadow-md border border-base-300 rounded-2xl overflow-hidden">
                         <input
                             type="checkbox"
                             checked={showComplexity}
