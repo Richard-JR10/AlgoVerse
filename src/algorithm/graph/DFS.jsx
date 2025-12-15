@@ -796,36 +796,89 @@ const DFS = () => {
             <div className="flex flex-grow relative">
                 <svg ref={svgRef} className="lg:ml-[10%] flex-1 flex"></svg>
                 <div className="hidden lg:flex gap-2 items-start mr-12 mt-4">
-                    <div className="flex flex-col items-center z-20 border-r-4 border-l-4 border-base-300 bg-base-100 xl:w-32 h-fit">
-                        <div className="w-full text-center text-sm font-bold bg-primary text-primary-content py-2 border-b-2 border-base-300">
-                            STACK STATUS
+                    <div className="flex flex-col items-center z-20 border-2 border-primary/30 bg-base-100 rounded-xl shadow-xl w-40 h-fit overflow-hidden">
+                        <div className="w-full text-center text-sm font-bold bg-gradient-to-r from-primary to-secondary text-primary-content py-3 border-b-2 border-primary/30">
+                            <div className="flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <span>STACK STATUS</span>
+                            </div>
                         </div>
-                        <div className="px-8 xl:py-4 w-full">
-                            {[...queue].reverse().map((item, index) => (
-                                <div
-                                    key={index}
-                                    className={`xl:px-4 py-2 w-full text-center text-sm xl:text-xl font-bold`}
-                                >
-                                    {item}
+                        <div className="px-4 py-3 w-full min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-base-200">
+                            {visited.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-base-content/40">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span className="text-xs text-center">Start traversal<br/>to see stack</span>
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    {[...queue].reverse().map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="relative"
+                                        >
+                                            <div className="badge badge-lg bg-gradient-to-br from-primary to-secondary text-primary-content font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 border-2 border-primary/50 px-4 py-3">
+                                                {item}
+                                            </div>
+                                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-content rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                                                {index + 1}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
-
-                    <div className="flex flex-col items-center z-20 border-r-2 border-l-2 border-b-2 border-base-300 bg-base-100 xl:w-32 h-fit">
-                        <div className="w-full text-center text-sm font-bold bg-primary text-primary-content py-2 border-b-2 border-base-300">
-                            OUTPUT
+                    <div className="flex flex-col items-center z-20 border-2 border-primary/30 bg-base-100 rounded-xl shadow-xl w-40 h-fit overflow-hidden">
+                        <div className="w-full text-center text-sm font-bold bg-gradient-to-r from-primary to-secondary text-primary-content py-3 border-b-2 border-primary/30">
+                            <div className="flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <span>TRAVERSAL</span>
+                            </div>
                         </div>
-                        <div className="px-8 xl:py-4 w-full">
-                            {visited.map((item, index) => (
-                                <div
-                                    key={index}
-                                    className={`xl:px-4 py-2 w-full text-center text-sm xl:text-xl font-bold`}
-                                >
-                                    {item}
+                        <div className="px-4 py-3 w-full min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-base-200">
+                            {visited.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-base-content/40">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span className="text-xs text-center">Start traversal<br/>to see output</span>
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    {visited.map((item, index) => (
+                                        <div
+                                            key={index}
+                                            className="relative"
+                                        >
+                                            <div className="badge badge-lg bg-gradient-to-br from-primary to-secondary text-primary-content font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 border-2 border-primary/50 px-4 py-3">
+                                                {item}
+                                            </div>
+                                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-content rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                                                {index + 1}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+                        {visited.length > 0 && (
+                            <div className="w-full px-4 py-2 bg-base-200/50 border-t border-primary/20">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-base-content/60">Total:</span>
+                                    <span className="badge badge-sm badge-primary font-bold">{visited.length}</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
