@@ -43,7 +43,7 @@ const FilterButton = ({
                 )}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="btn btn-circle btn-sm sm:btn-md flex items-center gap-2 bg-base-100 hover:bg-base-200"
+                    className="btn btn-circle btn-sm sm:btn-md btn-outline flex items-center gap-2 bg-base-100 hover:bg-base-200"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M1.5 1.5A.5.5 0 0 1 2 1h12a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.128.334L10 8.692V13.5a.5.5 0 0 1-.342.474l-3 1A.5.5 0 0 1 6 14.5V8.692L1.628 3.834A.5.5 0 0 1 1.5 3.5v-2z"/>
@@ -54,14 +54,14 @@ const FilterButton = ({
 
             {/* Filter Dropdown */}
             {isOpen && (
-                <div className="absolute top-full mt-2 right-0 z-50 w-72 sm:w-80 bg-base-200 rounded-lg shadow-xl p-4">
+                <div className="absolute top-full mt-2 right-0 z-50 w-72 sm:w-80 bg-base-200 rounded-lg shadow-xl p-4 outline-neutral-500 outline-1 ">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-medium text-base">Filter Questions</h3>
                         <button
                             onClick={handleResetAll}
                             className="btn btn-error btn-xs text-sm"
                         >
-                            Reset All
+                            Reset
                         </button>
                     </div>
 
