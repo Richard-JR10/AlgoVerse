@@ -148,7 +148,7 @@ const JumpSearch = () => {
         return steps;
     };
 
-    const animateSearch = async (input, target) => {
+    const animateSearch = async (input) => {
         try {
             setIsAnimating(true);
             const stringArray = input;
@@ -170,13 +170,6 @@ const JumpSearch = () => {
                 return;
             }
 
-            const targetNum = parseInt(target, 10);
-            if (isNaN(targetNum)) {
-                setError("Please enter a valid target number");
-                setIsAnimating(false);
-                return;
-            }
-
             // Sort the array for jump search
             const sortedArray = [...numArray].sort((a, b) => a - b);
 
@@ -194,12 +187,7 @@ const JumpSearch = () => {
             setCurrentBlock(null);
             setSearchResult(null);
 
-            const startTime = performance.now();
-            const searchSteps = jumpSearch(sortedArray, targetNum);
-            const endTime = performance.now();
-
-            setSteps(searchSteps);
-            setExecutionTime((endTime - startTime) / 1000);
+            setSteps([]);
             setIsSubmitting(false);
             isCancelledRef.current = false;
             setIsAnimating(false);
@@ -240,7 +228,7 @@ const JumpSearch = () => {
         e.preventDefault();
         if (isSubmitting || isAnimating) return;
         const input = inputValue.split(",").map(item => item.trim()).filter(Boolean);
-        await animateSearch(input, targetValue);
+        await animateSearch(input);
     };
 
     const isInitializedRef = useRef(false);
@@ -614,12 +602,12 @@ const JumpSearch = () => {
                             <input
                                 type="number"
                                 value={targetValue}
-                                className="input join-item rounded-l-lg w-full"
+                                className="input join-item w-full"
                                 onChange={handleTargetInput}
                                 placeholder="e.g., 42"
                             />
                             <button
-                                className="btn btn-primary join-item rounded-r-lg"
+                                className="btn btn-primary join-item"
                                 onClick={startSearching}
                                 disabled={isSubmitting || isAnimating || !targetValue}
                             >
@@ -648,13 +636,18 @@ const JumpSearch = () => {
                     <div className="flex flex-col sm:flex-row gap-2 md:gap-4 items-center justify-center w-full">
                         <div className="flex flex-row items-center gap-1 w-full min-w-3xs">
                             <div className="font-semibold text-sm">Array:</div>
-                            <input
-                                type="text"
-                                value={inputValue}
-                                className="input w-full"
-                                onChange={handleInput}
-                                placeholder="e.g., 12,23,34,45"
-                            />
+                            <div className="join w-full">
+                                <input
+                                    type="text"
+                                    value={inputValue}
+                                    className="input join-item w-full"
+                                    onChange={handleInput}
+                                    placeholder="e.g., 12,23,34,45"
+                                />
+                                <button className="btn btn-secondary join-item" onClick={handleSubmit}>
+                                    GO
+                                </button>
+                            </div>
                         </div>
                         <div className="flex flex-row items-center gap-1 w-full md:w-auto">
                             <div className="font-semibold text-sm">Size:</div>
@@ -662,10 +655,10 @@ const JumpSearch = () => {
                                 <input
                                     type="number"
                                     value={size}
-                                    className="input join-item rounded-l-lg w-full md:w-13"
+                                    className="input join-item w-full md:w-13"
                                     onChange={handleSizeInput}
                                 />
-                                <button className="btn btn-secondary join-item rounded-r-lg" onClick={handleRandom} disabled={isAnimating}>
+                                <button className="btn btn-primary join-item" onClick={handleRandom} disabled={isAnimating}>
                                     Random
                                 </button>
                             </div>
