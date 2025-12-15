@@ -96,14 +96,15 @@ const About = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                         {[
-                            { name: "Richard De Ocampo Jr.", role: "Full Stack Developer" },
-                            { name: "Mac Elroy Badar", role: "Project Manager" },
-                            { name: "Ian Aquino", role: "UI Designer" }
+                            { name: "Richard De Ocampo Jr.", role: "Full Stack Developer",image: "/public/pfp/badar.jpg"},
+                            { name: "Mac Elroy Badar", role: "Project Manager",image: "/public/pfp/badar.jpg"},
+                            { name: "Ian Aquino", role: "UI Designer",image: "/public/pfp/aquino.jpg"}
                         ].map((member, index) => (
                             <div key={index} className="card bg-base-100 shadow-xl w-full max-w-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                                 <div className="card-body items-center text-center p-8">
                                     <div className="avatar placeholder mb-6">
-                                        <div className="bg-gradient-to-br from-primary to-secondary text-primary-content rounded-full w-20 h-20">
+                                        <div className="rounded-full w-20 h-20">
+                                            <img className="w-20 h-20 rounded-full" src={member.image} alt={member.name} />
                                         </div>
                                     </div>
                                     <h3 className="card-title text-xl mb-2 text-center leading-tight">
@@ -309,7 +310,7 @@ const About = () => {
                                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                                         <polyline points="22,6 12,13 2,6"/>
                                     </svg>
-                                    contactus@algoverse.com
+                                    algoverse0805@gmail.com
                                 </div>
                             </div>
                         </div>
