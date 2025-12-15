@@ -518,13 +518,13 @@ const DFS = () => {
     const animateSingleStep = async (step) => {
         setIsAnimating(true);
         try {
+            if (step.visited) {  // Add this check
+                setVisited(step.visited);
+            }
             switch (step.type) {
                 case 'queue':
                     highlightNode(step.node, COLORS.NODE_QUEUED);
                     setQueue(prev => [...prev, step.node]);
-                    if (step.visited) {
-                        setVisited(step.visited);
-                    }
                     break;
                 case 'dequeue':
                     highlightNode(step.node, COLORS.NODE_CURRENT);
@@ -536,9 +536,6 @@ const DFS = () => {
                     break;
                 case 'explore':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
-                    if (step.visited) {
-                        setVisited(step.visited);
-                    }
                     break;
                 case 'visited':
                     resetEdgeHighlight(step.source, step.target);
@@ -577,13 +574,13 @@ const DFS = () => {
             setVisited([]);
             for (let i = 0; i <= prevStepIndex; i++) {
                 const step = steps[i];
+                if (step.visited) {  // Add this check
+                    setVisited(step.visited);
+                }
                 switch (step.type) {
                     case 'queue':
                         highlightNode(step.node, COLORS.NODE_QUEUED);
                         setQueue(prev => [...prev, step.node]);
-                        if (step.visited) {
-                            setVisited(step.visited);
-                        }
                         break;
                     case 'dequeue':
                         highlightNode(step.node, COLORS.NODE_CURRENT);
@@ -595,9 +592,6 @@ const DFS = () => {
                         break;
                     case 'explore':
                         highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
-                        if (step.visited) {
-                            setVisited(step.visited);
-                        }
                         break;
                     case 'visited':
                         resetEdgeHighlight(step.source, step.target);
