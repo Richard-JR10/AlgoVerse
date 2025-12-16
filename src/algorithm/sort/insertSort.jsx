@@ -37,7 +37,7 @@ const InsertSort = () => {
     const swappingColor = "green";
     const selectedColor = "red";
     const compareColor = "yellow";
-    const defaultColor = "#EDE2F3";
+    const defaultColor = "var(--bar-color)";
 
     useEffect(() => {
         soundRef.current = soundEnabled;

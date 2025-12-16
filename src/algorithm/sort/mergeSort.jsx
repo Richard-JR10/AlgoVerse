@@ -33,7 +33,7 @@ const MergeSort = () => {
     const leftHalfColor = "#FF0000"; // Red for left half
     const rightHalfColor = "#0000FF"; // Blue for right half
     const mergedColor = "#800080"; // Purple for merging
-    const defaultColor = "#EDE2F3"; // Grey for default
+    const defaultColor = "var(--bar-color)";
 
     useEffect(() => {
         soundRef.current = soundEnabled;

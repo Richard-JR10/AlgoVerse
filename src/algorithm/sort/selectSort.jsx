@@ -37,7 +37,7 @@ const SelectSort = () => {
     const swappingColor = "green";
     const compareColor = "yellow";
     const minColor = "red";
-    const defaultColor = "#EDE2F3";
+    const defaultColor = "var(--bar-color)";
 
     useEffect(() => {
         soundRef.current = soundEnabled;

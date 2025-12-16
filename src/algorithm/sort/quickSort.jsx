@@ -34,7 +34,7 @@ const QuickSort = () => {
     const pivotColor = "yellow";
     const compareColor = "red";
     const swapColor = "green";
-    const defaultColor = "#EDE2F3"
+    const defaultColor = "var(--bar-color)";
     const lessThanPivotColor = "#3cb371";
     const greaterThanPivotColor = "#9932cc";
 
