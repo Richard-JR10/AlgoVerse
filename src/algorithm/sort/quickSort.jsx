@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const QuickSort = () => {
     const [currentInput, setCurrentInput] = useState([]);
@@ -28,6 +31,9 @@ const QuickSort = () => {
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     // VisuAlgo-inspired colors
     const sortedColor = "orange";
@@ -37,6 +43,19 @@ const QuickSort = () => {
     const defaultColor = "var(--bar-color)";
     const lessThanPivotColor = "#3cb371";
     const greaterThanPivotColor = "#9932cc";
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     useEffect(() => {
         if (error) {
@@ -402,13 +421,15 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
+            await delay(speedRef.current / 2);
         } else if (step.type === "compare") {
             await highlightBars(
                 { pivotIndex: step.pivot, compareIndices: [step.left], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
+            await delay(speedRef.current / 2);
             const pivotValue = numberArr[step.pivot];
             const comparedValue = numberArr[step.left];
             if (comparedValue <= pivotValue) {
@@ -427,12 +448,15 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            await delay(speedRef.current / 2);
         } else if (step.type === "swap") {
             await highlightBars(
                 { pivotIndex: step.pivot, compareIndices: [step.index1, step.index2], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
+            if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
+            await delay(100);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('B4', '16n');
             // Perform swap on numberArr
             let newArray = [...numberArr];
             [newArray[step.index1], newArray[step.index2]] = [newArray[step.index2], newArray[step.index1]];
@@ -450,7 +474,7 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            await delay(speedRef.current / 2);
         } else if (step.type === "partition") {
             sortedIndices.push(step.pivot);
             lessThanIndices = [];
@@ -460,7 +484,8 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                 sortedIndices
             );
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('G5', '8n');
+            await delay(speedRef.current / 2);
         } else if (step.type === "sorted") {
             sortedIndices = [...new Set([...sortedIndices, ...step.indices])];
             lessThanIndices = [];
@@ -470,7 +495,8 @@ const QuickSort = () => {
                 { pivotIndex: null, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '4n');
+            await delay(speedRef.current / 2);
         }
 
         setIsAnimating(false);
@@ -603,6 +629,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
                         sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -613,6 +640,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [step.left], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
                         sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -656,11 +684,14 @@ const QuickSort = () => {
                     );
                     await swapBars(step.index1, step.index2, currentArray);
                     await drawBars(currentArray, false); // Enforce correct positions
-                    await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                    await delay(speedRef.current / 2);
                     await highlightBars(
                         { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
+                    await delay(100);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('B4', '16n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
                         sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -674,6 +705,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                         sortedIndices
                     );
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('G5', '8n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
                         sortingPromiseRef.current = { abort: () => clearTimeout(timeout) };
@@ -687,6 +719,7 @@ const QuickSort = () => {
                         { pivotIndex: null, compareIndices: [], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '4n');
                     await drawBars(currentArray, false);
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
@@ -984,6 +1017,8 @@ const QuickSort = () => {
                                 </button>
                             </div>
                         </div>
+
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>
