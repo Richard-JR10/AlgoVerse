@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import NavBar from "../../components/navBar.jsx";
 import axios from "axios";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const Binary = () => {
     const [inputValue, setInputValue] = useState("");
@@ -24,6 +27,9 @@ const Binary = () => {
     // Complexity display
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     // Visualization states
     const [highlightedIndices, setHighlightedIndices] = useState([]);
@@ -32,6 +38,17 @@ const Binary = () => {
     const [searchResult, setSearchResult] = useState(null);
 
     const isInitializedRef = useRef(false);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -122,27 +139,31 @@ const Binary = () => {
         if (step.type === "checking") {
             setMidIndex(step.index);
             setHighlightedIndices([step.index]);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             setSearchRange(step.left !== undefined ? { left: step.left, right: step.right } : null);
             setSearchResult(null);
         } else if (step.type === "search_left" || step.type === "search_right") {
             setSearchRange({ left: step.left, right: step.right });
+            if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
             setMidIndex(null);
             setHighlightedIndices([]);
         } else if (step.type === "found") {
             setMidIndex(step.index);
             setHighlightedIndices([step.index]);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
             setSearchResult({ found: true, index: step.index });
         } else if (step.type === "not_found") {
             setHighlightedIndices([]);
             setMidIndex(null);
             setSearchRange(null);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
             setSearchResult({ found: false });
         }
     };
 
     const stepForward = async () => {
         if (isAnimating || currentStepIndex >= searchSteps.length - 1 || searchSteps.length === 0) return;
-
+        await Tone.start();
         setIsAnimating(true);
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -174,6 +195,7 @@ const Binary = () => {
 
     const startSearching = async () => {
         try {
+            await Tone.start();
             setIsSearching(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -605,6 +627,7 @@ const Binary = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>

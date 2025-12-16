@@ -1,6 +1,9 @@
 import {useState, useEffect, useRef} from 'react';
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
 import NavBar from "../../components/navBar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const JumpSearch = () => {
     const [inputValue, setInputValue] = useState("");
@@ -22,6 +25,20 @@ const JumpSearch = () => {
     const [highlightedIndices, setHighlightedIndices] = useState([]);
     const [currentBlock, setCurrentBlock] = useState(null);
     const [searchResult, setSearchResult] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -251,11 +268,13 @@ const JumpSearch = () => {
         setNumberArr([...step.array]);
         setHighlightedIndices(step.indices || []);
         setCurrentBlock(step.blockStart !== undefined ? {start: step.blockStart, end: step.blockEnd} : null);
-
+        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
         if (step.type === "found") {
             setSearchResult({found: true, index: step.foundIndex});
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
         } else if (step.type === "not_found") {
             setSearchResult({found: false});
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
         }
 
         await new Promise(resolve => setTimeout(resolve, speedRef.current));
@@ -264,7 +283,7 @@ const JumpSearch = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex], true);
@@ -304,6 +323,7 @@ const JumpSearch = () => {
 
     const startSearching = async () => {
         if (numberArr.length > 0 && !isSearching && !isAnimating && targetValue) {
+            await Tone.start();
             setIsSearching(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -349,11 +369,13 @@ const JumpSearch = () => {
             setNumberArr([...step.array]);
             setHighlightedIndices(step.indices || []);
             setCurrentBlock(step.blockStart !== undefined ? {start: step.blockStart, end: step.blockEnd} : null);
-
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             if (step.type === "found") {
                 setSearchResult({found: true, index: step.foundIndex});
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
             } else if (step.type === "not_found") {
                 setSearchResult({found: false});
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
             }
 
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
@@ -663,6 +685,7 @@ const JumpSearch = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>

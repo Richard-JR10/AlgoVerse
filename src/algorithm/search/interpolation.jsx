@@ -1,6 +1,9 @@
 import {useState, useEffect, useRef} from 'react';
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 const InterpolationSearch = () => {
     const [inputValue, setInputValue] = useState("");
@@ -23,6 +26,20 @@ const InterpolationSearch = () => {
     const [searchRange, setSearchRange] = useState(null);
     const [searchResult, setSearchResult] = useState(null);
     const [probePosition, setProbePosition] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -292,7 +309,7 @@ const InterpolationSearch = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex], true);
@@ -320,13 +337,15 @@ const InterpolationSearch = () => {
         setHighlightedIndices(prevStep.indices || []);
         setSearchRange(prevStep.range || null);
         setProbePosition(prevStep.probePos !== undefined ? prevStep.probePos : null);
-
+        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
         if (prevStep.type === "found") {
             setSearchResult({found: true, index: prevStep.foundIndex});
         } else if (prevStep.type === "not_found") {
             setSearchResult({found: false});
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
         } else {
             setSearchResult(null);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
         }
 
         setIsAnimating(false);
@@ -334,6 +353,7 @@ const InterpolationSearch = () => {
 
     const startSearching = async () => {
         if (numberArr.length > 0 && !isSearching && !isAnimating && targetValue) {
+            await Tone.start();
             setIsSearching(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -381,11 +401,13 @@ const InterpolationSearch = () => {
             setHighlightedIndices(step.indices || []);
             setSearchRange(step.range || null);
             setProbePosition(step.probePos !== undefined ? step.probePos : null);
-
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             if (step.type === "found") {
                 setSearchResult({found: true, index: step.foundIndex});
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
             } else if (step.type === "not_found") {
                 setSearchResult({found: false});
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
             }
 
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
@@ -793,6 +815,7 @@ const InterpolationSearch = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>

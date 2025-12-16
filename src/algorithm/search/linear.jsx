@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import NavBar from "../../components/navBar.jsx";
 import axios from "axios";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const Linear = () => {
     const [inputValue, setInputValue] = useState("");
@@ -24,12 +27,26 @@ const Linear = () => {
     // Complexity display
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     // Visualization states
     const [highlightedIndex, setHighlightedIndex] = useState(null);
     const [searchResult, setSearchResult] = useState(null);
 
     const isInitializedRef = useRef(false);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -100,19 +117,22 @@ const Linear = () => {
     const executeStep = (step) => {
         if (step.type === "checking") {
             setHighlightedIndex(step.index);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             setSearchResult(null);
         } else if (step.type === "found") {
             setHighlightedIndex(step.index);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
             setSearchResult({ found: true, index: step.index });
         } else if (step.type === "not_found") {
             setHighlightedIndex(null);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
             setSearchResult({ found: false });
         }
     };
 
     const stepForward = async () => {
         if (isAnimating || currentStepIndex >= searchSteps.length - 1 || searchSteps.length === 0) return;
-
+        await Tone.start();
         setIsAnimating(true);
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
@@ -142,6 +162,7 @@ const Linear = () => {
 
     const startSearching = async () => {
         try {
+            await Tone.start();
             setIsSearching(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -532,6 +553,7 @@ const Linear = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>
