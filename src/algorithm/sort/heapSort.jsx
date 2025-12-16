@@ -1,6 +1,9 @@
 import {useState, useEffect, useRef} from 'react';
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const HeapSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -20,6 +23,20 @@ const HeapSort = () => {
     const [executionTime, setExecutionTime] = useState(null);
     const [highlightedNodes, setHighlightedNodes] = useState([]);
     const [sortedArray, setSortedArray] = useState([]);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -271,18 +288,25 @@ const HeapSort = () => {
 
         if (step.type === "compare") {
             setHighlightedNodes(step.indices);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
         } else if (step.type === "swap") {
             setHighlightedNodes(step.indices);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
         } else if (step.type === "extract") {
             setHighlightedNodes(step.indices);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('D5', '8n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
         } else if (step.type === "build" || step.type === "heap_complete") {
             setHighlightedNodes([]);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '8n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
         } else if (step.type === "complete") {
             setHighlightedNodes([]);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '12n');
         }
 
         setIsAnimating(false);
@@ -290,7 +314,7 @@ const HeapSort = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex], true);
@@ -321,6 +345,7 @@ const HeapSort = () => {
 
     const startSorting = async () => {
         if (numberArr.length > 0 && !isSorting && !isAnimating) {
+            await Tone.start();
             setIsSorting(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -360,18 +385,25 @@ const HeapSort = () => {
 
             if (step.type === "compare") {
                 setHighlightedNodes(step.indices);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             } else if (step.type === "swap") {
                 setHighlightedNodes(step.indices);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n');
+                await new Promise(resolve => setTimeout(resolve, 100));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             } else if (step.type === "extract") {
                 setHighlightedNodes(step.indices);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('D5', '8n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             } else if (step.type === "build" || step.type === "heap_complete") {
                 setHighlightedNodes([]);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '8n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "complete") {
                 setHighlightedNodes([]);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '12n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             }
         }
@@ -720,6 +752,7 @@ const HeapSort = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>
