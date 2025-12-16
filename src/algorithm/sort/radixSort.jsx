@@ -1,6 +1,9 @@
 import {useState, useEffect, useRef} from 'react';
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 const RadixSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -21,6 +24,22 @@ const RadixSort = () => {
     const [currentDigitPosition, setCurrentDigitPosition] = useState(null);
     const [highlightedIndex, setHighlightedIndex] = useState(null);
     const [highlightedBucket, setHighlightedBucket] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     useEffect(() => {
         if (error) {
@@ -229,25 +248,30 @@ const RadixSort = () => {
         if (step.type === "pass") {
             setNumberArr([...step.array]);
             setCurrentDigitPosition(step.digit);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C3', '4n');
             setHighlightedIndex(null);
             setHighlightedBucket(null);
         } else if (step.type === "highlight") {
             setHighlightedIndex(step.index);
             setHighlightedBucket(step.bucketIndex);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
         } else if (step.type === "place") {
             setHighlightedIndex(null);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
         } else if (step.type === "reconstruct") {
             setNumberArr([...step.array]);
             setHighlightedIndex(null);
             setHighlightedBucket(null);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '8n');
             await new Promise(resolve => setTimeout(resolve, speedRef.current));
         } else if (step.type === "complete") {
             setNumberArr([...step.array]);
             setCurrentDigitPosition(null);
             setHighlightedIndex(null);
             setHighlightedBucket(null);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '2n');
         }
 
         setIsAnimating(false);
@@ -255,7 +279,7 @@ const RadixSort = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex], true);
@@ -299,6 +323,7 @@ const RadixSort = () => {
 
     const startSorting = async () => {
         if (numberArr.length > 0 && !isSorting && !isAnimating) {
+            await Tone.start();
             setIsSorting(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -338,24 +363,29 @@ const RadixSort = () => {
                 setCurrentDigitPosition(step.digit);
                 setHighlightedIndex(null);
                 setHighlightedBucket(null);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C3', '4n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "highlight") {
                 setHighlightedIndex(step.index);
                 setHighlightedBucket(step.bucketIndex);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             } else if (step.type === "place") {
                 setHighlightedIndex(null);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
             } else if (step.type === "reconstruct") {
                 setNumberArr([...step.array]);
                 setHighlightedIndex(null);
                 setHighlightedBucket(null);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '8n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             } else if (step.type === "complete") {
                 setNumberArr([...step.array]);
                 setCurrentDigitPosition(null);
                 setHighlightedIndex(null);
                 setHighlightedBucket(null);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '12n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             }
         }
@@ -631,6 +661,7 @@ const RadixSort = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>
