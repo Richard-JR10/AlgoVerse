@@ -4,6 +4,7 @@ import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
 import {useSound} from "../../context/soundContext.jsx";
 import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 // Constants
 const COLORS = {
@@ -679,6 +680,7 @@ const TreeTraversal = () => {
                             </button>
                         </div>
                     </div>
+                    <SoundToggle/>
                 </div>
             </div>
 
