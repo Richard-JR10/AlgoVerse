@@ -81,6 +81,9 @@ const ChallengeTable = ({ challenges }) => {
                                     {question.difficulty}
                                 </span>
                             </td>
+                            <td className="text-success font-bold">
+                                +{question.difficulty === "Hard" ? 3 : question.difficulty === "Medium" ? 2 : 1}pts
+                            </td>
                             <td>
                                 <ArrowButton id={question.id} difficulty={question.difficulty} type={question.type} question={question.questions} />
                             </td>
