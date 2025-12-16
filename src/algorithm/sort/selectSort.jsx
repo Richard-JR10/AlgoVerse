@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const SelectSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -21,6 +24,9 @@ const SelectSort = () => {
     const initialArrayRef = useRef([]);
     const isInitializedRef = useRef(false);
     const movedBarsRef = useRef([]);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
@@ -32,6 +38,19 @@ const SelectSort = () => {
     const compareColor = "yellow";
     const minColor = "red";
     const defaultColor = "#EDE2F3";
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     useEffect(() => {
         if (error) {
@@ -368,19 +387,25 @@ const SelectSort = () => {
 
         if (step.type === "minimum") {
             highlightBars(step.indices, minColor, sortedIndices);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('A3', '8n');
+            await delay(speedRef.current / 2);
         } else if (step.type === "compare") {
             highlightCompare(step.indices, sortedIndices);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
+            await delay(speedRef.current / 2);
         } else if (step.type === "swap") {
             highlightBars(step.indices, swappingColor, sortedIndices);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
+            await delay(100);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '8n');
             await swapBars(step.indices[0], step.indices[1], step.array);
             setNumberArr([...step.array]);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            await delay(speedRef.current / 2);
         } else if (step.type === "sorted") {
             sortedIndices.push(step.index);
             highlightBars(sortedIndices, sortedColor);
-            await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
+            await delay(speedRef.current / 2);
         }
 
         setIsAnimating(false);
@@ -388,7 +413,7 @@ const SelectSort = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex]);
@@ -446,25 +471,32 @@ const SelectSort = () => {
             if (isCancelledRef.current) break;
             if (step.type === "minimum") {
                 highlightBars(step.indices, minColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('A3', '8n');
+                await delay(speedRef.current / 2);
             } else if (step.type === "compare") {
                 highlightCompare(step.indices, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
+                await delay(speedRef.current / 2);
             } else if (step.type === "swap") {
                 highlightBars(step.indices, swappingColor, sortedIndices);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
+                await delay(100);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '8n');
                 await swapBars(step.indices[0], step.indices[1], step.array);
                 setNumberArr([...step.array]);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                await delay(speedRef.current / 2);
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
+                await delay(speedRef.current / 2);
             }
         }
     };
 
     const startSorting = async () => {
         if (numberArr.length > 0 && !isSorting && !isAnimating) {
+            await Tone.start();
             setIsSorting(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
@@ -703,6 +735,8 @@ const SelectSort = () => {
                                 </button>
                             </div>
                         </div>
+
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>

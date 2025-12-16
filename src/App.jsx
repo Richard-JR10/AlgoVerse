@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { AuthProvider, useAuth } from "./Auth/AuthContext.jsx";
 import { ErrorProvider } from "./context/errorContext.jsx";
 import { ThemeProvider } from './context/themeContext';
+import { SoundProvider } from './context/soundContext.jsx';
 import { BrowserRouter, Navigate, Route, Routes, Outlet } from "react-router-dom";
 import LoginForm from "./components/loginForm.jsx";
 import HomePage from "./components/homePage.jsx";
@@ -62,6 +63,7 @@ const AdminRoute = () => {
 
 const App = () => (
     <ThemeProvider>
+        <SoundProvider>
         <ErrorProvider>
             <AuthProvider>
                 <ChallengeProvider>
@@ -72,6 +74,7 @@ const App = () => (
                 </ChallengeProvider>
             </AuthProvider>
         </ErrorProvider>
+        </SoundProvider>
     </ThemeProvider>
 );
 

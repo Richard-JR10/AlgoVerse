@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
 
 const MergeSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -21,6 +24,9 @@ const MergeSort = () => {
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const initialArrayRef = useRef([]);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     // VisuAlgo-inspired colors
     const sortedColor = "#00FF00"; // Green for sorted
@@ -28,6 +34,19 @@ const MergeSort = () => {
     const rightHalfColor = "#0000FF"; // Blue for right half
     const mergedColor = "#800080"; // Purple for merging
     const defaultColor = "#EDE2F3"; // Grey for default
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
+
+    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     useEffect(() => {
         if (error) {
@@ -489,23 +508,29 @@ const MergeSort = () => {
                 const leftIndices = Array.from({ length: step.mid - step.left + 1 }, (_, i) => step.left + i);
                 const rightIndices = Array.from({ length: step.right - step.mid }, (_, i) => step.mid + 1 + i);
                 await highlightBars(leftIndices, leftHalfColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
+                await delay(100);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
+                await delay(speedRef.current / 2);
                 await highlightBars(rightIndices, rightHalfColor, sortedIndices);
             } else if (step.type === "recurse") {
                 const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                 indices.forEach(i => { depthMap[i] = step.depth; });
                 await drawBars(currentArray, true, depthMap);
                 await highlightBars(indices, defaultColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('G3', '8n');
+                await delay(speedRef.current / 2);
             } else if (step.type === "backtrack") {
                 const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                 indices.forEach(i => { depthMap[i] = Math.max(0, (depthMap[i] || 0) - 1); });
                 await drawBars(currentArray, true, depthMap);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('A3', '8n');
+                await delay(speedRef.current / 2);
             } else if (step.type === "merge_before") {
                 const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                 await highlightBars(indices, leftHalfColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
+                await delay(speedRef.current / 2);
             } else if (step.type === "merge_after") {
                 const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                 if (step.after_array && step.before_array) {
@@ -514,7 +539,8 @@ const MergeSort = () => {
                     setNumberArr([...currentArray]);
                     await drawBars(currentArray, false, depthMap, false);
                     await highlightBars(indices, mergedColor, sortedIndices);
-                    await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '4n');
+                    await delay(speedRef.current / 2);
                 }
             } else if (step.type === "sorted") {
                 const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
@@ -522,7 +548,8 @@ const MergeSort = () => {
                 indices.forEach(i => { depthMap[i] = Math.max(0, (depthMap[i] || 0) - 1); });
                 await drawBars(currentArray, true, depthMap);
                 await highlightBars(indices, sortedColor, sortedIndices);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
+                await delay(speedRef.current / 2);
             }
         } catch (err) {
             setError(`Error in step: ${err.message}`);
@@ -533,7 +560,7 @@ const MergeSort = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex], true);
@@ -612,21 +639,27 @@ const MergeSort = () => {
                     const rightIndices = Array.from({ length: step.right - step.mid }, (_, i) => step.mid + i + 1);
                     await highlightBars(leftIndices, leftHalfColor, sortedIndices);
                     await highlightBars(rightIndices, rightHalfColor, sortedIndices);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
+                    await delay(100);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
                 } else if (step.type === "recurse") {
                     const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                     indices.forEach(i => { depthMap[i] = step.depth; });
                     await drawBars(currentArray, true, depthMap);
                     await highlightBars(indices, defaultColor, sortedIndices);
-                    await new Promise(resolve => setTimeout(resolve, speedRef.current));
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('G3', '8n');
+                    await delay(speedRef.current);
                 } else if (step.type === "backtrack") {
                     const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                     indices.forEach(i => { depthMap[i] = Math.max(0, (depthMap[i] || 0) - 1); });
                     await drawBars(currentArray, true, depthMap);
-                    await new Promise(resolve => setTimeout(resolve, speedRef.current));
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('A3', '8n');
+                    await delay(speedRef.current);
                 } else if (step.type === "merge_before") {
                     const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                     await highlightBars(indices, leftHalfColor, sortedIndices);
-                    await new Promise(resolve => setTimeout(resolve, speedRef.current));
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
+                    await delay(speedRef.current);
                 } else if (step.type === "merge_after") {
                     const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
                     if (step.after_array && step.before_array) {
@@ -635,7 +668,8 @@ const MergeSort = () => {
                         setNumberArr([...currentArray]);
                         await drawBars(currentArray, false, depthMap, false);
                         await highlightBars(indices, mergedColor, sortedIndices);
-                        await new Promise(resolve => setTimeout(resolve, speedRef.current * 1.5));
+                        if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '4n');
+                        await delay(speedRef.current * 1.5);
                     }
                 } else if (step.type === "sorted") {
                     const indices = Array.from({ length: step.right - step.left + 1 }, (_, i) => step.left + i);
@@ -644,7 +678,8 @@ const MergeSort = () => {
                     indices.forEach(i => { depthMap[i] = Math.max(0, (depthMap[i] || 0) + adjustment); });
                     await drawBars(currentArray, true, depthMap);
                     await highlightBars(indices, sortedColor, sortedIndices);
-                    await new Promise(resolve => setTimeout(resolve, speedRef.current));
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
+                    await delay(speedRef.current);
                 }
             } catch (err) {
                 setError(`Error processing step ${i}: ${err.message}`);
@@ -660,7 +695,7 @@ const MergeSort = () => {
             return;
         }
         if (isSorting || isAnimating) return;
-
+        await Tone.start();
         setIsSorting(true);
         setIsAnimating(true);
         isCancelledRef.current = false;
@@ -884,6 +919,8 @@ const MergeSort = () => {
                                 </button>
                             </div>
                         </div>
+
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>

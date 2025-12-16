@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
 import axios from "axios";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import SoundToggle from "/src/components/utils/soundToggle.jsx";
 
 // Constants for visualization
 const COLORS = {
@@ -1025,6 +1026,7 @@ const Dijkstra = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
 
                     </div>
                 </div>

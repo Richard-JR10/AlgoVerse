@@ -4,6 +4,8 @@ import axios from "axios";
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
 import * as Tone from 'tone';
+import SoundToggle from "../../components/utils/soundToggle.jsx";
+import { useSound } from '../../context/soundContext.jsx';
 
 const BubbleSort = () => {
     const [inputValue, setInputValue] = useState("");
@@ -24,12 +26,17 @@ const BubbleSort = () => {
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
     const synthRef = useRef(null);
-
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
     // Sorting colors
     const sortedColor = "orange";
     const swappingColor = "green";
     const compareColor = "yellow";
-    const defaultColor = "#EDE2F3";
+    const defaultColor = "var(--bar-color)";
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
 
     useEffect(() => {
         synthRef.current = new Tone.Synth().toDestination();
@@ -360,9 +367,9 @@ const BubbleSort = () => {
         if (step.type === "compare") {
             highlightBars(step.indices, compareColor, sortedIndices);
             if (isForward) {
-                synthRef.current.triggerAttackRelease('C4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '8n');
                 await delay(100);
-                synthRef.current.triggerAttackRelease('D4', '8n');
+                if (soundRef.current)  synthRef.current.triggerAttackRelease('D4', '8n');
                 await delay(speedRef.current / 2 - 200);
             } else {
                 await delay(speedRef.current / 2);
@@ -370,9 +377,9 @@ const BubbleSort = () => {
         } else if (step.type === "swap") {
             highlightBars(step.indices, swappingColor, sortedIndices);
             if (isForward) {
-                synthRef.current.triggerAttackRelease('E4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
                 await delay(100);
-                synthRef.current.triggerAttackRelease('F4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '8n');
             }
             await swapBars(
                 step.indices[isForward ? 0 : 1],
@@ -385,7 +392,7 @@ const BubbleSort = () => {
             sortedIndices.push(step.index);
             highlightBars(sortedIndices, sortedColor);
             if (isForward) {
-                synthRef.current.triggerAttackRelease('G4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '8n');
                 await delay(100);
             }
             await delay(speedRef.current / 2);
@@ -504,22 +511,22 @@ const BubbleSort = () => {
             const step = steps[i];
             if (step.type === "compare") {
                 highlightBars(step.indices, compareColor, sortedIndices);
-                synthRef.current.triggerAttackRelease('C4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '8n');
                 await delay(100);
-                synthRef.current.triggerAttackRelease('D4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
                 await delay(speedRef.current / 2 - 200);
             } else if (step.type === "swap") {
                 highlightBars(step.indices, swappingColor, sortedIndices);
-                synthRef.current.triggerAttackRelease('E4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
                 await delay(100);
-                synthRef.current.triggerAttackRelease('F4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '8n');
                 await swapBars(step.indices[0], step.indices[1], step.array);
                 setNumberArr([...step.array]);
                 await delay(speedRef.current / 2);
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
-                synthRef.current.triggerAttackRelease('G4', '8n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '8n');
                 await delay(100);
                 await delay(speedRef.current / 2);
             }
@@ -720,6 +727,8 @@ const BubbleSort = () => {
                                 </button>
                             </div>
                         </div>
+
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>
