@@ -17,7 +17,7 @@ html, body, #root {
   --scrollbar-width: calc(100vw - 100%);
   --index-color: #000000;
   --visual-font: #000000;
-  --bar-color: #d1afe8;
+  --bar-color: #9f2dec;
 }
 
 [data-theme="dark"] {
