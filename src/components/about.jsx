@@ -96,9 +96,9 @@ const About = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                         {[
-                            { name: "Richard De Ocampo Jr.", role: "Full Stack Developer",image: "public/pfp/badar.jpg"},
-                            { name: "Mac Elroy Badar", role: "Project Manager",image: "public/pfp/badar.jpg"},
-                            { name: "Ian Aquino", role: "UI Designer",image: "public/pfp/aquino.jpg"}
+                            { name: "Richard De Ocampo Jr.", role: "Full Stack Developer",image: "/pfp/badar.jpg"},
+                            { name: "Mac Elroy Badar", role: "Project Manager",image: "/pfp/badar.jpg"},
+                            { name: "Ian Aquino", role: "UI Designer",image: "/pfp/aquino.jpg"}
                         ].map((member, index) => (
                             <div key={index} className="card bg-base-100 shadow-xl w-full max-w-sm hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
                                 <div className="card-body items-center text-center p-8">
