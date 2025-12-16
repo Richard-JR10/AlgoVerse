@@ -3,6 +3,8 @@ import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
 import axios from "axios";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 // Constants for visualization
 const COLORS = {
@@ -60,8 +62,22 @@ const DFS = () => {
     const isInitializedRef = useRef(false);
     const [queue, setQueue] = useState([]);
     const [visited, setVisited] = useState([]);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -525,6 +541,7 @@ const DFS = () => {
                 case 'queue':
                     highlightNode(step.node, COLORS.NODE_QUEUED);
                     setQueue(prev => [...prev, step.node]);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
                     break;
                 case 'dequeue':
                     highlightNode(step.node, COLORS.NODE_CURRENT);
@@ -533,15 +550,19 @@ const DFS = () => {
                         if (lastIndex === -1) return prev;
                         return [...prev.slice(0, lastIndex), ...prev.slice(lastIndex + 1)];
                     });
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
                     break;
                 case 'explore':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '32n');
                     break;
                 case 'visited':
                     resetEdgeHighlight(step.source, step.target);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '32n');
                     break;
                 case 'visit':
                 case 'finish':
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '16n');
                     highlightNode(step.node, COLORS.NODE_VISITED);
                     break;
             }
@@ -555,7 +576,7 @@ const DFS = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex]);
@@ -633,7 +654,7 @@ const DFS = () => {
         }
 
         if (isSorting || isAnimating) return;
-
+        await Tone.start();
         setIsSorting(true);
         setIsAnimating(true);
         isCancelledRef.current = false;
@@ -681,7 +702,7 @@ const DFS = () => {
         };
         const timer = setTimeout(initializeVisualization, 100);
         return () => clearTimeout(timer);
-    }, []);
+    }, [speed]);
 
     return (
         <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 relative">
@@ -929,7 +950,7 @@ const DFS = () => {
                                 onClick={startTraversalDFS}
                                 disabled={!startNode || Object.keys(adjacencyList).length === 0 || isSubmitting || isAnimating || isSorting}
                             >
-                                Start DFS
+                                Start
                             </button>
                         </div>
                     </div>

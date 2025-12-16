@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
 import axios from "axios";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 // Constants for visualization
 const COLORS = {
@@ -58,9 +61,22 @@ const Kruskal = () => {
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
-    const [visited, setVisited] = useState([]);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -540,14 +556,17 @@ const Kruskal = () => {
             switch (step.type) {
                 case 'consider':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
                     break;
                 case 'reject':
                     resetEdgeHighlight(step.source, step.target);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
                     break;
                 case 'add':
                     highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
                     highlightNode(step.source, COLORS.NODE_VISITED);
                     highlightNode(step.target, COLORS.NODE_VISITED);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
                     break;
             }
             await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
@@ -560,7 +579,7 @@ const Kruskal = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex]);
@@ -617,7 +636,7 @@ const Kruskal = () => {
         }
 
         if (isSorting || isAnimating) return;
-
+        await Tone.start();
         setIsSorting(true);
         setIsAnimating(true);
         isCancelledRef.current = false;
@@ -809,7 +828,7 @@ const Kruskal = () => {
                                 onClick={startTraversalKruskal}
                                 disabled={Object.keys(adjacencyList).length === 0 || isSubmitting || isAnimating || isSorting}
                             >
-                                Start Kruskal
+                                Start
                             </button>
                         </div>
                     </div>
@@ -870,6 +889,7 @@ const Kruskal = () => {
                                 </button>
                             </div>
                         </div>
+                        <SoundToggle/>
                     </div>
                 </div>
             </div>

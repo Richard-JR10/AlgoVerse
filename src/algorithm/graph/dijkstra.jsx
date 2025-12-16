@@ -4,6 +4,8 @@ import NavBar from '../../components/navBar.jsx';
 import axios from "axios";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
 import SoundToggle from "/src/components/utils/soundToggle.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 // Constants for visualization
 const COLORS = {
@@ -61,8 +63,22 @@ const Dijkstra = () => {
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
     const [visited, setVisited] = useState([]);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     const baseURL = 'https://algoverse-backend-python.onrender.com';
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -615,25 +631,32 @@ const Dijkstra = () => {
             switch (step.type) {
                 case 'queue':
                     highlightNode(step.node, COLORS.NODE_QUEUED);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
                     break;
                 case 'dequeue':
                     highlightNode(step.node, COLORS.NODE_CURRENT);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
                     break;
                 case 'explore':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '32n');
                     break;
                 case 'visited':
                     resetEdgeHighlight(step.source, step.target);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '32n');
                     break;
                 case 'visit':
                 case 'finish':
                     highlightNode(step.node, COLORS.NODE_VISITED, step.distance);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '16n');
                     break;
                 case 'distance':
                     highlightNode(step.node, step.node === startNode ? COLORS.NODE_QUEUED : COLORS.NODE_VISITED, step.distance);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '32n');
                     break;
                 case 'path':
                     highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('E5', '16n');
                     break;
             }
             await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
@@ -646,6 +669,7 @@ const Dijkstra = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
+        await Tone.start();
         const nextStepIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextStepIndex);
         await animateSingleStep(steps[nextStepIndex]);
@@ -719,6 +743,7 @@ const Dijkstra = () => {
             return;
         }
         if (isSorting || isAnimating) return;
+        await Tone.start();
         setIsSorting(true);
         setIsAnimating(true);
         isCancelledRef.current = false;
@@ -965,7 +990,7 @@ const Dijkstra = () => {
                                 onClick={startTraversalDijkstra}
                                 disabled={!startNode || Object.keys(adjacencyList).length === 0 || isSubmitting || isAnimating || isSorting}
                             >
-                                Start Dijkstra
+                                Start
                             </button>
                         </div>
                     </div>

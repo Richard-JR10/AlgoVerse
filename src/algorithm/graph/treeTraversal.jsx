@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import NavBar from "../../components/navBar.jsx";
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 // Constants
 const COLORS = {
@@ -36,10 +38,28 @@ const TreeTraversal = () => {
     const [executionTime, setExecutionTime] = useState(null);
     const [showComplexity, setShowComplexity] = useState(false);
     const [size, setSize] = useState(7);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
+
+    useEffect(() => {
+        speedRef.current = speed;
+    }, [speed]);
 
     // Tree Node class
     class TreeNode {
@@ -240,16 +260,21 @@ const TreeTraversal = () => {
     };
 
     // Animation
-    const animateSingleStep = async (step) => {
+    const animateSingleStep = async (step, visitedNodes) => {
         switch(step.type) {
             case 'visit':
-                highlightNode(step.node, COLORS.NODE_QUEUED);
+                // Only highlight if node hasn't been visited yet
+                if (!visitedNodes.includes(step.node)) {
+                    highlightNode(step.node, COLORS.NODE_QUEUED);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '32n');
+                }
                 break;
             case 'process':
                 highlightNode(step.node, COLORS.NODE_CURRENT);
-                await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
+                await new Promise(resolve => setTimeout(resolve, speedRef.current));
                 highlightNode(step.node, COLORS.NODE_VISITED);
                 setVisited(prev => [...prev, step.node]);
+                if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
                 break;
         }
         await new Promise(resolve => setTimeout(resolve, speedRef.current / 2));
@@ -257,20 +282,23 @@ const TreeTraversal = () => {
 
     const startTraversal = async () => {
         if (!tree || isAnimating) return;
-
         setIsAnimating(true);
         isCancelledRef.current = false;
         resetHighlight();
         setVisited([]);
         setCurrentStepIndex(-1);
-
+        await Tone.start();
         const traversalSteps = getTraversalSteps(tree, traversalType);
         setSteps(traversalSteps);
 
+        const visitedNodes = [];
         for (let i = 0; i < traversalSteps.length; i++) {
             if (isCancelledRef.current) break;
             setCurrentStepIndex(i);
-            await animateSingleStep(traversalSteps[i]);
+            await animateSingleStep(traversalSteps[i], visitedNodes);
+            if (traversalSteps[i].type === 'process') {
+                visitedNodes.push(traversalSteps[i].node);
+            }
         }
 
         setIsAnimating(false);
@@ -278,10 +306,19 @@ const TreeTraversal = () => {
 
     const handleStepForward = async () => {
         if (isAnimating || currentStepIndex >= steps.length - 1 || steps.length === 0) return;
-
+        await Tone.start();
         const nextIndex = currentStepIndex + 1;
         setCurrentStepIndex(nextIndex);
-        await animateSingleStep(steps[nextIndex]);
+
+        // Track visited nodes up to current step
+        const visitedNodes = [];
+        for (let i = 0; i <= currentStepIndex; i++) {
+            if (steps[i].type === 'process') {
+                visitedNodes.push(steps[i].node);
+            }
+        }
+
+        await animateSingleStep(steps[nextIndex], visitedNodes);
     };
 
     const handleStepBackward = () => {
@@ -296,7 +333,10 @@ const TreeTraversal = () => {
         for (let i = 0; i <= prevIndex; i++) {
             const step = steps[i];
             if (step.type === 'visit') {
-                highlightNode(step.node, COLORS.NODE_QUEUED);
+                const alreadyVisited = newVisited.includes(step.node);
+                if (!alreadyVisited) {
+                    highlightNode(step.node, COLORS.NODE_QUEUED);
+                }
             } else if (step.type === 'process') {
                 highlightNode(step.node, COLORS.NODE_VISITED);
                 newVisited.push(step.node);
@@ -380,10 +420,6 @@ const TreeTraversal = () => {
     }, [traversalType]);
 
     useEffect(() => {
-        speedRef.current = speed;
-    }, [speed]);
-
-    useEffect(() => {
         if (error) {
             const timer = setTimeout(() => setError(null), 5000);
             return () => clearTimeout(timer);
@@ -399,7 +435,7 @@ const TreeTraversal = () => {
             <NavBar/>
             <AlgorithmNavbar/>
             {/* Algorithm Performance Analysis */}
-            <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8 mt-4">
                 <div className="max-w-7xl mx-auto">
                     <div className="collapse collapse-arrow bg-base-100 shadow-md border border-base-300 rounded-2xl overflow-hidden">
                         <input
@@ -420,7 +456,6 @@ const TreeTraversal = () => {
                         <div className="collapse-content bg-base-100">
                             <div className="pt-6">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                    {/* Theoretical Complexity */}
                                     <div className="card bg-base-100 border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300">
                                         <div className="card-body p-6">
                                             <div className="flex items-center gap-3 mb-4">
@@ -446,7 +481,6 @@ const TreeTraversal = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    {/* Execution Time */}
                                     <div className="card bg-base-100 border border-secondary/20 shadow-lg hover:shadow-xl transition-all duration-300">
                                         <div className="card-body p-6">
                                             <div className="flex items-center gap-3 mb-4">
