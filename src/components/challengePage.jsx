@@ -308,30 +308,33 @@ const ChallengePage = () => {
                         <div className="col-span-1 lg:col-span-3">
                             <div className="card w-full bg-base-100 shadow-xl min-h-64">
                                 <div className="card-body p-4 sm:p-6">
-                                    <div className="flex flex-row items-start justify-end lg:items-center gap-3 lg:gap-0">
-                                        {/* Search bar - Full width on mobile to md, auto width on lg */}
-                                        <label className="input input-sm sm:input-md w-full lg:max-w-69 mr-2">
-                                            <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                                                <g
-                                                    strokeLinejoin="round"
-                                                    strokeLinecap="round"
-                                                    strokeWidth="2.5"
-                                                    fill="none"
-                                                    stroke="currentColor"
-                                                >
-                                                    <circle cx="11" cy="11" r="8"></circle>
-                                                    <path d="m21 21-4.3-4.3"></path>
-                                                </g>
-                                            </svg>
-                                            <input onChange={handleSearch} type="search" required placeholder="Search" className="w-full" />
-                                        </label>
+                                    <div className="flex flex-row items-center justify-between w-full">
+                                        <div className="hidden lg:block font-bold text-xl mr-2">Challenges</div>
+                                        <div className="flex flex-row items-start justify-end lg:items-center gap-3 lg:gap-0 w-full md:w-auto flex-grow">
+                                            {/* Search bar - Full width on mobile to md, auto width on lg */}
+                                            <label className="input input-sm sm:input-md w-full lg:max-w-69 mr-2">
+                                                <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                    <g
+                                                        strokeLinejoin="round"
+                                                        strokeLinecap="round"
+                                                        strokeWidth="2.5"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                    >
+                                                        <circle cx="11" cy="11" r="8"></circle>
+                                                        <path d="m21 21-4.3-4.3"></path>
+                                                    </g>
+                                                </svg>
+                                                <input onChange={handleSearch} type="search" required placeholder="Search" className="w-full" />
+                                            </label>
 
-                                        {/* New FilterButton Component */}
-                                        <FilterButton
-                                            filters={filters}
-                                            onFilterChange={handleFilterChange}
-                                            onResetFilters={handleResetFilters}
-                                        />
+                                            {/* New FilterButton Component */}
+                                            <FilterButton
+                                                filters={filters}
+                                                onFilterChange={handleFilterChange}
+                                                onResetFilters={handleResetFilters}
+                                            />
+                                        </div>
                                     </div>
                                     <ChallengeTable challenges={displayEntries}/>
                                 </div>
