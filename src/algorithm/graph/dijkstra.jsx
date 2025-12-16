@@ -489,7 +489,7 @@ const Dijkstra = () => {
             .attr('class', 'distance-label')
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'hanging')
-            .attr('fill', 'white')
+            .attr('fill', "var(--index-color)")
             .attr('font-size', '12px')
             .attr('dy', '20px')
             .text(d => (d.distance === Infinity ? '' : d.distance));
