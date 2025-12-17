@@ -48,7 +48,7 @@ const PrivateRoute = () => {
     const { user, loading } = useAuth();
 
     if (loading) {
-        return <div className="flex justify-center items-center h-screen">Loading...</div>;
+        return <div className="flex justify-center items-center h-screen"><span className="loading loading-spinner loading-xl"></span></div>;
     }
 
     return user ? <Outlet /> : <Navigate to="/" replace />;
@@ -57,7 +57,7 @@ const PrivateRoute = () => {
 // AdminRoute for admin-only access
 const AdminRoute = () => {
     const { user, loading } = useAuth();
-    if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
+    if (loading) return <div className="flex justify-center items-center h-screen"><span className="loading loading-spinner loading-xl"></span></div>;
     return user && user.admin ? <Outlet /> : <Navigate to="/" replace />;
 };
 
@@ -86,7 +86,7 @@ const AppRoutes = React.memo(() => {
     // }
 
     return (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div><span className="loading loading-spinner loading-xl"></span></div>}>
             <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={!user ? <HomePage /> : <Navigate to="/visualizer" replace />} />
