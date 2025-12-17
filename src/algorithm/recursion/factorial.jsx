@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import NavBar from '../../components/navBar.jsx';
 import axios from 'axios';
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 const FactorialVisualization = () => {
     const [inputValue, setInputValue] = useState('10');
@@ -19,12 +22,27 @@ const FactorialVisualization = () => {
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
 
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
 
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
@@ -38,18 +56,14 @@ const FactorialVisualization = () => {
         setInputValue(e.target.value);
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        if (isSubmitting) return;
-
-        const input = parseInt(inputValue.trim(), 10);
-        if (isNaN(input) || input < 0 || input > 12) {
-            setError('Please enter a valid number between 0 and 12');
-            return;
-        }
-
-        setNumber(input);
-        await initializeVisualization(input);
+    const addHighlights = (rawSteps) => {
+        return rawSteps.map(step => {
+            if (step.type === 'base') {
+                return {...step, highlightSub: 2, highlightReturn: 3};
+            } else {
+                return {...step, highlightSub: 4, highlightReturn: 5};
+            }
+        });
     };
 
     const initializeVisualization = async (num) => {
@@ -59,10 +73,11 @@ const FactorialVisualization = () => {
                 isCancelledRef.current = true;
                 setIsCalculating(false);
             }
-
+            await Tone.start();
             // Reset step navigation
             setCurrentStep(-1);
             setIsStepMode(false);
+            setPseudocodeHighlight(null);
 
             const startTime = performance.now();
             // Fetch steps from the API
@@ -81,10 +96,11 @@ const FactorialVisualization = () => {
             setExecutionTime((endTime - startTime) / 1000);
 
             const calculationSteps = response.data.steps;
-            setSteps(calculationSteps);
+            const highlightedSteps = addHighlights(calculationSteps);
+            setSteps(highlightedSteps);
 
             // Initialize cards with unique n values
-            const uniqueNValues = [...new Set(calculationSteps.map((step) => step.n))];
+            const uniqueNValues = [...new Set(highlightedSteps.map((step) => step.n))];
             const initialCards = uniqueNValues.map((n) => ({
                 n,
                 visible: false,
@@ -103,6 +119,20 @@ const FactorialVisualization = () => {
             setIsSubmitting(false);
             isCancelledRef.current = false;
         }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (isSubmitting) return;
+
+        const input = parseInt(inputValue.trim(), 10);
+        if (isNaN(input) || input < 0 || input > 12) {
+            setError('Please enter a valid number between 0 and 12');
+            return;
+        }
+
+        setNumber(input);
+        await initializeVisualization(input);
     };
 
     const handleRandom = async (e) => {
@@ -158,6 +188,7 @@ const FactorialVisualization = () => {
                 showingReturnValue: false,
             }));
             setCards(resetCards);
+            setPseudocodeHighlight(null);
         }
     };
 
@@ -189,6 +220,7 @@ const FactorialVisualization = () => {
 
         // Phase 1: Show cards sequentially (steps 0 to totalCards-1)
         if (stepIndex < totalCards) {
+            setPseudocodeHighlight(1);
             for (let i = 0; i <= stepIndex; i++) {
                 const cardIndex = updatedCards.findIndex(card => card.n === uniqueNValues[i]);
                 if (cardIndex !== -1) {
@@ -215,6 +247,8 @@ const FactorialVisualization = () => {
                             subValue: step.type === 'base' ? 1 : step.subValue,
                             showingSubValue: true,
                         };
+                        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
+                        setPseudocodeHighlight(step.highlightSub);
 
                         // Show returnValue if we're at the second sub-step
                         if (phase2Step % 2 === 1 || phase2Step > i * 2 + 1) {
@@ -223,6 +257,8 @@ const FactorialVisualization = () => {
                                 returnValue: step.type === 'base' ? 1 : step.returnValue,
                                 showingReturnValue: true,
                             };
+                            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
+                            setPseudocodeHighlight(step.highlightReturn);
                         }
                     }
                 }
@@ -237,6 +273,7 @@ const FactorialVisualization = () => {
         setIsStepMode(false);
         setCurrentStep(-1);
         isCancelledRef.current = false;
+        setPseudocodeHighlight(null);
 
         // Clear all cards and reset to initial state
         let updatedCards = cards.map(card => ({
@@ -255,6 +292,7 @@ const FactorialVisualization = () => {
         // First phase: Show all cards sequentially
         for (let i = 0; i < updatedCards.length; i++) {
             if (isCancelledRef.current) break;
+            setPseudocodeHighlight(1);
             updatedCards[i] = { ...updatedCards[i], visible: true };
             setCards([...updatedCards]);
             await new Promise((resolve) => setTimeout(resolve, speedRef.current));
@@ -275,6 +313,7 @@ const FactorialVisualization = () => {
                     showingSubValue: true,
                 };
                 setCards([...updatedCards]);
+                setPseudocodeHighlight(step.highlightSub);
                 await new Promise((resolve) => setTimeout(resolve, speedRef.current));
 
                 // Show returnValue
@@ -284,6 +323,7 @@ const FactorialVisualization = () => {
                     showingReturnValue: true,
                 };
                 setCards([...updatedCards]);
+                setPseudocodeHighlight(step.highlightReturn);
                 await new Promise((resolve) => setTimeout(resolve, speedRef.current));
             }
         }
@@ -316,7 +356,7 @@ const FactorialVisualization = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -561,6 +601,41 @@ const FactorialVisualization = () => {
                 </div>
             </div>
 
+            <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                {/* Pseudocode Panel */}
+                <div tabIndex="-1" className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                    <div className="card bg-base-100 shadow-lg border border-base-300">
+                        <div className="card-body p-3 w-60">
+                            <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                Pseudocode
+                            </h3>
+                            <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    <span className="text-primary font-bold">function</span> factorial(n):
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                    <span className="text-secondary font-bold">if</span> n &lt;= 1:
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                    <span className="text-info font-bold">return</span> 1
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                    <span className="text-warning font-bold">else</span>:
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 5 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                    <span className="text-success font-bold">return</span> n * factorial(n-1)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
             {/* Control Panel */}
             <div className="p-4 bg-base-200 w-full">
                 <div className="flex flex-col lg:flex-row justify-center items-center gap-2 lg:gap-4 max-w-7xl mx-auto">
@@ -636,6 +711,7 @@ const FactorialVisualization = () => {
                             {speed} ms
                         </span>
                     </div>
+                    <SoundToggle/>
                 </div>
             </div>
             {error && (

@@ -25,6 +25,7 @@ const JumpSearch = () => {
     const [highlightedIndices, setHighlightedIndices] = useState([]);
     const [currentBlock, setCurrentBlock] = useState(null);
     const [searchResult, setSearchResult] = useState(null);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
@@ -81,7 +82,8 @@ const JumpSearch = () => {
             array: [...arr],
             jumpSize: jumpSize,
             target: target,
-            message: `Jump size: ${jumpSize} (√${n})`
+            message: `Jump size: ${jumpSize} (√${n})`,
+            highlight: 3
         });
 
         let prev = 0;
@@ -96,7 +98,8 @@ const JumpSearch = () => {
                 blockStart: prev,
                 blockEnd: curr,
                 target: target,
-                message: `Checking block [${prev}...${curr}]: arr[${curr}] = ${arr[curr]} < ${target}`
+                message: `Checking block [${prev}...${curr}]: arr[${curr}] = ${arr[curr]} < ${target}`,
+                highlight: 6
             });
 
             prev = curr + 1;
@@ -110,7 +113,8 @@ const JumpSearch = () => {
                 array: [...arr],
                 indices: [],
                 target: target,
-                message: `Target ${target} not found (past array bounds)`
+                message: `Target ${target} not found (past array bounds)`,
+                highlight: 10
             });
             return steps;
         }
@@ -122,7 +126,8 @@ const JumpSearch = () => {
             blockStart: prev,
             blockEnd: curr,
             target: target,
-            message: `Block found [${prev}...${curr}]: arr[${curr}] = ${arr[curr]} >= ${target}`
+            message: `Block found [${prev}...${curr}]: arr[${curr}] = ${arr[curr]} >= ${target}`,
+            highlight: 11
         });
 
         // Linear search within the block
@@ -134,7 +139,8 @@ const JumpSearch = () => {
                 blockStart: prev,
                 blockEnd: curr,
                 target: target,
-                message: `Linear search: arr[${i}] = ${arr[i]} ${arr[i] === target ? '==' : '!='} ${target}`
+                message: `Linear search: arr[${i}] = ${arr[i]} ${arr[i] === target ? '==' : '!='} ${target}`,
+                highlight: 12
             });
 
             if (arr[i] === target) {
@@ -144,7 +150,8 @@ const JumpSearch = () => {
                     indices: [i],
                     foundIndex: i,
                     target: target,
-                    message: `Target ${target} found at index ${i}!`
+                    message: `Target ${target} found at index ${i}!`,
+                    highlight: 13
                 });
                 return steps;
             }
@@ -159,7 +166,8 @@ const JumpSearch = () => {
             array: [...arr],
             indices: [],
             target: target,
-            message: `Target ${target} not found in array`
+            message: `Target ${target} not found in array`,
+            highlight: 14
         });
 
         return steps;
@@ -262,18 +270,28 @@ const JumpSearch = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    const animateSingleStep = async (step, isForward = true) => {
-        setIsAnimating(true);
-
+    const setFromStep = (step) => {
         setNumberArr([...step.array]);
         setHighlightedIndices(step.indices || []);
         setCurrentBlock(step.blockStart !== undefined ? {start: step.blockStart, end: step.blockEnd} : null);
-        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
+        setPseudocodeHighlight(step.highlight || null);
         if (step.type === "found") {
             setSearchResult({found: true, index: step.foundIndex});
-            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
         } else if (step.type === "not_found") {
             setSearchResult({found: false});
+        } else {
+            setSearchResult(null);
+        }
+    };
+
+    const animateSingleStep = async (step, isForward = true) => {
+        setIsAnimating(true);
+
+        setFromStep(step);
+        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
+        if (step.type === "found") {
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
+        } else if (step.type === "not_found") {
             if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
         }
 
@@ -301,23 +319,12 @@ const JumpSearch = () => {
             setHighlightedIndices([]);
             setCurrentBlock(null);
             setSearchResult(null);
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
 
-        const prevStep = steps[prevStepIndex];
-        setNumberArr([...prevStep.array]);
-        setHighlightedIndices(prevStep.indices || []);
-        setCurrentBlock(prevStep.blockStart !== undefined ? {start: prevStep.blockStart, end: prevStep.blockEnd} : null);
-
-        if (prevStep.type === "found") {
-            setSearchResult({found: true, index: prevStep.foundIndex});
-        } else if (prevStep.type === "not_found") {
-            setSearchResult({found: false});
-        } else {
-            setSearchResult(null);
-        }
-
+        setFromStep(steps[prevStepIndex]);
         setIsAnimating(false);
     };
 
@@ -327,6 +334,7 @@ const JumpSearch = () => {
             setIsSearching(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
+            setPseudocodeHighlight(null);
             try {
                 setCurrentStepIndex(-1);
                 setNumberArr([...initialArrayRef.current]);
@@ -360,27 +368,11 @@ const JumpSearch = () => {
     };
 
     const animateSearchSteps = async (steps) => {
-        setIsAnimating(true);
         for (let i = 0; i < steps.length; i++) {
             if (isCancelledRef.current) break;
             setCurrentStepIndex(i);
-            const step = steps[i];
-
-            setNumberArr([...step.array]);
-            setHighlightedIndices(step.indices || []);
-            setCurrentBlock(step.blockStart !== undefined ? {start: step.blockStart, end: step.blockEnd} : null);
-            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
-            if (step.type === "found") {
-                setSearchResult({found: true, index: step.foundIndex});
-                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
-            } else if (step.type === "not_found") {
-                setSearchResult({found: false});
-                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
-            }
-
-            await new Promise(resolve => setTimeout(resolve, speedRef.current));
+            await animateSingleStep(steps[i]);
         }
-        setIsAnimating(false);
     };
 
     useEffect(() => {
@@ -410,7 +402,7 @@ const JumpSearch = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -600,6 +592,68 @@ const JumpSearch = () => {
                         <span className="text-sm">Unvisited</span>
                     </div>
                 </div>
+
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-78">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">function</span> jumpSearch(arr, target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        n = arr.length
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        step = floor(sqrt(n))
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        prev = 0
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 5 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        curr = min(step, n) - 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 6 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        <span className="text-accent font-bold">while</span> (curr &lt; n &amp;&amp; arr[curr] &lt; target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 7 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        prev = curr + 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 8 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        curr = min(curr + step, n - 1)
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 9 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        <span className="text-error font-bold">if</span> (prev &gt;= n):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 10 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> -1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 11 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        <span className="text-info font-bold">for</span> i = prev <span className="text-info font-bold">to</span> curr:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 12 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">if</span> arr[i] == target:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 13 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> i
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 14 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> -1
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             {/* Controls */}

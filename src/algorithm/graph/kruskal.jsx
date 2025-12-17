@@ -57,10 +57,12 @@ const Kruskal = () => {
     const [executionTime, setExecutionTime] = useState(null);
     const [showComplexity, setShowComplexity] = useState(false);
     const [size, setSize] = useState(6);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
     const isInitializedRef = useRef(false);
+    const [mstEdges, setMstEdges] = useState([]);
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
@@ -90,6 +92,26 @@ const Kruskal = () => {
     const handleEdgeInput = (e) => setEdgeInput(e.target.value.toUpperCase());
     const handleSizeInput = (e) => setSize(Math.max(1, Math.min(26, Number(e.target.value))));
 
+    const addHighlights = (rawSteps) => {
+        let considerInit = false;
+        return rawSteps.map(step => {
+            let hl;
+            switch(step.type){
+                case 'consider':
+                    hl = considerInit ? 6 : 4;
+                    considerInit = true;
+                    break;
+                case 'reject':
+                    hl = 5;
+                    break;
+                case 'add':
+                    hl = 7;
+                    break;
+            }
+            return {...step, highlight: hl};
+        });
+    };
+
     // Fetch Kruskal steps
     const fetchKruskalSteps = async (graph) => {
         if (Object.keys(graph).length === 0) return;
@@ -106,7 +128,8 @@ const Kruskal = () => {
             });
             const endTime = performance.now();
             setExecutionTime((endTime - startTime) / 1000);
-            setSteps(response.data || []);
+            const highlightedSteps = addHighlights(response.data || []);
+            setSteps(highlightedSteps);
             setCurrentStepIndex(-1);
         } catch (err) {
             setError(err.response?.data?.detail || 'Failed to fetch Kruskal steps');
@@ -506,6 +529,8 @@ const Kruskal = () => {
         if (!svgRef.current) return;
         d3.select(svgRef.current).selectAll('.graph-node').attr('fill', COLORS.NODE_DEFAULT);
         d3.select(svgRef.current).selectAll('.graph-edge').attr('stroke', COLORS.EDGE_DEFAULT);
+        setPseudocodeHighlight(null);
+        setMstEdges([]);
     };
 
     const highlightNode = (nodeId, color) => {
@@ -553,6 +578,7 @@ const Kruskal = () => {
     const animateSingleStep = async (step) => {
         setIsAnimating(true);
         try {
+            setPseudocodeHighlight(step.highlight);
             switch (step.type) {
                 case 'consider':
                     highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
@@ -566,6 +592,7 @@ const Kruskal = () => {
                     highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
                     highlightNode(step.source, COLORS.NODE_VISITED);
                     highlightNode(step.target, COLORS.NODE_VISITED);
+                    setMstEdges(prev => [...prev, `${step.source}-${step.target}`]);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
                     break;
             }
@@ -592,10 +619,20 @@ const Kruskal = () => {
         const prevStepIndex = currentStepIndex - 1;
         setCurrentStepIndex(prevStepIndex);
 
+        if (prevStepIndex === -1) {
+            resetHighlight();
+            setMstEdges([]);
+            setPseudocodeHighlight(null);
+            setIsAnimating(false);
+            return;
+        }
+
         try {
             resetHighlight();
+            setMstEdges([]);
             for (let i = 0; i <= prevStepIndex; i++) {
                 const step = steps[i];
+                setPseudocodeHighlight(step.highlight);
                 switch (step.type) {
                     case 'consider':
                         highlightEdge(step.source, step.target, COLORS.EDGE_TRAVERSED);
@@ -607,6 +644,7 @@ const Kruskal = () => {
                         highlightEdge(step.source, step.target, COLORS.PATH_COLOR);
                         highlightNode(step.source, COLORS.NODE_VISITED);
                         highlightNode(step.target, COLORS.NODE_VISITED);
+                        setMstEdges(prev => [...prev, `${step.source}-${step.target}`]);
                         break;
                 }
             }
@@ -642,6 +680,8 @@ const Kruskal = () => {
         isCancelledRef.current = false;
         resetHighlight();
         setCurrentStepIndex(-1);
+        setMstEdges([]);
+        setPseudocodeHighlight(null);
 
         try {
             await fetchKruskalSteps(adjacencyList);
@@ -662,6 +702,7 @@ const Kruskal = () => {
         setIsAnimating(false);
         resetHighlight();
         setCurrentStepIndex(-1);
+        setPseudocodeHighlight(null);
     };
 
     // Initial render
@@ -690,7 +731,7 @@ const Kruskal = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -783,7 +824,95 @@ const Kruskal = () => {
 
             <div className="flex justify-center flex-grow">
                 <svg ref={svgRef} className="w-full h-full"></svg>
+                <div className="hidden lg:flex gap-2 items-start mr-12 mt-4">
+                    <div className="flex flex-col items-center z-20 border-2 border-primary/30 bg-base-100 rounded-xl shadow-xl w-40 h-fit overflow-hidden">
+                        <div className="w-full text-center text-sm font-bold bg-gradient-to-r from-primary to-secondary text-primary-content py-3 border-b-2 border-primary/30">
+                            <div className="flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <span>MST EDGES</span>
+                            </div>
+                        </div>
+                        <div className="px-4 py-3 w-full min-h-[100px] max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-primary/30 scrollbar-track-base-200">
+                            {mstEdges.length === 0 ? (
+                                <div className="flex flex-col items-center justify-center py-8 text-base-content/40">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                    <span className="text-xs text-center">Start algorithm<br/>to see MST</span>
+                                </div>
+                            ) : (
+                                <div className="flex flex-wrap gap-2 justify-center">
+                                    {mstEdges.map((edge, index) => (
+                                        <div
+                                            key={index}
+                                            className="relative"
+                                        >
+                                            <div className="badge badge-lg bg-gradient-to-br from-primary to-secondary text-primary-content font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 border-2 border-primary/50 px-4 py-3">
+                                                {edge}
+                                            </div>
+                                            <div className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-content rounded-full flex items-center justify-center text-xs font-bold shadow-md">
+                                                {index + 1}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        {mstEdges.length > 0 && (
+                            <div className="w-full px-4 py-2 bg-base-200/50 border-t border-primary/20">
+                                <div className="flex justify-between items-center text-xs">
+                                    <span className="text-base-content/60">Total:</span>
+                                    <span className="badge badge-sm badge-primary font-bold">{mstEdges.length}</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
+            <details open className="hidden lg:block dropdown dropdown-right dropdown-center fixed bottom-1/3 left-2">
+                <summary className="btn m-1 bg-base-content text-base-200">{">"}</summary>
+                {/* Pseudocode Panel */}
+                <div tabIndex="-1" className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                    <div className="card bg-base-100 shadow-lg border border-base-300">
+                        <div className="card-body p-3 w-78">
+                            <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                Pseudocode
+                            </h3>
+                            <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    <span className="text-primary font-bold">function</span> Kruskal(graph):
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                    sorted_edges = sort_edges_by_weight(graph)
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                    uf = UnionFind(graph.nodes)
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                    <span className="text-warning font-bold">for</span> edge in sorted_edges:
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 5 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                    <span className="text-success font-bold">if</span> uf.find(edge.u) != uf.find(edge.v):
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 6 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                    uf.union(edge.u, edge.v)
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 7 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    add edge to MST
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">
                     <div className="flex items-center gap-2 w-full xl:w-auto">

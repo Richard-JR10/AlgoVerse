@@ -42,6 +42,7 @@ const TreeTraversal = () => {
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
 
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
@@ -265,6 +266,7 @@ const TreeTraversal = () => {
         switch(step.type) {
             case 'visit':
                 // Only highlight if node hasn't been visited yet
+                setPseudocodeHighlight(3);
                 if (!visitedNodes.includes(step.node)) {
                     highlightNode(step.node, COLORS.NODE_QUEUED);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '32n');
@@ -274,6 +276,7 @@ const TreeTraversal = () => {
                 highlightNode(step.node, COLORS.NODE_CURRENT);
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
                 highlightNode(step.node, COLORS.NODE_VISITED);
+                setPseudocodeHighlight(4);
                 setVisited(prev => [...prev, step.node]);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
                 break;
@@ -287,6 +290,7 @@ const TreeTraversal = () => {
         isCancelledRef.current = false;
         resetHighlight();
         setVisited([]);
+        setPseudocodeHighlight(null);
         setCurrentStepIndex(-1);
         await Tone.start();
         const traversalSteps = getTraversalSteps(tree, traversalType);
@@ -431,6 +435,62 @@ const TreeTraversal = () => {
         generateRandomTree();
     }, []);
 
+    function Pseudocode({ traversalType, pseudocodeHighlight }) {
+        if (traversalType === "inorder") {
+            return (
+                <>
+                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                        <span className="text-primary font-bold">function</span> inorder(node):
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                        <span className="text-secondary font-bold">if</span> node is null: <span className="text-primary font-bold">return</span>
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                        inorder(node)
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                        visit(node)
+                    </div>
+                </>
+            );
+        } else if (traversalType === "preorder") {
+            return (
+                <>
+                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                        <span className="text-primary font-bold">function</span> preorder(node):
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                        <span className="text-secondary font-bold">if</span> node is null: <span className="text-primary font-bold">return</span>
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                        visit(node)
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                        preorder(node)
+                    </div>
+                </>
+            )
+        } else if (traversalType === "postorder") {
+            return (
+                <>
+                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                        <span className="text-primary font-bold">function</span> postorder(node):
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                        <span className="text-secondary font-bold">if</span> node is null: <span className="text-primary font-bold">return</span>
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                        postorder(node)
+                    </div>
+                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                        visit(node)
+                    </div>
+                </>
+            )
+        }
+        return null; // Or some fallback
+    }
+
     return (
         <div className="flex flex-col scrollbar-hide overflow-auto h-screen bg-base-200 relative">
             <NavBar/>
@@ -444,7 +504,7 @@ const TreeTraversal = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -583,6 +643,27 @@ const TreeTraversal = () => {
                         )}
                     </div>
                 </div>
+
+                <details open className="hidden lg:block dropdown dropdown-right dropdown-center fixed bottom-1/3 left-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{">"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-60">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    {Pseudocode({ traversalType, pseudocodeHighlight })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">

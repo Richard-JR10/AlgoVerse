@@ -30,6 +30,7 @@ const Linear = () => {
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
 
     // Visualization states
     const [highlightedIndex, setHighlightedIndex] = useState(null);
@@ -117,14 +118,17 @@ const Linear = () => {
     const executeStep = (step) => {
         if (step.type === "checking") {
             setHighlightedIndex(step.index);
+            setPseudocodeHighlight(3);
             if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             setSearchResult(null);
         } else if (step.type === "found") {
             setHighlightedIndex(step.index);
+            setPseudocodeHighlight(4);
             if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
             setSearchResult({ found: true, index: step.index });
         } else if (step.type === "not_found") {
             setHighlightedIndex(null);
+            setPseudocodeHighlight(5);
             if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
             setSearchResult({ found: false });
         }
@@ -169,6 +173,7 @@ const Linear = () => {
             setCurrentStepIndex(-1);
             setHighlightedIndex(null);
             setSearchResult(null);
+            setPseudocodeHighlight(null);
 
             let arrayToSearch;
             if (Array.isArray(data) && data.length > 0) {
@@ -271,7 +276,7 @@ const Linear = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -457,6 +462,41 @@ const Linear = () => {
                         <span className="text-sm">Unvisited</span>
                     </div>
                 </div>
+
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-78">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">function</span> linearSearch(array, target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        <span className="text-secondary font-bold">for</span> i = 0 <span className="text-secondary font-bold">to</span> array.length - 1:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">if</span> array[i] == target:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 4 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> i
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 5 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> -1
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             {/* Controls */}

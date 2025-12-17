@@ -26,6 +26,7 @@ const InterpolationSearch = () => {
     const [searchRange, setSearchRange] = useState(null);
     const [searchResult, setSearchResult] = useState(null);
     const [probePosition, setProbePosition] = useState(null);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
@@ -75,6 +76,7 @@ const InterpolationSearch = () => {
     const interpolationSearch = (arr, target) => {
         const steps = [];
         const n = arr.length;
+        let notFoundHighlight = 19;
 
         if (n === 0) {
             steps.push({
@@ -82,7 +84,8 @@ const InterpolationSearch = () => {
                 array: [...arr],
                 indices: [],
                 target: target,
-                message: `Array is empty`
+                message: `Array is empty`,
+                highlight: 4
             });
             return steps;
         }
@@ -95,7 +98,8 @@ const InterpolationSearch = () => {
             array: [...arr],
             range: {low, high},
             target: target,
-            message: `Starting search for ${target} in range [${low}...${high}]`
+            message: `Starting search for ${target} in range [${low}...${high}]`,
+            highlight: 7
         });
 
         while (low <= high && target >= arr[low] && target <= arr[high]) {
@@ -107,7 +111,8 @@ const InterpolationSearch = () => {
                     indices: [low],
                     range: {low, high},
                     target: target,
-                    message: `Checking single element at index ${low}: arr[${low}] = ${arr[low]}`
+                    message: `Checking single element at index ${low}: arr[${low}] = ${arr[low]}`,
+                    highlight: 9
                 });
 
                 if (arr[low] === target) {
@@ -117,10 +122,12 @@ const InterpolationSearch = () => {
                         indices: [low],
                         foundIndex: low,
                         target: target,
-                        message: `Target ${target} found at index ${low}!`
+                        message: `Target ${target} found at index ${low}!`,
+                        highlight: 10
                     });
                     return steps;
                 }
+                notFoundHighlight = 11;
                 break;
             }
 
@@ -136,7 +143,8 @@ const InterpolationSearch = () => {
                 range: {low, high},
                 probePos: pos,
                 target: target,
-                message: `Interpolated position: ${pos}, arr[${pos}] = ${arr[pos]}`
+                message: `Interpolated position: ${pos}, arr[${pos}] = ${arr[pos]}`,
+                highlight: 12
             });
 
             // Target found
@@ -147,7 +155,8 @@ const InterpolationSearch = () => {
                     indices: [pos],
                     foundIndex: pos,
                     target: target,
-                    message: `Target ${target} found at index ${pos}!`
+                    message: `Target ${target} found at index ${pos}!`,
+                    highlight: 14
                 });
                 return steps;
             }
@@ -160,7 +169,8 @@ const InterpolationSearch = () => {
                     indices: [pos],
                     range: {low: pos + 1, high},
                     target: target,
-                    message: `arr[${pos}] = ${arr[pos]} < ${target}, search right: [${pos + 1}...${high}]`
+                    message: `arr[${pos}] = ${arr[pos]} < ${target}, search right: [${pos + 1}...${high}]`,
+                    highlight: 16
                 });
                 low = pos + 1;
             }
@@ -172,7 +182,8 @@ const InterpolationSearch = () => {
                     indices: [pos],
                     range: {low, high: pos - 1},
                     target: target,
-                    message: `arr[${pos}] = ${arr[pos]} > ${target}, search left: [${low}...${pos - 1}]`
+                    message: `arr[${pos}] = ${arr[pos]} > ${target}, search left: [${low}...${pos - 1}]`,
+                    highlight: 18
                 });
                 high = pos - 1;
             }
@@ -183,7 +194,8 @@ const InterpolationSearch = () => {
             array: [...arr],
             indices: [],
             target: target,
-            message: `Target ${target} not found in array`
+            message: `Target ${target} not found in array`,
+            highlight: notFoundHighlight
         });
 
         return steps;
@@ -228,7 +240,7 @@ const InterpolationSearch = () => {
             setSearchRange(null);
             setSearchResult(null);
             setProbePosition(null);
-
+            setPseudocodeHighlight(null);
 
             setSteps([]);
             setIsSubmitting(false);
@@ -266,6 +278,7 @@ const InterpolationSearch = () => {
         setSearchRange(null);
         setSearchResult(null);
         setProbePosition(null);
+        setPseudocodeHighlight(null);
     };
 
     const handleSubmit = async (e) => {
@@ -289,18 +302,30 @@ const InterpolationSearch = () => {
         return () => clearTimeout(timer);
     }, []);
 
-    const animateSingleStep = async (step, isForward = true) => {
-        setIsAnimating(true);
-
+    const setFromStep = (step) => {
         setNumberArr([...step.array]);
         setHighlightedIndices(step.indices || []);
         setSearchRange(step.range || null);
         setProbePosition(step.probePos !== undefined ? step.probePos : null);
-
+        setPseudocodeHighlight(step.highlight || null);
         if (step.type === "found") {
             setSearchResult({found: true, index: step.foundIndex});
         } else if (step.type === "not_found") {
             setSearchResult({found: false});
+        } else {
+            setSearchResult(null);
+        }
+    };
+
+    const animateSingleStep = async (step, isForward = true) => {
+        setIsAnimating(true);
+
+        setFromStep(step);
+        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
+        if (step.type === "found") {
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
+        } else if (step.type === "not_found") {
+            if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
         }
 
         await new Promise(resolve => setTimeout(resolve, speedRef.current));
@@ -328,25 +353,12 @@ const InterpolationSearch = () => {
             setSearchRange(null);
             setSearchResult(null);
             setProbePosition(null);
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
 
-        const prevStep = steps[prevStepIndex];
-        setNumberArr([...prevStep.array]);
-        setHighlightedIndices(prevStep.indices || []);
-        setSearchRange(prevStep.range || null);
-        setProbePosition(prevStep.probePos !== undefined ? prevStep.probePos : null);
-        if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
-        if (prevStep.type === "found") {
-            setSearchResult({found: true, index: prevStep.foundIndex});
-        } else if (prevStep.type === "not_found") {
-            setSearchResult({found: false});
-            if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
-        } else {
-            setSearchResult(null);
-            if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
-        }
+        setFromStep(steps[prevStepIndex]);
 
         setIsAnimating(false);
     };
@@ -357,6 +369,7 @@ const InterpolationSearch = () => {
             setIsSearching(true);
             setIsAnimating(true);
             isCancelledRef.current = false;
+            setPseudocodeHighlight(null);
             try {
                 setCurrentStepIndex(-1);
                 setNumberArr([...initialArrayRef.current]);
@@ -391,28 +404,11 @@ const InterpolationSearch = () => {
     };
 
     const animateSearchSteps = async (steps) => {
-        setIsAnimating(true);
         for (let i = 0; i < steps.length; i++) {
             if (isCancelledRef.current) break;
             setCurrentStepIndex(i);
-            const step = steps[i];
-
-            setNumberArr([...step.array]);
-            setHighlightedIndices(step.indices || []);
-            setSearchRange(step.range || null);
-            setProbePosition(step.probePos !== undefined ? step.probePos : null);
-            if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
-            if (step.type === "found") {
-                setSearchResult({found: true, index: step.foundIndex});
-                if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '32n');
-            } else if (step.type === "not_found") {
-                setSearchResult({found: false});
-                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
-            }
-
-            await new Promise(resolve => setTimeout(resolve, speedRef.current));
+            await animateSingleStep(steps[i]);
         }
-        setIsAnimating(false);
     };
 
     useEffect(() => {
@@ -442,7 +438,7 @@ const InterpolationSearch = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -730,6 +726,83 @@ const InterpolationSearch = () => {
                         )}
                     </div>
                 </div>
+
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-2/5 right-2 z-1">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-90">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">function</span> interpolationSearch(arr, target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        n = arr.length
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        <span className="text-accent font-bold">if</span> (n == 0):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 4 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> -1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 5 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        low = 0
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 6 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        high = n - 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 7 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        <span className="text-accent font-bold">while</span> (low &lt;= high &amp;&amp; target &gt;= arr[low] &amp;&amp; target &lt;= arr[high]):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 8 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">if</span> (low == high):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 9 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        <span className="text-success font-bold">if</span> (arr[low] == target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-8 ${pseudocodeHighlight === 10 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> low
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 11 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> -1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 12 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        pos = low + floor(((target - arr[low]) * (high - low)) / (arr[high] - arr[low]))
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 13 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">if</span> (arr[pos] == target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 14 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> pos
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 15 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">if</span> (arr[pos] &lt; target):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 16 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        low = pos + 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 17 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">else</span>:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 18 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        high = pos - 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 19 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> -1
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             {/* Controls */}

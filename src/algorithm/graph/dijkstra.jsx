@@ -58,6 +58,7 @@ const Dijkstra = () => {
     const [isAnimating, setIsAnimating] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
     const [showComplexity, setShowComplexity] = useState(false);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     const svgRef = useRef(null);
     const speedRef = useRef(speed);
     const isCancelledRef = useRef(false);
@@ -102,6 +103,43 @@ const Dijkstra = () => {
     };
     const handleSizeInput = (e) => setSize(Math.max(1, Math.min(26, Number(e.target.value))));
 
+    const addHighlights = (rawSteps) => {
+        let queueInit = false;
+        let visitInit = false;
+        return rawSteps.map(step => {
+            let hl;
+            switch(step.type){
+                case 'queue':
+                    hl = queueInit ? 12 : 4;
+                    queueInit = true;
+                    break;
+                case 'dequeue':
+                    hl = 6;
+                    break;
+                case 'explore':
+                    hl = 8;
+                    break;
+                case 'visited':
+                    hl = 7;
+                    break;
+                case 'distance':
+                    hl = 11;
+                    break;
+                case 'visit':
+                    hl = visitInit ? 10 : 5;
+                    visitInit = true;
+                    break;
+                case 'finish':
+                    hl = 13;
+                    break;
+                case 'path':
+                    hl = 14;
+                    break;
+            }
+            return {...step, highlight: hl};
+        });
+    };
+
     // Fetch Dijkstra steps
     const fetchDijkstraSteps = async (graph, start) => {
         if (!start || !graph[start]) return;
@@ -118,7 +156,8 @@ const Dijkstra = () => {
             });
             const endTime = performance.now();
             setExecutionTime((endTime - startTime) / 1000);
-            setSteps(response.data);
+            const highlightedSteps = addHighlights(response.data);
+            setSteps(highlightedSteps);
             setCurrentStepIndex(-1);
         } catch (err) {
             console.error('Failed to fetch Dijkstra steps:', err);
@@ -589,6 +628,7 @@ const Dijkstra = () => {
         d3.select(svgRef.current).selectAll('.graph-edge').attr('stroke', COLORS.EDGE_DEFAULT);
         d3.select(svgRef.current).selectAll('.distance-label').text(d => (d.distance === Infinity ? '' : d.distance));
         if (startNode && adjacencyList[startNode]) highlightNode(startNode, COLORS.NODE_QUEUED, 0);
+        setPseudocodeHighlight(null);
     };
 
     const highlightNode = (nodeId, color, distance = null) => {
@@ -624,9 +664,9 @@ const Dijkstra = () => {
     const animateSingleStep = async (step) => {
         setIsAnimating(true);
         try {
+            setPseudocodeHighlight(step.highlight);
             if (step.visited) {
                 setVisited(step.visited);
-                console.log(step.visited)
             }
             switch (step.type) {
                 case 'queue':
@@ -680,6 +720,15 @@ const Dijkstra = () => {
         setIsAnimating(true);
         const prevStepIndex = currentStepIndex - 1;
         setCurrentStepIndex(prevStepIndex);
+
+        if (prevStepIndex === -1) {
+            resetHighlight();
+            setVisited([]);
+            setPseudocodeHighlight(null);
+            setIsAnimating(false);
+            return;
+        }
+
         try {
             resetHighlight();
             setVisited([]);
@@ -687,8 +736,8 @@ const Dijkstra = () => {
                 const step = steps[i];
                 if (step.visited) {
                     setVisited(step.visited);
-                    console.log(step.visited)
                 }
+                setPseudocodeHighlight(step.highlight);
                 switch (step.type) {
                     case 'queue':
                         highlightNode(step.node, COLORS.NODE_QUEUED);
@@ -750,6 +799,7 @@ const Dijkstra = () => {
         resetHighlight();
         setCurrentStepIndex(-1);
         setVisited([]);
+        setPseudocodeHighlight(null);
         try {
             await fetchDijkstraSteps(adjacencyList, startNode);
             await animateDijkstraSteps(steps);
@@ -769,6 +819,7 @@ const Dijkstra = () => {
         setIsAnimating(false);
         resetHighlight();
         setCurrentStepIndex(-1);
+        setPseudocodeHighlight(null);
     };
 
     // Initial render
@@ -797,7 +848,7 @@ const Dijkstra = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -939,6 +990,61 @@ const Dijkstra = () => {
                     </div>
                 </div>
             </div>
+            <details open className="hidden lg:block dropdown dropdown-right dropdown-center fixed bottom-1/3 left-2">
+                <summary className="btn m-1 bg-base-content text-base-200">{">"}</summary>
+                {/* Pseudocode Panel */}
+                <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                    <div className="card bg-base-100 shadow-lg border border-base-300">
+                        <div className="card-body p-3 w-78">
+                            <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                Pseudocode
+                            </h3>
+                            <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    <span className="text-primary font-bold">function</span> Dijkstra(graph, start):
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                    {"distances = {node: inf for node in graph}"}
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                    distances[start] = 0
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                    pq = [(0, start)]
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 5 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                    <span className="text-success font-bold">while</span> pq:
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 6 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                    dist, current = heappop(pq)
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 7 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    <span className="text-primary font-bold">if</span> dist > distances[current]: continue
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 8 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                    <span className="text-secondary font-bold">for</span> neighbor, weight in graph[current]:
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 9 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                    new_dist = dist + weight
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 10 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                    <span className="text-warning font-bold">if</span> {"new_dist < distances[neighbor]:"}
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-8 ${pseudocodeHighlight === 11 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                    distances[neighbor] = new_dist
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-8 ${pseudocodeHighlight === 12 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                    heappush(pq, (new_dist, neighbor))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">
                     <div className="flex items-center gap-2 w-full xl:w-auto">

@@ -3,6 +3,9 @@ import * as d3 from 'd3';
 import NavBar from '../../components/navBar.jsx';
 import axios from 'axios';
 import AlgorithmNavbar from "../algorithmNavbar.jsx";
+import SoundToggle from "../../components/utils/soundToggle.jsx";
+import {useSound} from "../../context/soundContext.jsx";
+import * as Tone from "tone";
 
 const HanoiVisualization = () => {
     const [inputValue, setInputValue] = useState('3');
@@ -23,10 +26,25 @@ const HanoiVisualization = () => {
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
     const [executionTime, setExecutionTime] = useState(null);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
+    const synthRef = useRef(null);
+    const { soundEnabled } = useSound();
+    const soundRef = useRef(soundEnabled);
+
+    useEffect(() => {
+        soundRef.current = soundEnabled;
+    }, [soundEnabled]);
+
+    useEffect(() => {
+        synthRef.current = new Tone.Synth().toDestination();
+        return () => {
+            if (synthRef.current) synthRef.current.dispose();
+        };
+    }, []);
 
     useEffect(() => {
         if (error) {
-            const timer = setTimeout(() => setTimeout(() => setError(null), 5000));
+            const timer = setTimeout(() => setError(null), 5000);
             return () => clearTimeout(timer);
         }
     }, [error]);
@@ -39,6 +57,12 @@ const HanoiVisualization = () => {
     const handleInput = (e) => {
         e.preventDefault();
         setInputValue(e.target.value);
+    };
+
+    const addHighlights = (rawSteps) => {
+        return rawSteps.map(step => {
+            return {...step, highlight: step.type === 'move' ? 6 : null};
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -68,7 +92,7 @@ const HanoiVisualization = () => {
             const initialPegs = {
                 A: Array.from({ length: num }, (_, i) => ({
                     id: i + 1,
-                    size: i + 1, // Smallest disk (1) at top, largest (n) at bottom
+                    size: i + 1, // Smallest disk (1) at top, largest disk (n) at bottom
                     color: diskColors[i % diskColors.length],
                 })),
                 B: [],
@@ -77,6 +101,7 @@ const HanoiVisualization = () => {
             setPegs(initialPegs);
             setCurrentStepIndex(-1); // Reset step index
             setCurrentPegsHistory([JSON.parse(JSON.stringify(initialPegs))]); // Initialize history
+            setPseudocodeHighlight(null);
 
             setIsSubmitting(false);
             isCancelledRef.current = false;
@@ -124,8 +149,9 @@ const HanoiVisualization = () => {
             setExecutionTime((endTime - startTime) / 1000);
 
             const calculationSteps = response.data.steps;
-            setSteps(calculationSteps);
-            return calculationSteps;
+            const highlightedSteps = addHighlights(calculationSteps);
+            setSteps(highlightedSteps);
+            return highlightedSteps;
         } catch (err) {
             console.error(err);
             setError('Failed to fetch Hanoi steps from the API. Please try again.');
@@ -134,10 +160,12 @@ const HanoiVisualization = () => {
     };
 
     const animateSingleStep = async (step, currentPegs, svg) => {
+        setPseudocodeHighlight(step.highlight);
         if (step.type === "move") {
             const { disk, from, to } = step;
             const diskToMove = currentPegs[from].find(d => d.id === disk);
             if (diskToMove) {
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
                 setCurrentMove({ disk, from, to });
 
                 const containerWidth = svgRef.current?.parentElement?.clientWidth || 900;
@@ -226,7 +254,7 @@ const HanoiVisualization = () => {
         setIsCalculating(false);
     };
 
-    const handleStepBackward = () => {
+    const handleStepBackward = async () => {
         if (currentStepIndex <= -1 || steps.length === 0 || isCalculating) return;
 
         setIsCalculating(true);
@@ -234,12 +262,14 @@ const HanoiVisualization = () => {
         const prevPegs = JSON.parse(JSON.stringify(currentPegsHistory[prevIndex]));
         setPegs(prevPegs);
         setCurrentStepIndex(prevIndex - 1);
+        setPseudocodeHighlight(steps[prevIndex - 1]?.highlight || null);
         setIsCalculating(false);
     };
 
     const animateCalculationSteps = async () => {
         setIsCalculating(true);
         isCancelledRef.current = false;
+        setPseudocodeHighlight(null);
 
         // Reset to initial state
         const initialPegs = {
@@ -275,6 +305,8 @@ const HanoiVisualization = () => {
                 const { disk, from, to } = step;
                 const diskToMove = currentPegs[from].find(d => d.id === disk);
                 if (diskToMove) {
+                    setPseudocodeHighlight(step.highlight);
+                    if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '16n');
                     // Update current move for accessibility
                     setCurrentMove({ disk, from, to });
 
@@ -336,7 +368,7 @@ const HanoiVisualization = () => {
                             .on("start", () => console.log(`Disk ${disk} dropping`))
                             .on("end", () => {
                                 movingElement.remove();
-                                // Update pegs with disk on destination
+                                // Update peg with disk on destination
                                 currentPegs[to] = [diskToMove, ...currentPegs[to]].sort((a, b) => a.size - b.size);
                                 setPegs({ ...currentPegs }); // Trigger renderPegs for destination
                                 setCurrentMove(null); // Clear move
@@ -450,7 +482,7 @@ const HanoiVisualization = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -478,7 +510,7 @@ const HanoiVisualization = () => {
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
                                                     <span className="font-semibold text-base-content/80">Time Complexity:</span>
-                                                    <div className="badge badge-primary badge-lg font-mono font-bold">O(n)</div>
+                                                    <div className="badge badge-primary badge-lg font-mono font-bold">O(2^n)</div>
                                                 </div>
                                                 <div className="flex items-center justify-between p-3 bg-primary/5 rounded-xl border border-primary/10">
                                                     <span className="font-semibold text-base-content/80">Space Complexity:</span>
@@ -595,26 +627,26 @@ const HanoiVisualization = () => {
 
                             {/* Right Section - Result Display */}
 
-                                <div className="relative group">
-                                    <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
-                                    <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-6 py-3 border border-slate-600/50">
-                                        <div className="flex items-center gap-3">
-                                            <div className="text-center">
-                                                <div className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">
-                                                    Number of Moves:
-                                                </div>
-                                                <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent font-mono">
-                                                    {(Math.pow(2, number) - 1).toLocaleString()}
-                                                </div>
+                            <div className="relative group">
+                                <div className="absolute -inset-0.5 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl blur opacity-60 group-hover:opacity-100 transition duration-300"></div>
+                                <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl px-6 py-3 border border-slate-600/50">
+                                    <div className="flex items-center gap-3">
+                                        <div className="text-center">
+                                            <div className="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">
+                                                Number of Moves:
                                             </div>
-                                            <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                                                <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                </svg>
+                                            <div className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent font-mono">
+                                                {(Math.pow(2, number) - 1).toLocaleString()}
                                             </div>
+                                        </div>
+                                        <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -635,6 +667,47 @@ const HanoiVisualization = () => {
                 {currentMove &&
                     `Disk ${currentMove.disk} moved from ${currentMove.from} to ${currentMove.to}`}
             </div>
+
+            <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                {/* Pseudocode Panel */}
+                <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                    <div className="card bg-base-100 shadow-lg border border-base-300">
+                        <div className="card-body p-3 w-78">
+                            <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                Pseudocode
+                            </h3>
+                            <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    <span className="text-primary font-bold">function</span> towerOfHanoi(n, source, target, auxiliary):
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                    <span className="text-secondary font-bold">if</span> n == 1:
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                    move disk from source to target
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 4 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                    <span className="text-warning font-bold">return</span>
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 5 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                    towerOfHanoi(n-1, source, auxiliary, target)
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 6 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                    move disk from source to target
+                                </div>
+                                <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 7 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                    towerOfHanoi(n-1, auxiliary, target, source)
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
 
             {/* Control Panel */}
             <div className="p-4 bg-base-200 w-full">
@@ -708,6 +781,7 @@ const HanoiVisualization = () => {
                             {speed} ms
                         </span>
                     </div>
+                    <SoundToggle/>
                 </div>
             </div>
             {error && (
