@@ -27,6 +27,7 @@ const SelectSort = () => {
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
 
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
@@ -101,7 +102,7 @@ const SelectSort = () => {
                 }
                 return num;
             });
-
+            setPseudocodeHighlight(null);
             setError(null);
             setIsSubmitting(true);
             if (isSorting || isAnimating) {
@@ -387,13 +388,16 @@ const SelectSort = () => {
 
         if (step.type === "minimum") {
             highlightBars(step.indices, minColor, sortedIndices);
+            setPseudocodeHighlight(3);
             if (soundRef.current) synthRef.current.triggerAttackRelease('A3', '8n');
             await delay(speedRef.current / 2);
         } else if (step.type === "compare") {
             highlightCompare(step.indices, sortedIndices);
+            setPseudocodeHighlight(5);
             if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
             await delay(speedRef.current / 2);
         } else if (step.type === "swap") {
+            setPseudocodeHighlight(7);
             highlightBars(step.indices, swappingColor, sortedIndices);
             if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
             await delay(100);
@@ -404,6 +408,7 @@ const SelectSort = () => {
         } else if (step.type === "sorted") {
             sortedIndices.push(step.index);
             highlightBars(sortedIndices, sortedColor);
+            setPseudocodeHighlight(8);
             if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
             await delay(speedRef.current / 2);
         }
@@ -430,6 +435,7 @@ const SelectSort = () => {
             await drawBars(initialArrayRef.current, false);
             resetHighlight();
             setNumberArr([...initialArrayRef.current]);
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
@@ -440,9 +446,11 @@ const SelectSort = () => {
         for (let i = 0; i <= prevStepIndex; i++) {
             const step = steps[i];
             if (step.type === "swap") {
+                setPseudocodeHighlight(7);
                 const [index1, index2] = step.indices;
                 [arrayToDraw[index1], arrayToDraw[index2]] = [arrayToDraw[index2], arrayToDraw[index1]];
             } else if (step.type === "sorted") {
+                setPseudocodeHighlight(8);
                 sortedIndices.push(step.index);
             }
         }
@@ -452,12 +460,16 @@ const SelectSort = () => {
 
         const prevStep = steps[prevStepIndex];
         if (prevStep.type === "minimum") {
+            setPseudocodeHighlight(3);
             highlightBars(prevStep.indices, minColor, sortedIndices);
         } else if (prevStep.type === "compare") {
+            setPseudocodeHighlight(5);
             highlightCompare(prevStep.indices, sortedIndices);
         } else if (prevStep.type === "swap") {
+            setPseudocodeHighlight(7);
             highlightBars(prevStep.indices, swappingColor, sortedIndices);
         } else if (prevStep.type === "sorted") {
+            setPseudocodeHighlight(8);
             highlightBars(sortedIndices, sortedColor);
         }
 
@@ -471,13 +483,16 @@ const SelectSort = () => {
             if (isCancelledRef.current) break;
             if (step.type === "minimum") {
                 highlightBars(step.indices, minColor, sortedIndices);
+                setPseudocodeHighlight(3);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('A3', '8n');
                 await delay(speedRef.current / 2);
             } else if (step.type === "compare") {
                 highlightCompare(step.indices, sortedIndices);
+                setPseudocodeHighlight(5);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '16n');
                 await delay(speedRef.current / 2);
             } else if (step.type === "swap") {
+                setPseudocodeHighlight(7);
                 highlightBars(step.indices, swappingColor, sortedIndices);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
                 await delay(100);
@@ -488,9 +503,11 @@ const SelectSort = () => {
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
+                setPseudocodeHighlight(8);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
                 await delay(speedRef.current / 2);
             }
+            setPseudocodeHighlight(9);
         }
     };
 
@@ -661,6 +678,52 @@ const SelectSort = () => {
 
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-70">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">function</span> selectionSort(array):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        <span className="text-secondary font-bold">for</span> i = 0 <span className="text-secondary font-bold">to</span> n-2:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        minIndex = i
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 4 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        <span className="text-info font-bold">for</span> j = i+1 <span className="text-info font-bold">to</span> n-1:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 5 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        <span className="text-info font-bold">if</span> array[j] {'<'} array[minIndex]:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-8 ${pseudocodeHighlight === 6 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        minIndex = j
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 7 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        swap(array[i], array[minIndex])
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 8 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        mark array[i] as sorted
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 9 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> array
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">

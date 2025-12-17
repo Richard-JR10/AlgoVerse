@@ -24,6 +24,7 @@ const InsertSort = () => {
     const [movedBars, setMovedBars] = useState([]);
     const initialArrayRef = useRef([]);
     const isInitializedRef = useRef(false);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
 
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
@@ -92,7 +93,7 @@ const InsertSort = () => {
                 }
                 return num;
             });
-
+            setPseudocodeHighlight(null);
             setError(null);
             setIsSubmitting(true);
             if (isSorting || isAnimating) {
@@ -488,15 +489,18 @@ const InsertSort = () => {
             highlightBars(step.indices, selectedColor, sortedIndices);
             setMovedBars(await moveDown(step.indices[0]) || []);
             sortedIndices.push(step.indices[0]);
+            setPseudocodeHighlight(3);
             if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '8n');
             await delay(speedRef.current / 2);
         } else if (step.type === "compare") {
             highlightBars(step.indices, compareColor, sortedIndices);
+            setPseudocodeHighlight(5);
             if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
             await delay(speedRef.current / 2);
         } else if (step.type === "swap") {
             highlightBars(step.indices, swappingColor, sortedIndices);
-            if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n'); // Short shift tone
+            setPseudocodeHighlight(6);
+            if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n');
             await delay(100);
             if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
             await swapBars(step.indices[0], step.indices[1], step.array, movedBars);
@@ -506,6 +510,7 @@ const InsertSort = () => {
         } else if (step.type === "sorted") {
             sortedIndices.push(step.index);
             highlightBars(sortedIndices, sortedColor);
+            setPseudocodeHighlight(8);
             if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
             await resetMovedBars(0)
             const newMovedBars = await resetMovedBars(swappedIndex || step.index) || []
@@ -538,6 +543,7 @@ const InsertSort = () => {
             resetHighlight();
             setNumberArr([...initialArrayRef.current]);
             setMovedBars([]);
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
@@ -550,13 +556,16 @@ const InsertSort = () => {
             if (step.type === "swap") {
                 const [index1, index2] = step.indices;
                 [arrayToDraw[index1], arrayToDraw[index2]] = [arrayToDraw[index2], arrayToDraw[index1]];
+                setPseudocodeHighlight(6);
                 if (newMovedBars.includes(index1)) {
                     newMovedBars = newMovedBars.filter(idx => idx !== index1);
                     newMovedBars.push(index2);
                 }
             } else if (step.type === "selected") {
+                setPseudocodeHighlight(3);
                 newMovedBars.push(step.indices[0]);
             } else if (step.type === "sorted") {
+                setPseudocodeHighlight(8);
                 newMovedBars = newMovedBars.filter(idx => idx !== step.index);
             }
         }
@@ -572,12 +581,16 @@ const InsertSort = () => {
             .map(s => s.index);
 
         if (prevStep.type === "selected") {
+            setPseudocodeHighlight(3);
             highlightBars(prevStep.indices, selectedColor, sortedIndices);
         } else if (prevStep.type === "compare") {
+            setPseudocodeHighlight(5);
             highlightBars(prevStep.indices, compareColor, sortedIndices);
         } else if (prevStep.type === "swap") {
+            setPseudocodeHighlight(6);
             highlightBars(prevStep.indices, swappingColor, sortedIndices);
         } else if (prevStep.type === "sorted") {
+            setPseudocodeHighlight(8);
             highlightBars(sortedIndices, sortedColor);
         }
 
@@ -595,14 +608,17 @@ const InsertSort = () => {
                 highlightBars(step.indices, selectedColor, sortedIndices);
                 currentMovedBars = await moveDown(step.indices[0]);
                 sortedIndices.push(step.indices[0]);
+                setPseudocodeHighlight(3);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '8n');
                 await delay(speedRef.current / 2);
             } else if (step.type === "compare") {
                 highlightBars(step.indices, compareColor, sortedIndices);
+                setPseudocodeHighlight(5);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '16n');
                 await delay(speedRef.current / 2);
             } else if (step.type === "swap") {
                 highlightBars(step.indices, swappingColor, sortedIndices);
+                setPseudocodeHighlight(6);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '16n');
                 await delay(100);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
@@ -612,11 +628,13 @@ const InsertSort = () => {
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
+                setPseudocodeHighlight(8);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('C5', '4n');
                 currentMovedBars = resetMovedBars(step.index);
                 await delay(speedRef.current / 2);
             }
         }
+        setPseudocodeHighlight(9);
     };
 
     const startSorting = async () => {
@@ -787,6 +805,52 @@ const InsertSort = () => {
 
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-70">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">function</span> insertionSort(array):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        <span className="text-secondary font-bold">for</span> i = 1 <span className="text-secondary font-bold">to</span> n-1:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        key = array[i]
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 4 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        j = i - 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 5 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        <span className="text-info font-bold">while</span> j {'>='} 0 <span className="text-info font-bold">and</span> array[j] {'>'} key:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 6 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        array[j+1] = array[j]
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 7 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        j = j - 1
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 8 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        array[j+1] = key
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 9 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> array
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">

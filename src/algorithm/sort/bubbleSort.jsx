@@ -28,6 +28,7 @@ const BubbleSort = () => {
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     // Sorting colors
     const sortedColor = "orange";
     const swappingColor = "green";
@@ -88,7 +89,7 @@ const BubbleSort = () => {
                 }
                 return num;
             });
-
+            setPseudocodeHighlight(null);
             setError(null);
             setIsSubmitting(true);
             if (isSorting || isAnimating) {
@@ -367,6 +368,7 @@ const BubbleSort = () => {
         if (step.type === "compare") {
             highlightBars(step.indices, compareColor, sortedIndices);
             if (isForward) {
+                setPseudocodeHighlight(3);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '8n');
                 await delay(100);
                 if (soundRef.current)  synthRef.current.triggerAttackRelease('D4', '8n');
@@ -377,6 +379,7 @@ const BubbleSort = () => {
         } else if (step.type === "swap") {
             highlightBars(step.indices, swappingColor, sortedIndices);
             if (isForward) {
+                setPseudocodeHighlight(4);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
                 await delay(100);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '8n');
@@ -392,6 +395,7 @@ const BubbleSort = () => {
             sortedIndices.push(step.index);
             highlightBars(sortedIndices, sortedColor);
             if (isForward) {
+                setPseudocodeHighlight(5);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '8n');
                 await delay(100);
             }
@@ -416,7 +420,7 @@ const BubbleSort = () => {
         setIsAnimating(true);
         const prevStepIndex = currentStepIndex - 1;
         setCurrentStepIndex(prevStepIndex);
-
+        setPseudocodeHighlight(null);
         if (prevStepIndex === -1) {
             await drawBars(initialArrayRef.current, false);
             resetHighlight();
@@ -444,10 +448,13 @@ const BubbleSort = () => {
             .map(s => s.index);
 
         if (prevStep.type === "compare") {
+            setPseudocodeHighlight(3);
             highlightBars(prevStep.indices, compareColor, sortedIndices);
         } else if (prevStep.type === "swap") {
+            setPseudocodeHighlight(4);
             highlightBars(prevStep.indices, swappingColor, sortedIndices);
         } else if (prevStep.type === "sorted") {
+            setPseudocodeHighlight(5);
             highlightBars([], defaultColor, sortedIndices);
         }
 
@@ -511,12 +518,14 @@ const BubbleSort = () => {
             const step = steps[i];
             if (step.type === "compare") {
                 highlightBars(step.indices, compareColor, sortedIndices);
+                setPseudocodeHighlight(3);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('C4', '8n');
                 await delay(100);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
                 await delay(speedRef.current / 2 - 200);
             } else if (step.type === "swap") {
                 highlightBars(step.indices, swappingColor, sortedIndices);
+                setPseudocodeHighlight(4);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('E4', '8n');
                 await delay(100);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '8n');
@@ -526,11 +535,13 @@ const BubbleSort = () => {
             } else if (step.type === "sorted") {
                 sortedIndices.push(step.index);
                 highlightBars(sortedIndices, sortedColor);
+                setPseudocodeHighlight(5);
                 if (soundRef.current) synthRef.current.triggerAttackRelease('G4', '8n');
                 await delay(100);
                 await delay(speedRef.current / 2);
             }
         }
+        setPseudocodeHighlight(6);
         setIsAnimating(false);
     };
 
@@ -653,6 +664,43 @@ const BubbleSort = () => {
 
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-70">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">for</span> i = 0 <span className="text-primary font-bold">to</span> n-1:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        <span className="text-secondary font-bold">for</span> j = 0 <span className="text-secondary font-bold">to</span> n-i-1:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">if</span> array[j] &gt; array[j+1]:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 4 ? 'bg-error/20 border-l-2 border-error' : ''}`}>
+                                        swap(array[j], array[j+1])
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 5 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        mark array[n-i-1] as sorted
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 6 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> array
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
 
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">

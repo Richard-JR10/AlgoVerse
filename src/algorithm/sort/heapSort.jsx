@@ -23,6 +23,7 @@ const HeapSort = () => {
     const [executionTime, setExecutionTime] = useState(null);
     const [highlightedNodes, setHighlightedNodes] = useState([]);
     const [sortedArray, setSortedArray] = useState([]);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
@@ -75,7 +76,8 @@ const HeapSort = () => {
             indices: [i],
             sorted: [...sorted],
             heapSize: heapSize !== null ? heapSize : arr.length,
-            message: `Heapifying at index ${i}`
+            message: `Heapifying at index ${i}`,
+            pseudoLine: 3
         });
 
         if (left < n) {
@@ -85,7 +87,8 @@ const HeapSort = () => {
                 indices: [largest, left],
                 sorted: [...sorted],
                 heapSize: heapSize !== null ? heapSize : arr.length,
-                message: `Comparing parent ${arr[largest]} with left child ${arr[left]}`
+                message: `Comparing parent ${arr[largest]} with left child ${arr[left]}`,
+                pseudoLine: 4
             });
             if (arr[left] > arr[largest]) {
                 largest = left;
@@ -99,7 +102,8 @@ const HeapSort = () => {
                 indices: [largest, right],
                 sorted: [...sorted],
                 heapSize: heapSize !== null ? heapSize : arr.length,
-                message: `Comparing with right child ${arr[right]}`
+                message: `Comparing with right child ${arr[right]}`,
+                pseudoLine: 5
             });
             if (arr[right] > arr[largest]) {
                 largest = right;
@@ -114,7 +118,8 @@ const HeapSort = () => {
                 indices: [i, largest],
                 sorted: [...sorted],
                 heapSize: heapSize !== null ? heapSize : arr.length,
-                message: `Swapping ${arr[largest]} with ${arr[i]}`
+                message: `Swapping ${arr[largest]} with ${arr[i]}`,
+                pseudoLine: 6
             });
             heapify(arr, n, largest, steps, sorted, heapSize);
         }
@@ -132,7 +137,8 @@ const HeapSort = () => {
             indices: [],
             sorted: [],
             heapSize: n,
-            message: "Building Max Heap"
+            message: "Building Max Heap",
+            pseudoLine: 1
         });
 
         for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
@@ -145,7 +151,8 @@ const HeapSort = () => {
             indices: [],
             sorted: [],
             heapSize: n,
-            message: "Max Heap built successfully"
+            message: "Max Heap built successfully",
+            pseudoLine: 2
         });
 
         // Extract elements from heap
@@ -160,7 +167,8 @@ const HeapSort = () => {
                 heapSize: i,
                 indices: [0, i],
                 sorted: [...sorted],
-                message: `Extracted ${workingArray[i]} to sorted array`
+                message: `Extracted ${workingArray[i]} to sorted array`,
+                pseudoLine: 7
             });
 
             heapify(workingArray, i, 0, steps, sorted, i);
@@ -173,7 +181,8 @@ const HeapSort = () => {
             sorted: [...sorted],
             heapSize: 0,
             indices: [],
-            message: "Sorting complete!"
+            message: "Sorting complete!",
+            pseudoLine: 8
         });
 
         return steps;
@@ -213,6 +222,7 @@ const HeapSort = () => {
             setCurrentStepIndex(-1);
             setHighlightedNodes([]);
             setSortedArray([]);
+            setPseudocodeHighlight(null);
 
             const startTime = performance.now();
             const sortSteps = heapSort(numArray);
@@ -281,7 +291,7 @@ const HeapSort = () => {
 
     const animateSingleStep = async (step, isForward = true) => {
         setIsAnimating(true);
-
+        setPseudocodeHighlight(step.pseudoLine);
         // Always set the sorted array from the step
         setSortedArray([...(step.sorted || [])]);
         setNumberArr([...step.array]);
@@ -331,12 +341,14 @@ const HeapSort = () => {
             setNumberArr([...initialArrayRef.current]);
             setHighlightedNodes([]);
             setSortedArray([]);
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
 
         const prevStep = steps[prevStepIndex];
         setNumberArr([...prevStep.array]);
+        setPseudocodeHighlight(prevStep.pseudoLine);
         setSortedArray([...(prevStep.sorted || [])]);
         setHighlightedNodes(prevStep.indices || []);
 
@@ -354,6 +366,7 @@ const HeapSort = () => {
                 setNumberArr([...initialArrayRef.current]);
                 setHighlightedNodes([]);
                 setSortedArray([]);
+                setPseudocodeHighlight(null);
 
                 const startTime = performance.now();
                 const sortSteps = heapSort(initialArrayRef.current);
@@ -378,6 +391,7 @@ const HeapSort = () => {
             if (isCancelledRef.current) break;
             setCurrentStepIndex(i);
             const step = steps[i];
+            setPseudocodeHighlight(step.pseudoLine);
 
             // Always update array and sorted array from step
             setNumberArr([...step.array]);
@@ -543,7 +557,7 @@ const HeapSort = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -644,38 +658,84 @@ const HeapSort = () => {
 
             {/* Visualization Area */}
             <div className="flex-grow flex flex-col items-center justify-start mt-6 px-4 overflow-auto">
-                {currentStep && (
-                    <div className="mb-4">
-                        <div className="badge badge-primary badge-lg">
-                            {currentStep.message}
+                {/* Visualization */}
+
+                    {currentStep && (
+                        <div className="flex mb-4 justify-center">
+                            <div className="badge badge-primary badge-lg">
+                                {currentStep.message}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tree Visualization */}
+                    <div className="w-full max-w-7xl bg-base-100 rounded-lg shadow-lg p-4 mb-6 min-h-[400px]">
+                        <h3 className="text-lg font-bold mb-3 text-center">Binary Heap Tree</h3>
+                        <div className="w-full h-full min-h-[350px]">
+                            {renderTree()}
                         </div>
                     </div>
-                )}
 
-                {/* Tree Visualization */}
-                <div className="w-full max-w-7xl bg-base-100 rounded-lg shadow-lg p-4 mb-6 min-h-[400px]">
-                    <h3 className="text-lg font-bold mb-3 text-center">Binary Heap Tree</h3>
-                    <div className="w-full h-full min-h-[350px]">
-                        {renderTree()}
-                    </div>
-                </div>
+                    {/* Sorted Array Display */}
+                    {sortedArray.length > 0 && (
+                        <div className="w-full max-w-6xl mb-6">
+                            <h3 className="text-lg font-bold mb-3 text-center">Sorted Array</h3>
+                            <div className="flex flex-wrap justify-center gap-2">
+                                {sortedArray.map((num, idx) => (
+                                    <div
+                                        key={idx}
+                                        className="w-16 h-16 flex items-center justify-center bg-green-200 border-2 border-green-500 rounded-lg font-bold text-lg text-black"
+                                    >
+                                        {num}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
-                {/* Sorted Array Display */}
-                {sortedArray.length > 0 && (
-                    <div className="w-full max-w-6xl mb-6">
-                        <h3 className="text-lg font-bold mb-3 text-center">Sorted Array</h3>
-                        <div className="flex flex-wrap justify-center gap-2">
-                            {sortedArray.map((num, idx) => (
-                                <div
-                                    key={idx}
-                                    className="w-16 h-16 flex items-center justify-center bg-green-200 border-2 border-green-500 rounded-lg font-bold text-lg text-black"
-                                >
-                                    {num}
+                    <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                        <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                        {/* Pseudocode Panel */}
+                        <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                            <div className="card bg-base-100 shadow-lg border border-base-300">
+                                <div className="card-body p-3 w-60">
+                                    <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="16 18 22 12 16 6"></polyline>
+                                            <polyline points="8 6 2 12 8 18"></polyline>
+                                        </svg>
+                                        Pseudocode
+                                    </h3>
+                                    <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                        <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                            <span className="text-primary font-bold">buildMaxHeap</span>(array)
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                            <span className="text-secondary font-bold">for</span> i = n/2-1 <span className="text-secondary font-bold">down to</span> 0:
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                            heapify(array, n, i)
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 4 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                            <span className="text-info font-bold">if</span> left_child {'>'} largest
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 5 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                            <span className="text-info font-bold">if</span> right_child {'>'} largest
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 6 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                            swap(parent, largest)
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 7 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                            swap(root, last)
+                                        </div>
+                                        <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 8 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                            <span className="text-primary font-bold">return</span> sorted
+                                        </div>
+                                    </div>
                                 </div>
-                            ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    </details>
             </div>
 
             {/* Controls */}

@@ -27,6 +27,7 @@ const QuickSort = () => {
     const initialArrayRef = useRef([]);
     const isInitializedRef = useRef(false);
     const movedBarsRef = useRef([]);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
 
     // State for complexity display
     const [showComplexity, setShowComplexity] = useState(false);
@@ -137,6 +138,7 @@ const QuickSort = () => {
             initialArrayRef.current = [...numArray];
             setCurrentStepIndex(-1);
             setSteps([]);
+            setPseudocodeHighlight(null);
             await drawBars(numArray, true);
 
             // Fetch sorting steps
@@ -421,6 +423,7 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
+            setPseudocodeHighlight(2);
             if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
             await delay(speedRef.current / 2);
         } else if (step.type === "compare") {
@@ -428,6 +431,7 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [step.left], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
+            setPseudocodeHighlight(4);
             if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
             await delay(speedRef.current / 2);
             const pivotValue = numberArr[step.pivot];
@@ -454,6 +458,7 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [step.index1, step.index2], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
+            setPseudocodeHighlight(5);
             if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
             await delay(100);
             if (soundRef.current) synthRef.current.triggerAttackRelease('B4', '16n');
@@ -484,6 +489,7 @@ const QuickSort = () => {
                 { pivotIndex: step.pivot, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                 sortedIndices
             );
+            setPseudocodeHighlight(6);
             if (soundRef.current) synthRef.current.triggerAttackRelease('G5', '8n');
             await delay(speedRef.current / 2);
         } else if (step.type === "sorted") {
@@ -495,6 +501,7 @@ const QuickSort = () => {
                 { pivotIndex: null, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
+            setPseudocodeHighlight(9);
             if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '4n');
             await delay(speedRef.current / 2);
         }
@@ -522,6 +529,7 @@ const QuickSort = () => {
             resetHighlight();
             setNumberArr([...initialArrayRef.current]);
             movedBarsRef.current = { lessThan: [], greaterThan: [] };
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
@@ -534,6 +542,7 @@ const QuickSort = () => {
         for (let i = 0; i <= prevStepIndex; i++) {
             const step = steps[i];
             if (step.type === "swap") {
+                setPseudocodeHighlight(5);
                 [arrayToDraw[step.index1], arrayToDraw[step.index2]] = [arrayToDraw[step.index2], arrayToDraw[step.index1]];
                 [lessThanIndices, greaterThanIndices] = [lessThanIndices, greaterThanIndices].map(indices =>
                     indices.map(idx => {
@@ -543,6 +552,7 @@ const QuickSort = () => {
                     })
                 );
             } else if (step.type === "compare") {
+                setPseudocodeHighlight(4);
                 const pivotValue = arrayToDraw[step.pivot];
                 const comparedValue = arrayToDraw[step.left];
                 if (comparedValue <= pivotValue) {
@@ -557,10 +567,12 @@ const QuickSort = () => {
                     lessThanIndices = lessThanIndices.filter(i => i !== step.left);
                 }
             } else if (step.type === "partition") {
+                setPseudocodeHighlight(6);
                 sortedIndices.push(step.pivot);
                 lessThanIndices = [];
                 greaterThanIndices = [];
             } else if (step.type === "sorted") {
+                setPseudocodeHighlight(9);
                 sortedIndices = [...new Set([...sortedIndices, ...step.indices])];
                 lessThanIndices = [];
                 greaterThanIndices = [];
@@ -573,26 +585,31 @@ const QuickSort = () => {
 
         const prevStep = steps[prevStepIndex];
         if (prevStep.type === "pivot") {
+            setPseudocodeHighlight(2);
             await highlightBars(
                 { pivotIndex: prevStep.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
         } else if (prevStep.type === "compare") {
+            setPseudocodeHighlight(4);
             await highlightBars(
                 { pivotIndex: prevStep.pivot, compareIndices: [prevStep.left], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
         } else if (prevStep.type === "swap") {
+            setPseudocodeHighlight(5);
             await highlightBars(
                 { pivotIndex: prevStep.pivot, compareIndices: [prevStep.index1, prevStep.index2], lessThanIndices, greaterThanIndices },
                 sortedIndices
             );
         } else if (prevStep.type === "partition") {
+            setPseudocodeHighlight(6);
             await highlightBars(
                 { pivotIndex: prevStep.pivot, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                 sortedIndices
             );
         } else if (prevStep.type === "sorted") {
+            setPseudocodeHighlight(9);
             await highlightBars(
                 { pivotIndex: null, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                 sortedIndices
@@ -629,6 +646,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    setPseudocodeHighlight(2);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('D4', '8n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
@@ -640,6 +658,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [step.left], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    setPseudocodeHighlight(4);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('F4', '16n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
@@ -689,6 +708,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    setPseudocodeHighlight(5);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('A4', '16n');
                     await delay(100);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('B4', '16n');
@@ -705,6 +725,7 @@ const QuickSort = () => {
                         { pivotIndex: step.pivot, compareIndices: [], lessThanIndices: [], greaterThanIndices: [] },
                         sortedIndices
                     );
+                    setPseudocodeHighlight(6);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('G5', '8n');
                     await new Promise(resolve => {
                         const timeout = setTimeout(resolve, speedRef.current);
@@ -719,6 +740,7 @@ const QuickSort = () => {
                         { pivotIndex: null, compareIndices: [], lessThanIndices, greaterThanIndices },
                         sortedIndices
                     );
+                    setPseudocodeHighlight(9);
                     if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '4n');
                     await drawBars(currentArray, false);
                     await new Promise(resolve => {
@@ -734,6 +756,7 @@ const QuickSort = () => {
                 break;
             }
         }
+        setPseudocodeHighlight(9);
     };
 
     const startSorting = async () => {
@@ -843,7 +866,7 @@ const QuickSort = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -944,6 +967,52 @@ const QuickSort = () => {
 
             <div className="flex justify-center mt-6 flex-grow">
                 <svg ref={svgRef} className="block w-full h-auto"></svg>
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3 w-70">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">function</span> quickSort(array, low, high):
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
+                                        pivot = array[high]
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 3 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-warning font-bold">for</span> i <span className="text-warning font-bold">in</span> low to high-1:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 4 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        <span className="text-info font-bold">if</span> array[i] {'<='} pivot
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-6 ${pseudocodeHighlight === 5 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        swap(array[i], array[j])
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 6 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        swap(array[j], pivot)
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 7 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        quickSort(array, low, j-1)
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 8 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        quickSort(array, j+1, high)
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 9 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> sorted
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </details>
             </div>
             <div className="flex flex-col items-center mb-4 px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-col xl:flex-row justify-center items-center gap-3 sm:gap-4 w-full xl:w-auto">

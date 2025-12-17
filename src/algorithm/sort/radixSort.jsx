@@ -24,6 +24,7 @@ const RadixSort = () => {
     const [currentDigitPosition, setCurrentDigitPosition] = useState(null);
     const [highlightedIndex, setHighlightedIndex] = useState(null);
     const [highlightedBucket, setHighlightedBucket] = useState(null);
+    const [pseudocodeHighlight, setPseudocodeHighlight] = useState(null);
     const synthRef = useRef(null);
     const { soundEnabled } = useSound();
     const soundRef = useRef(soundEnabled);
@@ -38,8 +39,6 @@ const RadixSort = () => {
             if (synthRef.current) synthRef.current.dispose();
         };
     }, []);
-
-    const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     useEffect(() => {
         if (error) {
@@ -94,7 +93,8 @@ const RadixSort = () => {
                 type: "pass",
                 digit: k,
                 array: [...workingArray],
-                buckets: Array.from({ length: 10 }, () => [])
+                buckets: Array.from({ length: 10 }, () => []),
+                pseudoLine: 1
             });
 
             let digitBuckets = Array.from({ length: 10 }, () => []);
@@ -107,7 +107,8 @@ const RadixSort = () => {
                     digit: digit,
                     bucketIndex: digit,
                     array: [...workingArray],
-                    buckets: digitBuckets.map(b => [...b])
+                    buckets: digitBuckets.map(b => [...b]),
+                    pseudoLine: 2
                 });
                 digitBuckets[digit].push(workingArray[i]);
                 steps.push({
@@ -115,7 +116,8 @@ const RadixSort = () => {
                     value: workingArray[i],
                     bucketIndex: digit,
                     array: [...workingArray],
-                    buckets: digitBuckets.map(b => [...b])
+                    buckets: digitBuckets.map(b => [...b]),
+                    pseudoLine: 3
                 });
             }
 
@@ -124,14 +126,16 @@ const RadixSort = () => {
             steps.push({
                 type: "reconstruct",
                 array: [...workingArray],
-                buckets: digitBuckets.map(b => [...b])
+                buckets: digitBuckets.map(b => [...b]),
+                pseudoLine: 4
             });
         }
 
         steps.push({
             type: "complete",
             array: [...workingArray],
-            buckets: Array.from({ length: 10 }, () => [])
+            buckets: Array.from({ length: 10 }, () => []),
+            pseudoLine: 5
         });
 
         return steps;
@@ -176,6 +180,7 @@ const RadixSort = () => {
             setCurrentDigitPosition(null);
             setHighlightedIndex(null);
             setHighlightedBucket(null);
+            setPseudocodeHighlight(null);
 
             const startTime = performance.now();
             const sortSteps = radixSort(numArray);
@@ -244,6 +249,7 @@ const RadixSort = () => {
 
     const animateSingleStep = async (step, isForward = true) => {
         setIsAnimating(true);
+        setPseudocodeHighlight(step.pseudoLine);
 
         if (step.type === "pass") {
             setNumberArr([...step.array]);
@@ -297,12 +303,14 @@ const RadixSort = () => {
             setCurrentDigitPosition(null);
             setHighlightedIndex(null);
             setHighlightedBucket(null);
+            setPseudocodeHighlight(null);
             setIsAnimating(false);
             return;
         }
 
         const prevStep = steps[prevStepIndex];
         setNumberArr([...prevStep.array]);
+        setPseudocodeHighlight(prevStep.pseudoLine);
 
         if (prevStep.type === "pass") {
             setCurrentDigitPosition(prevStep.digit);
@@ -333,6 +341,7 @@ const RadixSort = () => {
                 setCurrentDigitPosition(null);
                 setHighlightedIndex(null);
                 setHighlightedBucket(null);
+                setPseudocodeHighlight(null);
 
                 const startTime = performance.now();
                 const sortSteps = radixSort(initialArrayRef.current);
@@ -357,6 +366,7 @@ const RadixSort = () => {
             if (isCancelledRef.current) break;
             setCurrentStepIndex(i);
             const step = steps[i];
+            setPseudocodeHighlight(step.pseudoLine);
 
             if (step.type === "pass") {
                 setNumberArr([...step.array]);
@@ -385,7 +395,7 @@ const RadixSort = () => {
                 setCurrentDigitPosition(null);
                 setHighlightedIndex(null);
                 setHighlightedBucket(null);
-                if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '12n');
+                if (soundRef.current) synthRef.current.triggerAttackRelease('C6', '32n');
                 await new Promise(resolve => setTimeout(resolve, speedRef.current));
             }
         }
@@ -420,7 +430,7 @@ const RadixSort = () => {
                             checked={showComplexity}
                             onChange={(e) => setShowComplexity(e.target.checked)}
                         />
-                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-200/50 border-b border-base-300">
+                        <div className="collapse-title text-xl font-bold flex items-center justify-between bg-base-100 border-b border-base-300">
                             <div className="flex items-center gap-3">
                                 <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
@@ -520,71 +530,110 @@ const RadixSort = () => {
             </div>
 
             {/* Visualization Area */}
-            <div className="flex-grow flex flex-col items-center justify-start mt-6 px-4 overflow-auto">
-                {currentDigitPosition !== null && (
-                    <div className="mb-4">
-                        <div className="badge badge-primary badge-lg">
-                            Sorting by digit position: {currentDigitPosition} (from right)
+            <div className="flex-grow flex flex-col lg:flex-row items-start justify-center mt-6 px-4 gap-6 overflow-auto">
+
+                {/* Visualization */}
+                <div className="w-full max-w-6xl mx-auto">
+                    {currentDigitPosition !== null && (
+                        <div className="flex mb-4 justify-center">
+                            <div className="badge badge-primary badge-lg">
+                                Sorting by digit position: {currentDigitPosition} (from right)
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Current Array */}
+                    <div className="mb-8 w-full">
+                        <h3 className="text-lg font-bold mb-3 text-center">Current Array</h3>
+                        <div className="flex flex-wrap justify-center gap-2">
+                            {numberArr.map((num, idx) => (
+                                <div
+                                    key={idx}
+                                    className={`
+                                        w-16 h-16 flex flex-col items-center justify-center 
+                                        rounded-lg border-2 font-bold text-lg transition-all duration-300
+                                        ${highlightedIndex === idx
+                                        ? 'bg-yellow-300 border-yellow-500 scale-110 shadow-lg'
+                                        : 'bg-purple-100 border-purple-300'}
+                                    `}
+                                >
+                                    <span className="text-xl dark:text-black">{num}</span>
+                                    <span className="text-xs text-gray-600 mt-1">idx: {idx}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                )}
 
-                {/* Current Array */}
-                <div className="mb-8 w-full max-w-6xl">
-                    <h3 className="text-lg font-bold mb-3 text-center">Current Array</h3>
-                    <div className="flex flex-wrap justify-center gap-2">
-                        {numberArr.map((num, idx) => (
-                            <div
-                                key={idx}
-                                className={`
-                                    w-16 h-16 flex flex-col items-center justify-center 
-                                    rounded-lg border-2 font-bold text-lg transition-all duration-300
-                                    ${highlightedIndex === idx
-                                    ? 'bg-yellow-300 border-yellow-500 scale-110 shadow-lg'
-                                    : 'bg-purple-100 border-purple-300'}
-                                `}
-                            >
-                                <span className="text-xl dark:text-black">{num}</span>
-                                <span className="text-xs text-gray-600 mt-1">idx: {idx}</span>
-                            </div>
-                        ))}
+                    {/* Buckets */}
+                    <div className="w-full max-w-6xl">
+                        <h3 className="text-lg font-bold mb-3 text-center">Digit Buckets (0-9)</h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                            {buckets.map((bucket, bucketIdx) => (
+                                <div
+                                    key={bucketIdx}
+                                    className={`
+                                        p-3 rounded-lg border-2 min-h-24 transition-all duration-300
+                                        ${highlightedBucket === bucketIdx
+                                        ? 'bg-green-100 border-green-500 shadow-lg'
+                                        : 'bg-base-100 border-base-300'}
+                                    `}
+                                >
+                                    <div className="text-center font-bold mb-2 text-sm">
+                                        Bucket {bucketIdx}
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 justify-center">
+                                        {bucket.map((num, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="w-12 h-12 flex items-center justify-center bg-orange-200 border border-orange-400 rounded font-semibold text-sm text-black"
+                                            >
+                                                {num}
+                                            </div>
+                                        ))}
+                                        {bucket.length === 0 && (
+                                            <div className="text-xs text-gray-400 italic">empty</div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
-                {/* Buckets */}
-                <div className="w-full max-w-6xl">
-                    <h3 className="text-lg font-bold mb-3 text-center">Digit Buckets (0-9)</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-                        {buckets.map((bucket, bucketIdx) => (
-                            <div
-                                key={bucketIdx}
-                                className={`
-                                    p-3 rounded-lg border-2 min-h-24 transition-all duration-300
-                                    ${highlightedBucket === bucketIdx
-                                    ? 'bg-green-100 border-green-500 shadow-lg'
-                                    : 'bg-base-100 border-base-300'}
-                                `}
-                            >
-                                <div className="text-center font-bold mb-2 text-sm">
-                                    Bucket {bucketIdx}
-                                </div>
-                                <div className="flex flex-wrap gap-1 justify-center">
-                                    {bucket.map((num, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="w-12 h-12 flex items-center justify-center bg-orange-200 border border-orange-400 rounded font-semibold text-sm text-black"
-                                        >
-                                            {num}
-                                        </div>
-                                    ))}
-                                    {bucket.length === 0 && (
-                                        <div className="text-xs text-gray-400 italic">empty</div>
-                                    )}
+                <details open className="hidden lg:block dropdown dropdown-left dropdown-center fixed bottom-1/3 right-2">
+                    <summary className="btn m-1 bg-base-content text-base-200">{"<"}</summary>
+                    {/* Pseudocode Panel */}
+                    <div tabIndex="-1"  className="absolute dropdown-content menu rounded-box z-1 w-52 p-2 lg:w-fit lg:sticky lg:top-6 self-start">
+                        <div className="card bg-base-100 shadow-lg border border-base-300">
+                            <div className="card-body p-3">
+                                <h3 className="text-sm font-bold mb-2 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <polyline points="16 18 22 12 16 6"></polyline>
+                                        <polyline points="8 6 2 12 8 18"></polyline>
+                                    </svg>
+                                    Pseudocode
+                                </h3>
+                                <div className="bg-base-200 rounded-lg p-2 font-mono text-xs space-y-0.5">
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 1 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
+                                        <span className="text-primary font-bold">for</span> digit = 0 <span className="text-primary font-bold">to</span> max:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 2 ? 'bg-warning/20 border-l-2 border-warning' : ''}`}>
+                                        <span className="text-secondary font-bold">for</span> num <span className="text-secondary font-bold">in</span> array:
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 3 ? 'bg-success/20 border-l-2 border-success' : ''}`}>
+                                        bucket[digit].add(num)
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ml-2 ${pseudocodeHighlight === 4 ? 'bg-info/20 border-l-2 border-info' : ''}`}>
+                                        array = concat(buckets)
+                                    </div>
+                                    <div className={`px-2 py-1 rounded transition-all ${pseudocodeHighlight === 5 ? 'bg-accent/20 border-l-2 border-accent' : ''}`}>
+                                        <span className="text-primary font-bold">return</span> array
+                                    </div>
                                 </div>
                             </div>
-                        ))}
+                        </div>
                     </div>
-                </div>
+                </details>
             </div>
 
             {/* Controls */}
