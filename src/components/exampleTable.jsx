@@ -65,7 +65,7 @@ const ExampleTable = ({ exampleInfo, onDelete, onCheckboxChange, selectedIds, on
                                             const colorClass = badgeColors[index % badgeColors.length];
                                             return (
                                                 <li key={index}>
-                                                    <strong className={`badge ${colorClass} rounded-full mb-1`}>{example.title}</strong>
+                                                    <strong className={`badge h-full ${colorClass} rounded-full mb-1`}>{example.title}</strong>
                                                 </li>
                                             )
                                         })}
