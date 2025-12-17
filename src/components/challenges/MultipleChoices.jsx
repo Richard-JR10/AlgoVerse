@@ -8,6 +8,7 @@ import { ChallengeContext } from "./ChallengeContext.jsx";
 const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [answers, setAnswers] = useState(Array(questions.length).fill(null));
+    const [revealed, setRevealed] = useState(Array(questions.length).fill(false));
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [isRetaking, setIsRetaking] = useState(false);
@@ -16,7 +17,7 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     const [retryCount, setRetryCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
-    const { question, choices } = questions[currentQuestionIndex];
+    const { question, choices, answer } = questions[currentQuestionIndex];
     const { setError } = useContext(ErrorContext);
     const { auth } = useAuth();
     const { addSolvedChallenge, addPoints } = useContext(ChallengeContext);
@@ -53,6 +54,36 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
         const newAnswers = [...answers];
         newAnswers[currentQuestionIndex] = choice;
         setAnswers(newAnswers);
+    };
+
+    const handleReveal = async () => {
+        if (!auth.currentUser) {
+            setError("You must be logged in to reveal the answer.");
+            return;
+        }
+        try {
+            const token = await auth.currentUser.getIdToken();
+            // const response = await axios.post(
+            //     `${baseURL}/api/deductCredits`,
+            //     { amount: 10 },
+            //     {
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //             Authorization: `Bearer ${token}`,
+            //         },
+            //     }
+            // );
+            if (true) {
+                const newRevealed = [...revealed];
+                newRevealed[currentQuestionIndex] = true;
+                setRevealed(newRevealed);
+            } else {
+                setError(response.data.error || "Insufficient credits.");
+            }
+        } catch (err) {
+            console.error("Error revealing answer:", err);
+            setError(err.response?.data?.error || "Failed to reveal answer.");
+        }
     };
 
     const handleNextQuestion = () => {
@@ -135,6 +166,7 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     const handleReset = () => {
         setIsSubmitted(false);
         setAnswers(Array(questions.length).fill(null));
+        setRevealed(Array(questions.length).fill(false));
         setCurrentQuestionIndex(0);
         setIsRetaking(true);
     };
@@ -210,7 +242,7 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
     return (
         <div className="flex flex-col items-center">
             <div className="text-lg font-medium mt-20 mb-10">{question}</div>
-            <div className="flex flex-col items-start gap-1">
+            <div className="flex flex-col items-start gap-1 w-full max-w-lg">
                 {choices.map((choice, index) => (
                     <input
                         key={index}
@@ -223,30 +255,47 @@ const MultipleChoices = ({ id, questions, pointsMultiplier }) => {
                         onChange={() => handleAnswerSelect(choice)}
                     />
                 ))}
-                <button
-                    className="btn bg-gray-600 w-full mt-2"
-                    onClick={handlePreviousQuestion}
-                    disabled={currentQuestionIndex === 0}
-                >
-                    Previous
-                </button>
-                {currentQuestionIndex < questions.length - 1 ? (
+                <div className="flex justify-between w-full">
                     <button
-                        className="btn bg-gray-600 w-full mt-2"
-                        onClick={handleNextQuestion}
-                        disabled={!answers[currentQuestionIndex]}
+                        className="btn bg-gray-600 mt-2"
+                        onClick={handlePreviousQuestion}
+                        disabled={currentQuestionIndex === 0}
                     >
-                        Next
+                        Previous
                     </button>
-                ) : (
-                    <button
-                        className="btn btn-success w-full mt-2"
-                        onClick={handleSubmit}
-                        disabled={!answers[currentQuestionIndex]}
-                    >
-                        Submit
-                    </button>
-                )}
+                    {currentQuestionIndex < questions.length - 1 ? (
+                        <button
+                            className="btn bg-gray-600 mt-2"
+                            onClick={handleNextQuestion}
+                            disabled={!answers[currentQuestionIndex]}
+                        >
+                            Next
+                        </button>
+                    ) : (
+                        <button
+                            className="btn btn-success mt-2"
+                            onClick={handleSubmit}
+                            disabled={!answers[currentQuestionIndex]}
+                        >
+                            Submit
+                        </button>
+                    )}
+                </div>
+                <div className="flex justify-center items-center w-full">
+                    {!revealed[currentQuestionIndex] && (
+                        <button
+                            className="btn btn-warning w-full mt-2"
+                            onClick={handleReveal}
+                        >
+                            Reveal Answer (10 credits)
+                        </button>
+                    )}
+                    {revealed[currentQuestionIndex] && (
+                        <div className="mt-2 text-green-500">
+                            Correct answer: {choices.find((c) => c.startsWith(answer))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

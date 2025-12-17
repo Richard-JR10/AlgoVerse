@@ -95,6 +95,7 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
     const [answers, setAnswers] = useState(
         questions.map((q) => Array(q.correctAnswers.length).fill(null))
     );
+    const [revealed, setRevealed] = useState(Array(questions.length).fill(false));
     const [availableChoices, setAvailableChoices] = useState(
         questions.map((q) => [...q.choices])
     );
@@ -245,6 +246,36 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
         }
     };
 
+    const handleReveal = async () => {
+        if (!auth.currentUser) {
+            setError("You must be logged in to reveal the answer.");
+            return;
+        }
+        try {
+            const token = await auth.currentUser.getIdToken();
+            // const response = await axios.post(
+            //     `${baseURL}/api/deductCredits`,
+            //     { amount: 10 },
+            //     {
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //             Authorization: `Bearer ${token}`,
+            //         },
+            //     }
+            // );
+            if (true) {
+                const newRevealed = [...revealed];
+                newRevealed[currentQuestionIndex] = true;
+                setRevealed(newRevealed);
+            } else {
+                setError(response.data.error || "Insufficient credits.");
+            }
+        } catch (err) {
+            console.error("Error revealing answer:", err);
+            setError(err.response?.data?.error || "Failed to reveal answer.");
+        }
+    };
+
     // Submit quiz
     const handleSubmit = async () => {
         setIsSubmitted(true);
@@ -344,6 +375,7 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
     const handleReset = () => {
         setIsSubmitted(false);
         setAnswers(questions.map((q) => Array(q.correctAnswers.length).fill(null)));
+        setRevealed(Array(questions.length).fill(false));
         setAvailableChoices(questions.map((q) => [...q.choices]));
         setCurrentQuestionIndex(0);
         setIsRetaking(true);
@@ -515,6 +547,7 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
                     </DndContext>
                 </div>
 
+
                 <div className="flex justify-between mb-6">
                     <button
                         onClick={prevQuestion}
@@ -550,6 +583,21 @@ const FillInBlanksQuiz = ({ id, questions: rawQuestions, pointsMultiplier }) => 
                         </button>
                     )}
 
+                </div>
+                <div className="flex justify-center items-center w-full">
+                    {!revealed[currentQuestionIndex] && (
+                        <button
+                            className="btn btn-warning w-full mt-2"
+                            onClick={handleReveal}
+                        >
+                            Reveal Answer (10 credits)
+                        </button>
+                    )}
+                    {revealed[currentQuestionIndex] && (
+                        <div className="mt-2 text-green-500">
+                            Correct answers: {questions[currentQuestionIndex].correctAnswers.join(", ")}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

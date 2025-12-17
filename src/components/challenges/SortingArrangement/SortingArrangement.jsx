@@ -37,6 +37,7 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
     // State
     const [items, setItems] = useState([...currentQuestion.initialArray]);
     const [answers, setAnswers] = useState(questions.map(() => [...currentQuestion.initialArray]));
+    const [revealed, setRevealed] = useState(Array(questions.length).fill(false));
     const [activeId, setActiveId] = useState(null);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
@@ -132,6 +133,36 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
             newAnswers[currentQuestionIndex] = [...currentQuestion.initialArray];
             return newAnswers;
         });
+    };
+
+    const handleReveal = async () => {
+        if (!auth.currentUser) {
+            setError("You must be logged in to reveal the answer.");
+            return;
+        }
+        try {
+            const token = await auth.currentUser.getIdToken();
+            // const response = await axios.post(
+            //     `${baseURL}/api/deductCredits`,
+            //     { amount: 10 },
+            //     {
+            //         headers: {
+            //             "Content-Type": "application/json",
+            //             Authorization: `Bearer ${token}`,
+            //         },
+            //     }
+            // );
+            if (true) {
+                const newRevealed = [...revealed];
+                newRevealed[currentQuestionIndex] = true;
+                setRevealed(newRevealed);
+            } else {
+                setError(response.data.error || "Insufficient credits.");
+            }
+        } catch (err) {
+            console.error("Error revealing answer:", err);
+            setError(err.response?.data?.error || "Failed to reveal answer.");
+        }
     };
 
     // Navigation
@@ -245,6 +276,7 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
     const handleReset = () => {
         setIsSubmitted(false);
         setAnswers(questions.map(q => [...q.initialArray]));
+        setRevealed(Array(questions.length).fill(false));
         setCurrentQuestionIndex(0);
         setIsRetaking(true);
         setItems([...questions[0].initialArray]);
@@ -272,7 +304,7 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
 
         return (
             <div className="max-w-3xl mx-auto p-6 rounded-xl flex flex-col justify-center">
-                <div className="mt-4">
+                <div className="mt-20">
                     <div className="text-lg font-medium mb-10 text-center">
                         {isCompleted && !isSubmitted ? "Challenge Already Completed" : "Quiz Results"}
                     </div>
@@ -422,7 +454,21 @@ const SortingArrangement = ({ id, questions, pointsMultiplier }) => {
                             Next
                         </button>
                     )}
-
+                </div>
+                <div className="flex justify-center items-center w-full">
+                    {!revealed[currentQuestionIndex] && (
+                        <button
+                            className="btn btn-warning w-full mt-2"
+                            onClick={handleReveal}
+                        >
+                            Reveal Answer (10 credits)
+                        </button>
+                    )}
+                    {revealed[currentQuestionIndex] && (
+                        <div className="mt-2 text-green-500">
+                            Correct arrangement: {currentQuestion.expectedArray.join(", ")}
+                        </div>
+                    )}
                 </div>
 
             </div>
