@@ -882,7 +882,7 @@ const Dijkstra = () => {
                                             </div>
                                             <div className="mt-4 p-4 bg-info/10 rounded-xl border-l-4 border-info">
                                                 <p className="text-sm text-base-content/80 leading-relaxed">
-                                                    Dijkstra's algorithm finds the shortest paths from a start node using a priority queue, where V is the number of vertices and E is the number of edges.
+                                                    Dijkstra&#39;s algorithm finds the shortest paths from a start node using a priority queue, where V is the number of vertices and E is the number of edges.
                                                 </p>
                                             </div>
                                         </div>
@@ -1023,7 +1023,7 @@ const Dijkstra = () => {
                                     dist, current = heappop(pq)
                                 </div>
                                 <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 7 ? 'bg-primary/20 border-l-2 border-primary' : ''}`}>
-                                    <span className="text-primary font-bold">if</span> dist > distances[current]: continue
+                                    <span className="text-primary font-bold">if</span> {"dist > distances[current]: continue"}
                                 </div>
                                 <div className={`px-2 py-1 rounded transition-all ml-4 ${pseudocodeHighlight === 8 ? 'bg-secondary/20 border-l-2 border-secondary' : ''}`}>
                                     <span className="text-secondary font-bold">for</span> neighbor, weight in graph[current]:
