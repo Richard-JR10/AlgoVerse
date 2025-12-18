@@ -5,7 +5,7 @@ import { ErrorContext } from "../../context/errorContext.jsx";
 import PropTypes from "prop-types";
 import { ChallengeContext } from "./ChallengeContext.jsx";
 
-const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
+const MatchingQuiz = ({ id, pairs, instruction, pointsMultiplier }) => {
     const [matches, setMatches] = useState({});
     const [revealed, setRevealed] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -32,7 +32,7 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
     useEffect(() => {
         const shuffled = [...pairs.map(p => p.right)].sort(() => Math.random() - 0.5);
         setShuffledRight(shuffled);
-    }, []);
+    }, [pairs]);
 
     // Update lines when matches change
     useEffect(() => {
@@ -77,7 +77,9 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
                     });
                     if (response.data.SolvedChallenges?.includes(id)) {
                         setIsCompleted(true);
-                        setStoredMatches(response.data.challengeAttempts?.[id]?.matches || {});
+                        // Backend stores as 'answers', so we need to get it from there
+                        const storedAnswers = response.data.challengeAttempts?.[id]?.answers;
+                        setStoredMatches(storedAnswers || {});
                         setStoredScore(response.data.challengeAttempts?.[id]?.score || 0);
                         setRetryCount(response.data.retryCount?.[id] || 0);
                     }
@@ -133,9 +135,10 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
         }
         try {
             const token = await auth.currentUser.getIdToken();
+            // Send matches as 'answers' to match backend expectation
             await axios.post(
                 `${baseURL}/api/completeChallenge`,
-                { challengeId: id, points: totalPoints, matches, score },
+                { challengeId: id, points: totalPoints, answers: matches, score },
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -159,9 +162,10 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
         }
         try {
             const token = await auth.currentUser.getIdToken();
+            // Send matches as 'answers' to match backend expectation
             await axios.post(
                 `${baseURL}/api/recordRetry`,
-                { challengeId: id, matches, score },
+                { challengeId: id, answers: matches, score },
                 {
                     headers: {
                         "Content-Type": "application/json",
@@ -274,10 +278,10 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
     return (
         <div className="flex flex-col items-center px-4">
             <div className="text-lg font-medium mt-20 mb-4">
-                {pairs.instruction}
+                {instruction || "Match the items"}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-10">
-                Click an algorithm on the left, then click its matching time complexity on the right
+                Click an item on the left, then click its match on the right
             </div>
             <div className="relative w-full max-w-5xl" ref={containerRef}>
                 {/* SVG for drawing lines */}
@@ -307,9 +311,9 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
                 </svg>
 
                 <div className="grid grid-cols-[1fr_80px_1fr] gap-4 relative" style={{ zIndex: 2 }}>
-                    {/* Left Column - Algorithms */}
+                    {/* Left Column */}
                     <div className="flex flex-col gap-4">
-                        <div className="text-sm font-semibold mb-2 text-center">Algorithms</div>
+                        <div className="text-sm font-semibold mb-2 text-center">Items</div>
                         {pairs.map((pair, index) => (
                             <div key={index} className="flex flex-col gap-2">
                                 <button
@@ -350,9 +354,9 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
                     {/* Middle spacer for lines */}
                     <div></div>
 
-                    {/* Right Column - Time Complexities */}
+                    {/* Right Column */}
                     <div className="flex flex-col gap-4">
-                        <div className="text-sm font-semibold mb-2 text-center">Time Complexities</div>
+                        <div className="text-sm font-semibold mb-2 text-center">Matches</div>
                         {shuffledRight.map((rightItem, index) => (
                             <button
                                 key={index}
@@ -410,5 +414,6 @@ MatchingQuiz.propTypes = {
             right: PropTypes.string.isRequired,
         })
     ).isRequired,
+    instruction: PropTypes.string,
     pointsMultiplier: PropTypes.number.isRequired,
 };
