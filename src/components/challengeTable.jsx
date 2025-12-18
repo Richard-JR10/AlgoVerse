@@ -3,6 +3,7 @@ import SortingArrangement from "./challenges/SortingArrangement/SortingArrangeme
 import MultipleChoices from "./challenges/MultipleChoices.jsx";
 import {useContext} from "react";
 import {ChallengeContext} from "./challenges/ChallengeContext.jsx";
+import MatchingQuiz from "./challenges/matchingQuiz.jsx";
 
 const ArrowButton = ({id, difficulty, type, question}) => {
     const pointsMultiplier = difficulty === "Hard" ? 3 : difficulty === "Medium" ? 2 : 1;
@@ -20,6 +21,7 @@ const ArrowButton = ({id, difficulty, type, question}) => {
                         {/* if there is a button in form, it will close the modal */}
                         <button className="btn btn-lg btn-circle btn-ghost absolute right-2 top-2">✕</button>
                     </form>
+                    {type === 4 && <MatchingQuiz id={id} pairs={question} pointsMultiplier={pointsMultiplier} />}
                     {type === 3 && <FillInBlanksQuiz id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
                     {type === 2 && <SortingArrangement id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
                     {type === 1 && <MultipleChoices id={id} questions={question} pointsMultiplier={pointsMultiplier} />}
