@@ -59,6 +59,7 @@ const ChallengesAdminTable = ({ challengesInfo, onDelete, onCheckboxChange, sele
                                 {content.type === 1 && 'Multiple Choice'}
                                 {content.type === 2 && 'Sorting Arrangement'}
                                 {content.type === 3 && 'Fill In The Blanks'}
+                                {content.type === 4 && 'Matching Type'}
                             </span>
                         </td>
                         <td className="flex flex-row">

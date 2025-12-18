@@ -18,6 +18,8 @@ const ChallengesAddData = ({ onAddData }) => {
             explanation: '',
             text: '',
             correctAnswers: ['', ''], // For Fill In The Blanks
+            left: '',
+            right: '',
         },
     ]);
 
@@ -26,6 +28,7 @@ const ChallengesAddData = ({ onAddData }) => {
             'Multiple Choices': 1,
             'Sorting Arrangement': 2,
             'Fill In The Blanks': 3,
+            'Matching Type': 4,
         };
         setChallengeType(typeMap[e.target.value]);
         // Reset question entries when type changes
@@ -167,6 +170,11 @@ const ChallengesAddData = ({ onAddData }) => {
                     choices: entry.choices,
                     explanation: entry.explanation,
                 };
+            } else if (challengeType === 4) {
+                result = {
+                    left: entry.left,
+                    right: entry.right,
+                };
             }
             return result;
         });
@@ -197,6 +205,7 @@ const ChallengesAddData = ({ onAddData }) => {
                     <option>Multiple Choices</option>
                     <option>Sorting Arrangement</option>
                     <option>Fill In The Blanks</option>
+                    <option>Matching Type</option>
                 </select>
                 <button
                     className="btn btn-primary join-item gap-2"
@@ -450,6 +459,32 @@ const ChallengesAddData = ({ onAddData }) => {
                                                 placeholder="Enter explanation"
                                                 onChange={(e) => handleInputChange(index, e)}
                                             ></textarea>
+                                        </>
+                                    )}
+                                    {challengeType === 4 && (
+                                        <>
+                                            <legend className="fieldset-legend">Question</legend>
+                                            <input
+                                                required
+                                                name="left"  // ✅ Fixed
+                                                value={entry.left}
+                                                type="text"
+                                                className="input w-full"
+                                                placeholder="(e.g., Bubble Sort.)"
+                                                onChange={(e) => handleInputChange(index, e)}
+                                                onKeyDown={preventEnterKey}
+                                            />
+                                            <legend className="fieldset-legend">Answer</legend>
+                                            <input
+                                                required
+                                                name="right"  // ✅ Fixed
+                                                value={entry.right}
+                                                type="text"
+                                                className="input w-full"
+                                                placeholder="(e.g., O(n))"
+                                                onChange={(e) => handleInputChange(index, e)}
+                                                onKeyDown={preventEnterKey}
+                                            />
                                         </>
                                     )}
                                 </div>

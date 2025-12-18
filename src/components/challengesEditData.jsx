@@ -50,7 +50,9 @@ const ChallengesEditData = ({ content, onEditData }) => {
             ? { question: '', answer: '', choices: ['', '', '', ''] }
             : challengeData.type === 2
                 ? { algorithm: '', initialArray: [], expectedArray: [], stepDescription: '', explanation: '' }
-                : { text: '', correctAnswers: ['', ''], choices: ['', '', '', ''], explanation: '' };
+                : challengeData.type === 3
+                    ? { text: '', correctAnswers: ['', ''], choices: ['', '', '', ''], explanation: '' }
+                    : { left: '', right: '' };
         setQuestionEntries([...questionEntries, newQuestion]);
     };
 
@@ -138,7 +140,9 @@ const ChallengesEditData = ({ content, onEditData }) => {
                             {questionEntries.map((item, i) => (
                                 <div key={i} className="mt-2">
                                     <div className="flex flex-row justify-between items-center mb-2">
-                                        <legend className="fieldset-legend pt-0">Question {i + 1}</legend>
+                                        <legend className="fieldset-legend pt-0">
+                                            {`Question ${i + 1}`}
+                                        </legend>
                                         {i >= 1 && (
                                             <button type="button" className="btn btn-error btn-square" onClick={() => handleRemoveQuestion(i)}>
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
@@ -270,6 +274,28 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                                 value={item.explanation}
                                                 onChange={(e) => handleQuestionChange(i, 'explanation', e.target.value)}
                                             ></textarea>
+                                        </>
+                                    )}
+                                    {challengeData.type === 4 && (
+                                        <>
+                                            <legend className="fieldset-legend">Question</legend>
+                                            <input
+                                                type="text"
+                                                className="input w-full"
+                                                placeholder="Enter left item (e.g., Binary Search)"
+                                                value={item.left}
+                                                onChange={(e) => handleQuestionChange(i, 'left', e.target.value)}
+                                                onKeyDown={preventEnterKey}
+                                            />
+                                            <legend className="fieldset-legend">Answer</legend>
+                                            <input
+                                                type="text"
+                                                className="input w-full"
+                                                placeholder="Enter right item (e.g., O(log n))"
+                                                value={item.right}
+                                                onChange={(e) => handleQuestionChange(i, 'right', e.target.value)}
+                                                onKeyDown={preventEnterKey}
+                                            />
                                         </>
                                     )}
                                 </div>

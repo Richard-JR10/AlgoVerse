@@ -5,16 +5,16 @@ import { ErrorContext } from "../../context/errorContext.jsx";
 import PropTypes from "prop-types";
 import { ChallengeContext } from "./ChallengeContext.jsx";
 
-const MatchingQuiz = ({ id, pointsMultiplier }) => {
+const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
     // Fixed question and pairs
-    const pairs = [
-        { left: "Binary Search", right: "O(log n) - Divides search space in half" },
-        { left: "Linear Search", right: "O(n) - Checks each element sequentially" },
-        { left: "Quick Sort", right: "O(n log n) average - Divide and conquer sorting" },
-        { left: "Bubble Sort", right: "O(n²) - Compares adjacent elements" },
-        { left: "Hash Table Lookup", right: "O(1) - Direct access via hash function" },
-        { left: "Merge Sort", right: "O(n log n) - Stable divide and conquer" }
-    ];
+    // const pairs = [
+    //     { left: "Binary Search", right: "O(log n) - Divides search space in half" },
+    //     { left: "Linear Search", right: "O(n) - Checks each element sequentially" },
+    //     { left: "Quick Sort", right: "O(n log n) average - Divide and conquer sorting" },
+    //     { left: "Bubble Sort", right: "O(n²) - Compares adjacent elements" },
+    //     { left: "Hash Table Lookup", right: "O(1) - Direct access via hash function" },
+    //     { left: "Merge Sort", right: "O(n log n) - Stable divide and conquer" }
+    // ];
 
     const [matches, setMatches] = useState({});
     const [revealed, setRevealed] = useState({});
@@ -414,5 +414,11 @@ export default MatchingQuiz;
 
 MatchingQuiz.propTypes = {
     id: PropTypes.string.isRequired,
+    pairs: PropTypes.arrayOf(
+        PropTypes.shape({
+            left: PropTypes.string.isRequired,
+            right: PropTypes.string.isRequired,
+        })
+    ).isRequired,
     pointsMultiplier: PropTypes.number.isRequired,
 };
