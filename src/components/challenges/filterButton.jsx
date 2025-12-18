@@ -164,6 +164,12 @@ const FilterButton = ({
                                 >
                                     Fill in the Blanks
                                 </button>
+                                <button
+                                    onClick={() => handleFilterChange('type', 4)}
+                                    className={`btn btn-xs ${filters.type === 4 ? 'btn-accent' : 'btn-outline'}`}
+                                >
+                                    Matching Type
+                                </button>
                             </div>
                         </div>
                     </div>
