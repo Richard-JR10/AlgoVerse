@@ -6,16 +6,6 @@ import PropTypes from "prop-types";
 import { ChallengeContext } from "./ChallengeContext.jsx";
 
 const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
-    // Fixed question and pairs
-    // const pairs = [
-    //     { left: "Binary Search", right: "O(log n) - Divides search space in half" },
-    //     { left: "Linear Search", right: "O(n) - Checks each element sequentially" },
-    //     { left: "Quick Sort", right: "O(n log n) average - Divide and conquer sorting" },
-    //     { left: "Bubble Sort", right: "O(n²) - Compares adjacent elements" },
-    //     { left: "Hash Table Lookup", right: "O(1) - Direct access via hash function" },
-    //     { left: "Merge Sort", right: "O(n log n) - Stable divide and conquer" }
-    // ];
-
     const [matches, setMatches] = useState({});
     const [revealed, setRevealed] = useState({});
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -284,7 +274,7 @@ const MatchingQuiz = ({ id, pairs, pointsMultiplier }) => {
     return (
         <div className="flex flex-col items-center px-4">
             <div className="text-lg font-medium mt-20 mb-4">
-                Match Algorithms with Their Time Complexities
+                {pairs.instruction}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-10">
                 Click an algorithm on the left, then click its matching time complexity on the right

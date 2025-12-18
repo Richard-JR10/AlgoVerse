@@ -2,7 +2,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 
 const ChallengesEditData = ({ content, onEditData }) => {
-    const { id, title, category, type, difficulty, questions } = content;
+    const { id, title, category, type, difficulty, questions, instruction } = content;
 
     const [questionEntries, setQuestionEntries] = useState(questions);
     const [challengeData, setChallengeData] = useState({
@@ -10,6 +10,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
         category,
         type,
         difficulty,
+        instruction: instruction || '', // Handle cases where instruction doesn't exist
     });
 
     const handleInputChange = (e) => {
@@ -62,13 +63,15 @@ const ChallengesEditData = ({ content, onEditData }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onEditData(id, {
+        const updateData = {
             title: challengeData.title,
             category: challengeData.category,
             type: parseInt(challengeData.type),
             difficulty: challengeData.difficulty,
             questions: questionEntries,
-        });
+            ...(challengeData.type === 4 && { instruction: challengeData.instruction }) // Only include instruction for type 4
+        };
+        onEditData(id, updateData);
         document.getElementById(id).close();
     };
 
@@ -106,6 +109,20 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                 onChange={handleInputChange}
                                 onKeyDown={preventEnterKey}
                             />
+                            {challengeData.type === 4 && (
+                                <>
+                                    <legend className="fieldset-legend">Instruction</legend>
+                                    <input
+                                        name="instruction"
+                                        value={challengeData.instruction}
+                                        type="text"
+                                        className="input w-full"
+                                        placeholder="Enter matching instructions (e.g., Match algorithms with their time complexities)"
+                                        onChange={handleInputChange}
+                                        onKeyDown={preventEnterKey}
+                                    />
+                                </>
+                            )}
                             <legend className="fieldset-legend">Category</legend>
                             <select
                                 name="category"
@@ -130,7 +147,9 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                 <option>Hard</option>
                             </select>
                             <div className="flex flex-row justify-between">
-                                <legend className="fieldset-legend">Questions</legend>
+                                <legend className="fieldset-legend">
+                                    {challengeData.type === 4 ? 'Pairs' : 'Questions'}
+                                </legend>
                                 <button type="button" className="btn btn-primary btn-square" onClick={handleAddQuestion}>
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
                                         <path fill="currentColor" d="M18 10h-4V6a2 2 0 0 0-4 0l.071 4H6a2 2 0 0 0 0 4l4.071-.071L10 18a2 2 0 0 0 4 0v-4.071L18 14a2 2 0 0 0 0-4"/>
@@ -141,7 +160,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                 <div key={i} className="mt-2">
                                     <div className="flex flex-row justify-between items-center mb-2">
                                         <legend className="fieldset-legend pt-0">
-                                            {`Question ${i + 1}`}
+                                            {challengeData.type === 4 ? `Pair ${i + 1}` : `Question ${i + 1}`}
                                         </legend>
                                         {i >= 1 && (
                                             <button type="button" className="btn btn-error btn-square" onClick={() => handleRemoveQuestion(i)}>
@@ -278,7 +297,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                     )}
                                     {challengeData.type === 4 && (
                                         <>
-                                            <legend className="fieldset-legend">Question</legend>
+                                            <legend className="fieldset-legend">Left Item</legend>
                                             <input
                                                 type="text"
                                                 className="input w-full"
@@ -287,7 +306,7 @@ const ChallengesEditData = ({ content, onEditData }) => {
                                                 onChange={(e) => handleQuestionChange(i, 'left', e.target.value)}
                                                 onKeyDown={preventEnterKey}
                                             />
-                                            <legend className="fieldset-legend">Answer</legend>
+                                            <legend className="fieldset-legend">Right Item (Match)</legend>
                                             <input
                                                 type="text"
                                                 className="input w-full"
@@ -317,6 +336,7 @@ ChallengesEditData.propTypes = {
         type: PropTypes.number.isRequired,
         difficulty: PropTypes.string.isRequired,
         questions: PropTypes.arrayOf(PropTypes.object).isRequired,
+        instruction: PropTypes.string, // Optional, only for type 4
     }).isRequired,
     onEditData: PropTypes.func.isRequired,
 };

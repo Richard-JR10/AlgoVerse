@@ -2,22 +2,23 @@ import { useState } from 'react';
 import PropTypes from 'prop-types';
 
 const ChallengesAddData = ({ onAddData }) => {
-    const [challengeType, setChallengeType] = useState(null); // Tracks selected challenge type (1, 2, or 3)
+    const [challengeType, setChallengeType] = useState(null);
     const [category, setCategory] = useState('Sorting');
-    const [difficulty, setDifficulty] = useState('Easy'); // Single difficulty for all questions
-    const [title, setTitle] = useState(''); // Title for the challenge set
+    const [difficulty, setDifficulty] = useState('Easy');
+    const [title, setTitle] = useState('');
+    const [instruction, setInstruction] = useState(''); // For type 4 only
     const [questionEntries, setQuestionEntries] = useState([
         {
             question: '',
             answer: '',
-            choices: ['', '', '', ''], // For Multiple Choices
+            choices: ['', '', '', ''],
             algorithm: '',
             initialArray: '',
             expectedArray: '',
             stepDescription: '',
             explanation: '',
             text: '',
-            correctAnswers: ['', ''], // For Fill In The Blanks
+            correctAnswers: ['', ''],
             left: '',
             right: '',
         },
@@ -31,6 +32,7 @@ const ChallengesAddData = ({ onAddData }) => {
             'Matching Type': 4,
         };
         setChallengeType(typeMap[e.target.value]);
+        setInstruction(''); // Reset instruction when type changes
         // Reset question entries when type changes
         setQuestionEntries([
             {
@@ -44,6 +46,8 @@ const ChallengesAddData = ({ onAddData }) => {
                 explanation: '',
                 text: '',
                 correctAnswers: ['', ''],
+                left: '',
+                right: '',
             },
         ]);
     };
@@ -58,6 +62,10 @@ const ChallengesAddData = ({ onAddData }) => {
 
     const handleTitleChange = (e) => {
         setTitle(e.target.value);
+    };
+
+    const handleInstructionChange = (e) => {
+        setInstruction(e.target.value);
     };
 
     const handleInputChange = (index, e) => {
@@ -115,6 +123,8 @@ const ChallengesAddData = ({ onAddData }) => {
                 explanation: '',
                 text: '',
                 correctAnswers: ['', ''],
+                left: '',
+                right: '',
             },
         ]);
     };
@@ -128,6 +138,7 @@ const ChallengesAddData = ({ onAddData }) => {
             setDifficulty('Easy');
             setCategory('Sorting');
             setTitle('');
+            setInstruction('');
             setQuestionEntries([
                 {
                     question: '',
@@ -140,6 +151,8 @@ const ChallengesAddData = ({ onAddData }) => {
                     explanation: '',
                     text: '',
                     correctAnswers: ['', ''],
+                    left: '',
+                    right: '',
                 },
             ]);
         }, 200);
@@ -178,7 +191,17 @@ const ChallengesAddData = ({ onAddData }) => {
             }
             return result;
         });
-        const dataToSubmit = { title, category, questions, type: challengeType, difficulty };
+
+        // Build data object, only include instruction for type 4
+        const dataToSubmit = {
+            title,
+            category,
+            questions,
+            type: challengeType,
+            difficulty,
+            ...(challengeType === 4 && { instruction }) // Only add instruction for type 4
+        };
+
         onAddData(dataToSubmit);
         document.getElementById('my_modal_3').close();
         handleClose();
@@ -250,6 +273,20 @@ const ChallengesAddData = ({ onAddData }) => {
                                 onChange={handleTitleChange}
                                 onKeyDown={preventEnterKey}
                             />
+                            {challengeType === 4 && (
+                                <>
+                                    <legend className="fieldset-legend">Instruction</legend>
+                                    <input
+                                        required
+                                        value={instruction}
+                                        type="text"
+                                        className="input w-full"
+                                        placeholder="Enter matching instructions (e.g., Match algorithms with their time complexities)"
+                                        onChange={handleInstructionChange}
+                                        onKeyDown={preventEnterKey}
+                                    />
+                                </>
+                            )}
                             <legend className="fieldset-legend">Difficulty</legend>
                             <select
                                 value={difficulty}
@@ -274,7 +311,9 @@ const ChallengesAddData = ({ onAddData }) => {
                             {questionEntries.map((entry, index) => (
                                 <div key={index}>
                                     <div className="flex flex-row justify-between items-center mt-2">
-                                        <legend className="fieldset-legend pt-0">Question {index + 1}</legend>
+                                        <legend className="fieldset-legend pt-0">
+                                            {challengeType === 4 ? `Pair ${index + 1}` : `Question ${index + 1}`}
+                                        </legend>
                                         {index === 0 ? (
                                             <button
                                                 type="button"
@@ -463,25 +502,25 @@ const ChallengesAddData = ({ onAddData }) => {
                                     )}
                                     {challengeType === 4 && (
                                         <>
-                                            <legend className="fieldset-legend">Question</legend>
+                                            <legend className="fieldset-legend">Left Item</legend>
                                             <input
                                                 required
-                                                name="left"  // ✅ Fixed
+                                                name="left"
                                                 value={entry.left}
                                                 type="text"
                                                 className="input w-full"
-                                                placeholder="(e.g., Bubble Sort.)"
+                                                placeholder="(e.g., Binary Search)"
                                                 onChange={(e) => handleInputChange(index, e)}
                                                 onKeyDown={preventEnterKey}
                                             />
-                                            <legend className="fieldset-legend">Answer</legend>
+                                            <legend className="fieldset-legend">Right Item (Match)</legend>
                                             <input
                                                 required
-                                                name="right"  // ✅ Fixed
+                                                name="right"
                                                 value={entry.right}
                                                 type="text"
                                                 className="input w-full"
-                                                placeholder="(e.g., O(n))"
+                                                placeholder="(e.g., O(log n) - Divides search space)"
                                                 onChange={(e) => handleInputChange(index, e)}
                                                 onKeyDown={preventEnterKey}
                                             />
